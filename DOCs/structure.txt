@@ -1,0 +1,39 @@
+
+I/O map (in hex):
+
+40-4F		Switched I/O ports
+90-91		Printer
+98-99		VDP TMS9918
+9E-9F		(new) MMC/SD ports
+A0-A3		PSG
+A8-AB		PPI
+
+Hardware IDs:
+
+1  = DE-1 Board
+2  = DE-2 Board
+5  = WXEDA Board
+6  = Multicore Board
+8  = ZX-Uno Board
+
+Switched I/O ports:
+
+My Maker ID = 40d (28h)
+
+My ports (hex):
+
+48 = register number
+49 = register value
+
+Registers:
+
+(R )	00 => Machine ID number
+(R )	01 => Machine name (text), read to receive a null character.
+(R )	02 => Version (Nibble most significant = Major, Nibble less significant = Minor)
+
+(RW)	10 =>
+			bit 0 = Nextor SD interface enable (slot 3.2) (1 = enabled)
+(RW)	11 =>
+			bits 1-0 = Slot 1: SCC mapper type (X0 = SCC-I, 01 = ASCII 8, 11 = ASCII 16)
+(RW)	12 =>
+			bit 0 = Turbo

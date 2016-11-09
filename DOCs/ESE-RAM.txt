@@ -1,0 +1,86 @@
+Para usar o ESE-RAM:
+--------------------
+
+Há 3 modos de mapper, ESE-SCC, ASCII8 e ASCII16.
+
+Se mapper for ASCII8 ou 16:
+===========================
+
+Bancos divididos assim:
+-----------------------
+
+ASCII 8:
+Banco 1 = 4000-5FFF
+Banco 2 = 6000-7FFF
+Banco 3 = 8000-9FFF
+Banco 4 = A000-BFFF
+
+ASCII 16:
+Banco 1 = 4000-7FFF
+Banco 2 = 8000-BFFF
+
+Escrever bancos nos enderecos:
+------------------------------
+
+ASCII 8:
+Banco 1 = Escrever de 6000-67FF
+Banco 2 = Escrever de 6800-6FFF
+Banco 3 = Escrever de 7000-77FF
+Banco 4 = Escrever de 7800-7FFF
+
+ASCII 16:
+Banco 1 = Escrever de 6000-67FF
+Banco 2 = Escrever de 7000-77FF
+
+
+Leitura no slot ocorre normalmente de 4000 a BFFF, RAM é bloqueada para escrita.
+
+Para escrever na RAM, coloque 1 no bit 7 do banco 1 ou 3 ou 4 (Escrever "1xxxxxxx" nos bancos) e a escrita é habilitada.
+
+Observe que o Banco 2 não é permitido escrita.
+
+
+Se mapper for ESE-SCC:
+===================
+
+Bancos divididos assim:
+-----------------------
+
+Banco 1 = 4000-5FFF
+Banco 2 = 6000-7FFF
+Banco 3 = 8000-9FFF
+Banco 4 = A000-BFFF
+
+Escrever bancos nos enderecos:
+------------------------------
+
+Banco 1 = Escrever de 5000-57FF
+Banco 2 = Escrever de 7000-77FF
+Banco 3 = Escrever de 9000-97FF
+Banco 4 = Escrever de B000-B7FF
+
+A mapper ESE-SCC tem dois registros de configuração:
+
+Registro 1 = Escrita em 7FFE-7FFF se Modo de som for SCC e modo de memória for seleção de bancos (novo para o ESE-SCC)
+Registro 2 = Escrita em BFFE-BFFF se chaveado para os primeiros 512K (bit 6=0 do registro 1) e modo normal do SCC (bit 4=0 do registro 1) (mesmo do SCC+ do cartucho Snatcher)
+
+O bit 4 do Registro 1 é usado para ativar a escrita da RAM e bloquear o SCC+ (mapeador dos bancos e wave).
+O bit 6 do Registro 1 é usado para mapear além dos 512K, permitindo mais 512K porém com restrições.
+
+O registro 2 funciona assim:
+
+Bit 5 = Modo de Som (1=SCC+, 0=SCC)
+Bit 4 = Modo da Memória (1=RAM, 0=seleção de bancos)
+(outros bits sao ignorados)
+
+Se ativar o bit 6 do registro 1, a leitura e escrita não acontece de 4000-5FFF e nem em A000-BFFF, permitindo ler somente nos bancos 2 e 3 os 512K excedentes.
+
+Se ativar o bit 4 do registro 1, é permitido escrever na RAM em qualquer banco, sem chavear os bancos nos seus endereços, mas a escrita dos registros continuam ativos (7FFE-7FFF e BFFE-BFFF).
+
+Se o modo de memória for banco (bit 4=0 do registro 2):
+-------------------------------------------------------
+
+Se o banco 3 estiver configurado para a página 3F (bits 5-0 igual a 1) e o modo de som for SCC (bit5=0 do registro 2) o chip de áudio é mapeado de 9800 a 9FFF, sendo redirecionado para o som e não a memória.
+
+Se o bit 7 do banco 4 for 1 e o modo de som for SCC+ (bit5=1 do registro 2), os endereços de B800-BFFD são redirecionados para o chip de áudio ao invés de acessar a memória (BFFE-BFFF continua sendo Registro 2).
+

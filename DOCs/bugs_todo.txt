@@ -1,0 +1,11 @@
+TODO:
+Adicionar SOFARUN
+Adicionar sistema de troca de paleta
+Adicionar turbo de 7MHz
+
+Bugs:
+Jevilon e jsj tendo problemas com boot do Nextor!
+OK fran_matsusaka reclamou que sprites do nemesis 2 e 3 pisca muito
+OK Vanfanel reclamou que o chefe do penguim adventure nao aparece as bolas de fogo!
+OK	https://youtu.be/05kTZArlAtI?t=5m46s
+OK	https://www.youtube.com/watch?v=EoDIlTr_Y5w&feature=youtu.be
