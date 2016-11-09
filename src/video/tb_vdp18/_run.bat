@@ -2,15 +2,11 @@ vlib work
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_pack-p.vhd
 IF ERRORLEVEL 1 GOTO error
-vcom ..\vdp18\vdp18_comp_pack-p.vhd
-IF ERRORLEVEL 1 GOTO error
-vcom ..\vdp18\vdp18_core_comp_pack-p.vhd
-IF ERRORLEVEL 1 GOTO error
-vcom ..\vdp18\vdp18_col_pack-p.vhd
-IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_addr_mux.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_clk_gen.vhd
+IF ERRORLEVEL 1 GOTO error
+vcom ..\vdp18\vdp18_palette.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_col_mux.vhd
 IF ERRORLEVEL 1 GOTO error

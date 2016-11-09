@@ -125,9 +125,9 @@ entity msx is
 		joy2_out_o		: out   std_logic;
 		-- Video
 		col_o				: out std_logic_vector( 3 downto 0);
-		rgb_r_o			: out std_logic_vector( 7 downto 0);
-		rgb_g_o			: out std_logic_vector( 7 downto 0);
-		rgb_b_o			: out std_logic_vector( 7 downto 0);
+		rgb_r_o			: out std_logic_vector( 3 downto 0);
+		rgb_g_o			: out std_logic_vector( 3 downto 0);
+		rgb_b_o			: out std_logic_vector( 3 downto 0);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
 		csync_n_o		: out std_logic;
@@ -301,8 +301,7 @@ begin
 	vdp: entity work.vdp18_core
 	generic map (
 		is_pal_g			=> is_pal_g,
-		is_cvbs_g		=> (hw_id_g = 8),
-		compat_rgb_g	=> 0
+		is_cvbs_g		=> (hw_id_g = 8)
 	)
 	port map (
 		clock_i			=> clock_i,
@@ -310,7 +309,7 @@ begin
 		reset_n_i		=> por_n_s,
 		csr_n_i			=> vdp_rd_n_s,
 		csw_n_i			=> vdp_wr_n_s,
-		mode_i			=> cpu_addr_s(0),
+		mode_i			=> cpu_addr_s(1 downto 0),
 		int_n_o			=> vdp_int_n_s,
 		cd_i				=> d_from_cpu_s,
 		cd_o				=> d_from_vdp_s,

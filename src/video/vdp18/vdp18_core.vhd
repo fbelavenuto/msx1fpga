@@ -72,12 +72,15 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use work.vdp18_pack.opmode_t;
+use work.vdp18_pack.hv_t;
+use work.vdp18_pack.access_t;
+use work.vdp18_pack.to_boolean_f;
 
 entity vdp18_core is
 	generic (
-		is_pal_g      : boolean := false;
-		is_cvbs_g		: boolean := false;
-		compat_rgb_g  : integer := 0
+		is_pal_g		: boolean := false;
+		is_cvbs_g		: boolean := false
 	);
 	port (
 		-- Global Interface -------------------------------------------------------
@@ -87,7 +90,7 @@ entity vdp18_core is
 		-- CPU Interface ----------------------------------------------------------
 		csr_n_i			: in  std_logic;
 		csw_n_i			: in  std_logic;
-		mode_i			: in  std_logic;
+		mode_i			: in  std_logic_vector(0 to  1);
 		int_n_o			: out std_logic;
 		cd_i				: in  std_logic_vector(0 to  7);
 		cd_o				: out std_logic_vector(0 to  7);
@@ -101,22 +104,15 @@ entity vdp18_core is
 		vram_d_i			: in  std_logic_vector(0 to  7);
 		-- Video Interface --------------------------------------------------------
 		col_o				: out std_logic_vector(0 to 3);
-		rgb_r_o			: out std_logic_vector(0 to 7);
-		rgb_g_o			: out std_logic_vector(0 to 7);
-		rgb_b_o			: out std_logic_vector(0 to 7);
+		rgb_r_o			: out std_logic_vector(0 to 3);
+		rgb_g_o			: out std_logic_vector(0 to 3);
+		rgb_b_o			: out std_logic_vector(0 to 3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
 		comp_sync_n_o	: out std_logic
 	);
 
 end vdp18_core;
-
-
-use work.vdp18_comp_pack.all;
-use work.vdp18_pack.opmode_t;
-use work.vdp18_pack.hv_t;
-use work.vdp18_pack.access_t;
-use work.vdp18_pack.to_boolean_f;
 
 architecture struct of vdp18_core is
 
@@ -181,6 +177,9 @@ architecture struct of vdp18_core is
  
 	signal vram_read_s		: boolean;
 	signal vram_write_s		: boolean;
+	signal palette_idx_s		: std_logic_vector(0 to  3);
+	signal palette_val_s		: std_logic_vector(0 to 15);
+	signal palette_wr_s		: std_logic;
 
 begin
 
@@ -197,7 +196,7 @@ begin
   -----------------------------------------------------------------------------
   -- Clock Generator
   -----------------------------------------------------------------------------
-  clk_gen_b : vdp18_clk_gen
+  clk_gen_b: entity  work.vdp18_clk_gen
     port map (
       clock_i         => clock_i,
       clk_en_10m7_i => clk_en_10m7_i,
@@ -211,7 +210,7 @@ begin
   -----------------------------------------------------------------------------
   -- Horizontal and Vertical Timing Generator
   -----------------------------------------------------------------------------
-  hor_vert_b : vdp18_hor_vert
+  hor_vert_b: entity  work.vdp18_hor_vert
     generic map (
       is_pal_g		=> is_pal_g,
 		is_cvbs_g	=> is_cvbs_g
@@ -237,7 +236,7 @@ begin
   -----------------------------------------------------------------------------
   -- Control Module
   -----------------------------------------------------------------------------
-  ctrl_b : vdp18_ctrl
+  ctrl_b: entity  work.vdp18_ctrl
     port map (
       clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
@@ -264,51 +263,54 @@ begin
 	-----------------------------------------------------------------------------
 	-- CPU I/O Module
 	-----------------------------------------------------------------------------
-	cpu_io_b : vdp18_cpuio
+	cpu_io_b: entity  work.vdp18_cpuio
 	port map (
-		clock_i         => clock_i,
-		clk_en_10m7_i => clk_en_10m7_s,
-		clk_en_acc_i  => clk_en_acc_s,
-		reset_i       => reset_s,
-		rd_i          => rd_s,
-		wr_i          => wr_s,
-		mode_i        => mode_i,
-		cd_i          => cd_i,
-		cd_o          => cd_o,
-		cd_oe_o       => open,
+		clock_i			=> clock_i,
+		clk_en_10m7_i	=> clk_en_10m7_s,
+		clk_en_acc_i	=> clk_en_acc_s,
+		reset_i			=> reset_s,
+		rd_i				=> rd_s,
+		wr_i				=> wr_s,
+		mode_i			=> mode_i,
+		cd_i				=> cd_i,
+		cd_o				=> cd_o,
+		cd_oe_o			=> open,
 		wait_o			=> wait_o,
-		access_type_i => access_type_s,
-		opmode_o      => opmode_s,
-		vram_read_o   => vram_read_s,
-		vram_write_o  => vram_write_s,
-		vram_we_o     => vram_we_o,
-		vram_a_o      => cpu_vram_a_s,
-		vram_d_o      => vram_d_o,
-		vram_d_i      => vram_d_i,
-		spr_coll_i    => spr_coll_s,
-		spr_5th_i     => spr_5th_s,
-		spr_5th_num_i => spr_5th_num_s,
-		reg_ev_o      => open,
-		reg_16k_o     => open,
-		reg_blank_o   => reg_blank_s,
-		reg_size1_o   => reg_size1_s,
-		reg_mag1_o    => reg_mag1_s,
-		reg_ntb_o     => reg_ntb_s,
-		reg_ctb_o     => reg_ctb_s,
-		reg_pgb_o     => reg_pgb_s,
-		reg_satb_o    => reg_satb_s,
-		reg_spgb_o    => reg_spgb_s,
-		reg_col1_o    => reg_col1_s,
-		reg_col0_o    => reg_col0_s,
-		irq_i         => irq_s,
-		int_n_o       => int_n_o
+		access_type_i	=> access_type_s,
+		opmode_o			=> opmode_s,
+		vram_read_o		=> vram_read_s,
+		vram_write_o	=> vram_write_s,
+		vram_we_o		=> vram_we_o,
+		vram_a_o			=> cpu_vram_a_s,
+		vram_d_o			=> vram_d_o,
+		vram_d_i			=> vram_d_i,
+		spr_coll_i		=> spr_coll_s,
+		spr_5th_i		=> spr_5th_s,
+		spr_5th_num_i	=> spr_5th_num_s,
+		reg_ev_o			=> open,
+		reg_16k_o		=> open,
+		reg_blank_o		=> reg_blank_s,
+		reg_size1_o		=> reg_size1_s,
+		reg_mag1_o		=> reg_mag1_s,
+		reg_ntb_o		=> reg_ntb_s,
+		reg_ctb_o		=> reg_ctb_s,
+		reg_pgb_o		=> reg_pgb_s,
+		reg_satb_o		=> reg_satb_s,
+		reg_spgb_o		=> reg_spgb_s,
+		reg_col1_o		=> reg_col1_s,
+		reg_col0_o		=> reg_col0_s,
+		palette_idx_o	=> palette_idx_s,
+		palette_val_o	=> palette_val_s,
+		palette_wr_o	=> palette_wr_s,
+		irq_i				=> irq_s,
+		int_n_o			=> int_n_o
  );
 
 
   -----------------------------------------------------------------------------
   -- VRAM Address Multiplexer
   -----------------------------------------------------------------------------
-  addr_mux_b : vdp18_addr_mux
+  addr_mux_b: entity  work.vdp18_addr_mux
     port map (
       access_type_i => access_type_s,
       opmode_i      => opmode_s,
@@ -332,7 +334,7 @@ begin
   -----------------------------------------------------------------------------
   -- Pattern Generator
   -----------------------------------------------------------------------------
-  pattern_b : vdp18_pattern
+  pattern_b: entity  work.vdp18_pattern
     port map (
       clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
@@ -355,7 +357,7 @@ begin
   -----------------------------------------------------------------------------
   -- Sprite Generator
   -----------------------------------------------------------------------------
-  sprite_b : vdp18_sprite
+  sprite_b: entity  work.vdp18_sprite
     port map (
       clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
@@ -385,10 +387,7 @@ begin
   -----------------------------------------------------------------------------
   -- Color Multiplexer
   -----------------------------------------------------------------------------
-  col_mux_b : vdp18_col_mux
-    generic map (
-      compat_rgb_g  => compat_rgb_g
-    )
+  col_mux_b: entity  work.vdp18_col_mux
     port map (
       clock_i         => clock_i,
       clk_en_5m37_i => clk_en_5m37_s,
@@ -402,6 +401,9 @@ begin
       spr1_col_i    => spr1_col_s,
       spr2_col_i    => spr2_col_s,
       spr3_col_i    => spr3_col_s,
+		palette_idx_i	=> palette_idx_s,
+		palette_val_i	=> palette_val_s,
+		palette_wr_i	=> palette_wr_s,
       col_o         => col_o,
       rgb_r_o       => rgb_r_o,
       rgb_g_o       => rgb_g_o,

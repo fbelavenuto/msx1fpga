@@ -44,7 +44,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.vdp18_col_pack.all;
 
 -- Generic top-level entity for Altera DE1 board
 entity de1_top is
@@ -191,9 +190,12 @@ architecture behavior of de1_top is
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
 	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
-	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
-	signal vga_hsync_n_s		: std_logic;								-- 31KHz
-	signal vga_vsync_n_s		: std_logic;								-- 31KHz
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
+--	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
+--	signal vga_hsync_n_s		: std_logic;								-- 31KHz
+--	signal vga_vsync_n_s		: std_logic;								-- 31KHz
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector(3 downto 0);
@@ -328,10 +330,10 @@ begin
 		joy2_btn2_io	=> J1_BTN2,
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> rgb_col_s, --open,
-		rgb_r_o			=> open, --rgb_r_s,
-		rgb_g_o			=> open, --rgb_g_s,
-		rgb_b_o			=> open, --rgb_b_s,
+		col_o				=> open,
+		rgb_r_o			=> rgb_r_s,
+		rgb_g_o			=> rgb_g_s,
+		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		csync_n_o		=> open,
@@ -441,23 +443,9 @@ begin
 	FL_WE_N				<= '1';
 	
 	-- VGA Output
-	process (clock_master_s)
-		variable vga_col_v : natural range 0 to 15;
-		variable vga_r_v,
-					vga_g_v,
-					vga_b_v   : rgb_val_t;
-	begin
-		if rising_edge(clock_master_s) then
-			vga_col_v := to_integer(unsigned(rgb_col_s));
-			vga_r_v	:= full_rgb_table_c(vga_col_v)(r_c);
-			vga_g_v	:= full_rgb_table_c(vga_col_v)(g_c);
-			vga_b_v	:= full_rgb_table_c(vga_col_v)(b_c);
-			VGA_R		<= std_logic_vector(to_unsigned(vga_r_v, 8))(7 downto 4);
-			VGA_G		<= std_logic_vector(to_unsigned(vga_g_v, 8))(7 downto 4);
-			VGA_B		<= std_logic_vector(to_unsigned(vga_b_v, 8))(7 downto 4);
-		end if;
-	end process vga_col;
-
+	VGA_R		<= rgb_r_s;
+	VGA_G		<= rgb_g_s;
+	VGA_B		<= rgb_b_s;
 	VGA_HS	<= rgb_hsync_n_s;
 	VGA_VS	<= rgb_vsync_n_s;
 
