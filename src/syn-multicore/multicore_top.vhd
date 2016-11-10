@@ -37,7 +37,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.vdp18_paletas_3bit_pack.all;
 
 entity multicore_top is
 	port (
@@ -149,9 +148,11 @@ architecture behavior of multicore_top is
 	signal dac_s				: std_logic;
 
 	-- Video
-	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
-	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
+	signal rgb_hsync_n_s		: std_logic;
+	signal rgb_vsync_n_s		: std_logic;
 	signal extra_keys_s		: std_logic_vector(3 downto 0);
 
 	-- Keyboard
@@ -190,8 +191,7 @@ begin
 	generic map (
 		hw_id_g			=> 6,
 		hw_txt_g			=> "Multicore Board",
-		hw_version_g	=> X"10",			-- Version 1.0
-		use_m1_wait_g	=> true
+		hw_version_g	=> X"10"				-- Version 1.0
 	)
 	port map (
 		-- Clocks
@@ -270,10 +270,10 @@ begin
 		joy2_btn2_io	=> joy2_p9_io,
 		joy2_out_o		=> joy2_out_s,
 		-- Video
-		col_o				=> rgb_col_s,
-		rgb_r_o			=> open,
-		rgb_g_o			=> open,
-		rgb_b_o			=> open,
+		col_o				=> open,
+		rgb_r_o			=> rgb_r_s,
+		rgb_g_o			=> rgb_g_s,
+		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		csync_n_o		=> open,
@@ -364,33 +364,14 @@ begin
 	sram_ce_n_o(0)		<= not ram_ce_s;
 
 	-- VGA Output
-	process (clock_master_s)
-		variable vga_col_v : natural range 0 to 15;
-		variable vga_r_v,
-					vga_g_v,
-					vga_b_v   : rgb_val_t;
-		variable vid_r_v,
-					vid_g_v,
-					vid_b_v		: std_logic_vector(2 downto 0);
-	begin
-		if rising_edge(clock_master_s) then
-			vga_col_v := to_integer(unsigned(rgb_col_s));
-			vga_r_v	:= paleta3_c(vga_col_v)(r_c);
-			vga_g_v	:= paleta3_c(vga_col_v)(g_c);
-			vga_b_v	:= paleta3_c(vga_col_v)(b_c);
-			vid_r_v	:= std_logic_vector(to_unsigned(vga_r_v, 3));
-			vid_g_v	:= std_logic_vector(to_unsigned(vga_g_v, 3));
-			vid_b_v	:= std_logic_vector(to_unsigned(vga_b_v, 3));
-			vga_r_o	<= vid_r_v;
-			vga_g_o	<= vid_g_v;
-			vga_b_o	<= vid_b_v;
-		end if;
-	end process;
-
+	vga_r_o			<= rgb_r_s(3 downto 1);
+	vga_g_o			<= rgb_g_s(3 downto 1);
+	vga_b_o			<= rgb_b_s(3 downto 1);
 	vga_hsync_n_o	<= rgb_hsync_n_s;
 	vga_vsync_n_o	<= rgb_vsync_n_s;
 
 	-- DEBUG
---	leds_n_o
+	leds_n_o(0)		<= turbo_on_s;
+	leds_n_o(1)		<= caps_en_s;
 
 end architecture;

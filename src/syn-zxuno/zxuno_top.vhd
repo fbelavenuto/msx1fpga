@@ -153,9 +153,11 @@ architecture behavior of zxuno_top is
 	signal dac_s				: std_logic;
 
 	-- Video
-	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
-	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
+	signal rgb_hsync_n_s		: std_logic;
+	signal rgb_vsync_n_s		: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector(3 downto 0);
@@ -163,6 +165,9 @@ architecture behavior of zxuno_top is
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector(3 downto 0);
 	signal reload_core_s		: std_logic;
+
+	-- SD
+	signal sd_cs_n_s			: std_logic;
 
 	-- Joystick
 	signal joy_out1_s			: std_logic;
@@ -194,7 +199,6 @@ begin
 		hw_id_g			=> 8,
 		hw_txt_g			=> "ZX-Uno Board",
 		hw_version_g	=> X"10",			-- Version 1.0
-		use_m1_wait_g	=> true,
 		is_pal_g			=> is_pal_g
 	)
 	port map (
@@ -274,15 +278,15 @@ begin
 		joy2_btn2_io	=> joy2_btn2_io,
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> rgb_col_s,
-		rgb_r_o			=> open,
-		rgb_g_o			=> open,
-		rgb_b_o			=> open,
+		col_o				=> open,
+		rgb_r_o			=> rgb_r_s,
+		rgb_g_o			=> rgb_g_s,
+		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		csync_n_o		=> open,
 		-- SPI/SD
-		spi_cs_n_o		=> sd_cs_n_o,
+		spi_cs_n_o		=> sd_cs_n_s,
 		spi_sclk_o		=> sd_sclk_o,
 		spi_mosi_o		=> sd_mosi_o,
 		spi_miso_i		=> sd_miso_i,
@@ -290,6 +294,7 @@ begin
 		D_slots_o		=> open
 	);
 
+	sd_cs_n_o	<= sd_cs_n_s;
 	joy_fire3_o <= not joy_out1_s;		-- for Sega Genesis joypad
 
 	-- ROM
@@ -392,35 +397,15 @@ begin
 	sram_we_n_o			<= not ram_we_s;
 
 	-- VGA Output
-	process (clock_master_s)
-		variable vga_col_v : natural range 0 to 15;
-		variable vga_r_v,
-					vga_g_v,
-					vga_b_v   : rgb_val_t;
-		variable vid_r_v,
-					vid_g_v,
-					vid_b_v		: std_logic_vector(2 downto 0);
-	begin
-		if rising_edge(clock_master_s) then
-			vga_col_v := to_integer(unsigned(rgb_col_s));
-			vga_r_v	:= paleta3_c(vga_col_v)(r_c);
-			vga_g_v	:= paleta3_c(vga_col_v)(g_c);
-			vga_b_v	:= paleta3_c(vga_col_v)(b_c);
-			vid_r_v	:= std_logic_vector(to_unsigned(vga_r_v, 3));
-			vid_g_v	:= std_logic_vector(to_unsigned(vga_g_v, 3));
-			vid_b_v	:= std_logic_vector(to_unsigned(vga_b_v, 3));
-			vga_r_o	<= vid_r_v;
-			vga_g_o	<= vid_g_v;
-			vga_b_o	<= vid_b_v;
-		end if;
-	end process;
-
+	vga_r_o			<= rgb_r_s(3 downto 1);
+	vga_g_o			<= rgb_g_s(3 downto 1);
+	vga_b_o			<= rgb_b_s(3 downto 1);
 	vga_csync_n_o	<= rgb_hsync_n_s and rgb_vsync_n_s;
 	vga_vsync_n_o	<= '1';
 	vga_ntsc_o		<= '0'	when is_pal_g	else '1';
 	vga_pal_o		<= '1'	when is_pal_g	else '0';
 
 	-- DEBUG
---	led_o		<= '0';
+	led_o		<= sd_cs_n_s;
 
 end architecture;

@@ -40,7 +40,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.ALL;
-use work.vdp18_col_pack.all;
 
 entity wxeda_top is
 	port (
@@ -142,12 +141,11 @@ architecture behavior of wxeda_top is
 	signal dac_s				: std_logic;
 
 	-- Video
-	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
-	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
-	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
-	signal vga_hsync_n_s		: std_logic;								-- 31KHz
-	signal vga_vsync_n_s		: std_logic;								-- 31KHz
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
+	signal rgb_hsync_n_s		: std_logic;
+	signal rgb_vsync_n_s		: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
@@ -188,8 +186,7 @@ begin
 	generic map (
 		hw_id_g			=> 5,
 		hw_txt_g			=> "WXEDA Board",
-		hw_version_g	=> X"10",			-- Version 1.0
-		use_m1_wait_g	=> true
+		hw_version_g	=> X"10"				-- Version 1.0
 	)
 	port map (
 		-- Clocks
@@ -268,10 +265,10 @@ begin
 		joy2_btn2_io	=> 'Z',
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> rgb_col_s,
-		rgb_r_o			=> open,
-		rgb_g_o			=> open,
-		rgb_b_o			=> open,
+		col_o				=> open,
+		rgb_r_o			=> rgb_r_s,
+		rgb_g_o			=> rgb_g_s,
+		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		csync_n_o		=> open,
@@ -381,23 +378,9 @@ begin
 	audio_dac_r_o		<= dac_s;
 
 	-- VGA Output
-	process (clock_master_s)
-		variable vga_col_v : natural range 0 to 15;
-		variable vga_r_v,
-					vga_g_v,
-					vga_b_v   : rgb_val_t;
-	begin
-		if rising_edge(clock_master_s) then
-			vga_col_v := to_integer(unsigned(rgb_col_s));
-			vga_r_v	:= full_rgb_table_c(vga_col_v)(r_c);
-			vga_g_v	:= full_rgb_table_c(vga_col_v)(g_c);
-			vga_b_v	:= full_rgb_table_c(vga_col_v)(b_c);
-			vga_r_o	<= std_logic_vector(to_unsigned(vga_r_v, 8))(7 downto 3);
-			vga_g_o	<= std_logic_vector(to_unsigned(vga_g_v, 8))(7 downto 2);
-			vga_b_o	<= std_logic_vector(to_unsigned(vga_b_v, 8))(7 downto 3);
-		end if;
-	end process vga_col;
-
+	vga_r_o	<= rgb_r_s & '0';
+	vga_g_o	<= rgb_g_s & "00";
+	vga_b_o	<= rgb_b_s & '0';
 	vga_hs_o	<= rgb_hsync_n_s;
 	vga_vs_o	<= rgb_vsync_n_s;
 

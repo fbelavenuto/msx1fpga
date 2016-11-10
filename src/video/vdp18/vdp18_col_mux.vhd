@@ -81,6 +81,7 @@ begin
 
 	palette: entity work.vdp18_palette
 	port map (
+		reset_i		=> reset_i,
 		clock_i		=> clock_i,
 		we_i			=> palette_wr_i,
 		addr_wr_i	=> palette_idx_i,

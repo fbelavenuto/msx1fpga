@@ -51,6 +51,7 @@ use ieee.numeric_std.all;
 
 entity vdp18_palette is
 	port (
+		reset_i			: in  boolean;
 		clock_i			: in  std_logic;
 		we_i				: in  std_logic;
 		addr_wr_i		: in  std_logic_vector(0 to  3);
@@ -63,32 +64,34 @@ end entity;
 architecture Memory of vdp18_palette is
 
 	type ram_t is array (natural range 15 downto 0) of std_logic_vector(15 downto 0);
-	signal ram_q : ram_t := (
-		--      RB0G
-		0  => X"0000",
-		1  => X"0000",
-		2  => X"2402",
-		3  => X"570D",
-		4  => X"5E05",
-		5  => X"7F07",
-		6  => X"D405",
-		7  => X"4F0E",
-		8  => X"F505",
-		9  => X"F707",
-		10 => X"D50C",
-		11 => X"E80C",
-		12 => X"230B",
-		13 => X"CB05",
-		14 => X"CC0C",
-		15 => X"FF0F"
-	);
+	signal ram_q : ram_t;
 	signal read_addr_q : unsigned(3 downto 0);
 
 begin
 
-	process (clock_i)
+	process (reset_i, clock_i)
 	begin
-		if rising_edge(clock_i) then
+		if reset_i then
+			ram_q <= (
+				--      RB0G
+				0  => X"0000",
+				1  => X"0000",
+				2  => X"2402",
+				3  => X"570D",
+				4  => X"5E05",
+				5  => X"7F07",
+				6  => X"D405",
+				7  => X"4F0E",
+				8  => X"F505",
+				9  => X"F707",
+				10 => X"D50C",
+				11 => X"E80C",
+				12 => X"230B",
+				13 => X"CB05",
+				14 => X"CC0C",
+				15 => X"FF0F"
+			);
+		elsif rising_edge(clock_i) then
 			if we_i = '1' then
 				ram_q(to_integer(unsigned(addr_wr_i))) <= data_i;
 			end if;

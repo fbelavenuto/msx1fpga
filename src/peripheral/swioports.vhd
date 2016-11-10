@@ -148,7 +148,7 @@ begin
 					when others =>
 						null;
 				end case;
-			-- KdL ID
+			-- KdL ID (only for MGLOCM)
 			elsif cs_i = '1' and wr_i = '1' and maker_id_s = X"D4" then
 				if    addr_i = X"41" then
 					-- Smart Command
@@ -158,28 +158,19 @@ begin
 						turbo_on_q <= '1';
 					elsif data_i = X"0F" then
 						mapper_q <= "00";
+					elsif data_i = X"10" then
+						mapper_q <= "00";
 					elsif data_i = X"11" then
+						mapper_q <= "01";
+					elsif data_i = X"12" then
 						mapper_q <= "01";
 					elsif data_i = X"13" then
 						mapper_q <= "11";
+					elsif data_i = X"14" then
+						mapper_q <= "11";
 					elsif data_i = X"41" then
 						turbo_on_q <= '1';
-					elsif data_i = X"FB" then
-						-- Cold Reset
-						softreset_q	<= '1';
-					elsif data_i = X"FC" then
-						-- Warm Reset (w/ mapper 2M)
-						softreset_q	<= '1';
-					elsif data_i = X"FD" then
-						-- Warm Reset
-						softreset_q	<= '1';
-					elsif data_i = X"FE" then
-						-- Warm Reset (w/ mapper 4M)
-						softreset_q	<= '1';
 					end if;
-				elsif addr_i = X"42" then
-					-- Some configs
-					mapper_q <= data_i(5 downto 4);
 				end if;
 			end if;
 		end if;

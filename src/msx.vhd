@@ -525,8 +525,8 @@ begin
 	io_write_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1' and wr_n_s = '0'		else '0';
 
 	-- I/O
-	vdp_wr_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 1) = "1001100"	else '1';	-- VDP write	=> 98-99
-	vdp_rd_n_s		<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 1) = "1001100"	else '1';	-- VDP read		=> 98-99
+	vdp_wr_n_s		<= '0'	when io_write_s = '1'  and cpu_addr_s(7 downto 2) = "100110"	else '1';	-- VDP write	=> 98-9B
+	vdp_rd_n_s		<= '0'	when io_read_s = '1'   and cpu_addr_s(7 downto 2) = "100110"	else '1';	-- VDP read		=> 98-9B
 	spi_cs_s			<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 1) = "1001111"	else '0';	-- SPI			=> 9E-9F
 	psg_cs_s			<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 2) = "101000"	else '0';	-- PSG			=> A0-A3
 	pio_cs_s			<= '1'	when io_access_s = '1' and cpu_addr_s(7 downto 2) = "101010"	else '0';	-- PPI 			=> A8-AB

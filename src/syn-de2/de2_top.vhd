@@ -44,7 +44,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.vdp18_col_pack.all;
 
 -- Generic top-level entity for Altera DE2 board
 entity de2_top is
@@ -241,7 +240,10 @@ architecture behavior of de2_top is
 	signal k7_ai_s				: std_logic;
 
 	-- Video
-	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
+--	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
 	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
 --	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
@@ -309,8 +311,7 @@ begin
 	generic map (
 		hw_id_g			=> 2,
 		hw_txt_g			=> "DE-2 Board",
-		hw_version_g	=> X"10",			-- Version 1.0
-		use_m1_wait_g	=> true
+		hw_version_g	=> X"10"				-- Version 1.0
 	)
 	port map (
 		clock_i			=> clock_master_s,
@@ -388,10 +389,10 @@ begin
 		joy2_btn2_io	=> J1_BTN2,
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> rgb_col_s, --open,
-		rgb_r_o			=> open, --rgb_r_s,
-		rgb_g_o			=> open, --rgb_g_s,
-		rgb_b_o			=> open, --rgb_b_s,
+		col_o				=> open,
+		rgb_r_o			=> rgb_r_s,
+		rgb_g_o			=> rgb_g_s,
+		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		csync_n_o		=> open,
@@ -535,23 +536,9 @@ begin
 --	FL_WE_N				<= '1';
 
 	-- VGA Output
-	process (clock_master_s)
-		variable vga_col_v : natural range 0 to 15;
-		variable vga_r_v,
-					vga_g_v,
-					vga_b_v   : rgb_val_t;
-	begin
-		if rising_edge(clock_master_s) then
-			vga_col_v := to_integer(unsigned(rgb_col_s));
-			vga_r_v	:= full_rgb_table_c(vga_col_v)(r_c);
-			vga_g_v	:= full_rgb_table_c(vga_col_v)(g_c);
-			vga_b_v	:= full_rgb_table_c(vga_col_v)(b_c);
-			VGA_R		<= std_logic_vector(to_unsigned(vga_r_v, 8)) & "00";
-			VGA_G		<= std_logic_vector(to_unsigned(vga_g_v, 8)) & "00";
-			VGA_B		<= std_logic_vector(to_unsigned(vga_b_v, 8)) & "00";
-		end if;
-	end process;
-
+	VGA_R			<= rgb_r_s & "000000";
+	VGA_G			<= rgb_g_s & "000000";
+	VGA_B			<= rgb_b_s & "000000";
 	VGA_HS		<= rgb_hsync_n_s;
 	VGA_VS		<= rgb_vsync_n_s;
 	VGA_BLANK	<= '1';
