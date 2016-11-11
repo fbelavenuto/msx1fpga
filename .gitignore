@@ -80,6 +80,13 @@ greybox_tmp
 /ROMs/loader/*.mif
 /ROMs/loader/*.noi
 /ROMs/loader/obj
+/ROMs/loader2/*.bin
+/ROMs/loader2/*.ihx
+/ROMs/loader2/*.lk
+/ROMs/loader2/*.map
+/ROMs/loader2/*.mif
+/ROMs/loader2/*.noi
+/ROMs/loader2/obj
 /ROMs/nextor/*.lst
 /ROMs/nextor/*.ROM
 /ROMs/nextor/*.bin
@@ -137,7 +144,6 @@ greybox_tmp
 /synth/multicore/*.qws
 /synth/multicore/output_files
 /synth/multicore/PLLJ_PLLSPE_INFO.txt
-/ROMs/loader2
 /src/tb_msx/wave1.bmp
 /src/video/tb_vdp18/wave1.bmp
 /src/video/tb_vdp18/wave2.bmp
