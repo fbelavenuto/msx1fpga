@@ -75,8 +75,8 @@ void main()
 		//     12345678901234567890123456789012
 		error("Error setting MakerID!");
 	}
-//	SWIOP_REGNUM = REG_TURBO;
-//	SWIOP_REGVAL = 1;
+	SWIOP_REGNUM = REG_TURBO;
+	SWIOP_REGVAL = 1;
 	SWIOP_REGNUM = REG_HWID;
 	hwid = SWIOP_REGVAL;
 	SWIOP_REGNUM = REG_HWTXT;
@@ -195,8 +195,8 @@ void main()
 	vdp_putstring(" OK\n");
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
-//	SWIOP_REGNUM = REG_TURBO;
-//	SWIOP_REGVAL = 0;
+	SWIOP_REGNUM = REG_TURBO;
+	SWIOP_REGVAL = 0;
 	*prampage = 15;	// Main RAM
 	// start ROM
 	*ppl++=0x3E;		// LD A, $F0

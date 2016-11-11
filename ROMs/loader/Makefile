@@ -6,6 +6,7 @@ LD = sdcc
 H2B = hex2bin
 ROMGEN = romgen
 SRCAT = srec_cat
+FILL = fillfile
 
 SDIR = src
 IDIR = inc
@@ -20,9 +21,9 @@ OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 all: dir loader
 
 loader: loader.bin
-	fillfile $< 8192
-	$(SRCAT) $< --bin -o $@.mif --mif 8
-	$(ROMGEN) $< ipl_rom a r > ../../src/rom/ipl_rom.vhd
+	$(FILL) $< 8192
+#	$(SRCAT) $< --bin -o $@.mif --mif 8
+#	$(ROMGEN) $< ipl_rom a r > ../../src/rom/ipl_rom.vhd
 
 loader.bin: loader.ihx
 

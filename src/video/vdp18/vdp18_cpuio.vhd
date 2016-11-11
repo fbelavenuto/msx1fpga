@@ -411,7 +411,11 @@ begin
 					transfer_mode_v := TM_RD_MODE1;
 				end if;
 				if wr_i then
-					transfer_mode_v := TM_WR_MODE1;
+					if wrvram_q and not wait_s then
+						wait_s <= true;
+					elsif not wait_s then
+						transfer_mode_v := TM_WR_MODE1;
+					end if;
 				end if;
 			when "10" =>
 				if wr_i then
