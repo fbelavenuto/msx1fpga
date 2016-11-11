@@ -56,19 +56,19 @@ entity vdp18_col_mux is
 		vert_active_i	: in  boolean;
 		hor_active_i	: in  boolean;
 		blank_i			: in  boolean;
-		reg_col0_i		: in  std_logic_vector(0 to 3);
-		pat_col_i		: in  std_logic_vector(0 to 3);
-		spr0_col_i		: in  std_logic_vector(0 to 3);
-		spr1_col_i		: in  std_logic_vector(0 to 3);
-		spr2_col_i		: in  std_logic_vector(0 to 3);
-		spr3_col_i		: in  std_logic_vector(0 to 3);
+		reg_col0_i		: in  std_logic_vector(0 to  3);
+		pat_col_i		: in  std_logic_vector(0 to  3);
+		spr0_col_i		: in  std_logic_vector(0 to  3);
+		spr1_col_i		: in  std_logic_vector(0 to  3);
+		spr2_col_i		: in  std_logic_vector(0 to  3);
+		spr3_col_i		: in  std_logic_vector(0 to  3);
 		palette_idx_i	: in  std_logic_vector(0 to  3);
 		palette_val_i	: in  std_logic_vector(0 to 15);
 		palette_wr_i	: in  std_logic;
-		col_o				: out std_logic_vector(0 to 3);
-		rgb_r_o			: out std_logic_vector(0 to 3);
-		rgb_g_o			: out std_logic_vector(0 to 3);
-		rgb_b_o			: out std_logic_vector(0 to 3)
+		col_o				: out std_logic_vector(0 to  3);
+		rgb_r_o			: out std_logic_vector(0 to  3);
+		rgb_g_o			: out std_logic_vector(0 to  3);
+		rgb_b_o			: out std_logic_vector(0 to  3)
 	);
 end vdp18_col_mux;
 

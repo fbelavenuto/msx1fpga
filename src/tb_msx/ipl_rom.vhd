@@ -16,11 +16,20 @@ architecture rtl of ipl_rom is
 
 	type ROM_ARRAY is array(0 to 8191) of std_logic_vector(7 downto 0);
 	constant ROM : ROM_ARRAY := (
-		x"01",x"98",x"00",x"ED",x"B2",x"C3",x"03",x"00", -- 0x0000
-		x"00",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0008
+	--210001019800EDA3EDA3EDA3EDA3EDA3EDA3C30000
+		x"21",x"00",x"01",x"01",x"98",x"00",x"ED",x"A3", -- 0x0000
+		x"ED",x"A3",x"ED",x"A3",x"ED",x"A3",x"ED",x"A3", -- 0x0008
+		x"ED",x"A3",x"C3",x"00",x"00",x"FF",x"FF",x"FF", -- 0x0010
+
+
 --		x"3C",x"D3",x"98",x"3C",x"D3",x"98",x"C3",x"00", -- 0x0000
---		x"00",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0008
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0010
+
+--		X"3E",X"02",X"D3",X"99",X"3E",X"D0",X"D3",X"99", -- 0
+--		X"00",X"D3",X"9A",X"D3",X"9A",X"00",X"D3",X"9A", -- 8
+--		X"D3",X"9A",X"C3",X"12",X"00",X"00",X"00",X"00", -- 10
+
+--		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0008
+--		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0010
 		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0018
 		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0020
 		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0028

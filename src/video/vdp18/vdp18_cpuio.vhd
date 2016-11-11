@@ -102,7 +102,7 @@ architecture rtl of vdp18_cpuio is
 							ST_WR_MODE1_1ST, ST_WR_MODE1_1ST_IDLE,
 							ST_WR_MODE1_2ND_VREAD, ST_WR_MODE1_2ND_VWRITE,
 							ST_WR_MODE1_2ND_RWRITE,
-							ST_WR_PALETTE, ST_WR_PALETTE_IDLE, ST_WR_PALETTE2);
+							ST_WR_PALETTE);
 	signal state_s, state_q		: state_t;
 
 	signal buffer_q				: std_logic_vector(0 to 7);
@@ -153,7 +153,8 @@ begin
 	--   Implements the sequential elements.
 	--
 	seq: process (clock_i, reset_i)
-		variable incr_addr_v  : boolean;
+		variable incr_addr_v	: boolean;
+		variable write_pal_v	: boolean;
 	begin
 		if reset_i then
 			state_q        <= ST_IDLE;
@@ -164,12 +165,16 @@ begin
 			wrvram_sched_q <= false;
 			wrvram_q       <= false;
 			palette_idx_o	<= (others => '0');
+			wrpal_byte2_s	<= false;
+			write_pal_v		:= false;
 		elsif clock_i'event and clock_i = '1' then
 			-- default assignments
 			incr_addr_v  := incr_addr_s;
-			incr_palidx_s	<= false;
 
 			if clk_en_10m7_i then
+
+				incr_palidx_s	<= false;
+
 				-- update state vector ------------------------------------------------
 				state_q <= state_s;
 
@@ -236,6 +241,10 @@ begin
 						palette_val_s(0 to 7)  <= cd_i;
 					end if;
 				end if;
+				if write_pal_v and not write_pal_s then
+					wrpal_byte2_s <= not wrpal_byte2_s;
+				end if;
+				write_pal_v := write_pal_s;
 
 			end if;
 		end if;
@@ -317,7 +326,7 @@ begin
 						ctrl_reg_q(to_integer(reg_addr_v)) <= tmp_q;
 					end if;
 				end if;
-				if incr_palidx_s and not incr_palidx_v then
+				if not incr_palidx_s and incr_palidx_v then
 					palette_idx_s <= palette_idx_s + 1;
 				end if;
 				incr_palidx_v := incr_palidx_s;
@@ -377,7 +386,6 @@ begin
 		read_mux_s        <= RDMUX_STATUS;
 		destr_rd_status_s <= false;
 		write_pal_s			<= false;
-		wrpal_byte2_s		<= false;
 
 		-- end of wait
 		if not wrvram_q and wait_s then
@@ -403,11 +411,7 @@ begin
 					transfer_mode_v := TM_RD_MODE1;
 				end if;
 				if wr_i then
-					if wrvram_q and not wait_s then
-						wait_s <= true;
-					elsif not wait_s then
-						transfer_mode_v := TM_WR_MODE1;
-					end if;
+					transfer_mode_v := TM_WR_MODE1;
 				end if;
 			when "10" =>
 				if wr_i then
@@ -545,20 +549,6 @@ begin
 				if transfer_mode_v = TM_NONE then
 					-- CPU finished write access:
 					-- prepare to second byte
-					state_s   <= ST_WR_PALETTE_IDLE;
-				end if;
-
-			when ST_WR_PALETTE_IDLE =>
-				if transfer_mode_v = TM_WR_PALETTE then
-					state_s	<= ST_WR_PALETTE2;
-				end if;
-
-			when ST_WR_PALETTE2 =>
-				write_pal_s <= true;
-				wrpal_byte2_s <= true;
-				if transfer_mode_v = TM_NONE then
-					-- CPU finished write access:
-					-- return to idle
 					state_s   <= ST_IDLE;
 				end if;
 
@@ -633,7 +623,7 @@ begin
 	reg_col0_o  <= ctrl_reg_q(7)(4 to 7);
 	int_n_o     <= int_n_q or not ctrl_reg_q(1)(2);
 	palette_val_o	<= palette_val_s;
-	palette_wr_o	<= to_std_logic_f(incr_palidx_s);
+	palette_wr_o	<= to_std_logic_f(incr_palidx_s) when palette_idx_s /= 0 else '0';
 --	wait_o		<= '1' when wait_s	else '0';
 
 	process (reset_i, clock_i)
@@ -643,14 +633,16 @@ begin
 			cnt_v		:= 0;
 			wait_o	<= '0';
 		elsif rising_edge(clock_i) then
-			if wait_s or rdvram_q then
-				wait_o	<= '1';
-				cnt_v		:= 3;
-			end if;
-			if cnt_v = 0 then
-				wait_o	<= '0';
-			else
-				cnt_v := cnt_v - 1;
+			if clk_en_10m7_i then
+				if wait_s or rdvram_q then
+					wait_o	<= '1';
+					cnt_v		:= 3;
+				end if;
+				if cnt_v = 0 then
+					wait_o	<= '0';
+				else
+					cnt_v := cnt_v - 1;
+				end if;
 			end if;
 		end if;
 	end process;

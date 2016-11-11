@@ -306,7 +306,7 @@ begin
 	port map (
 		clock_i			=> clock_i,
 		clk_en_10m7_i	=> clock_vdp_i,
-		reset_n_i		=> por_n_s,
+		reset_n_i		=> reset_n_s,
 		csr_n_i			=> vdp_rd_n_s,
 		csw_n_i			=> vdp_wr_n_s,
 		mode_i			=> cpu_addr_s(1 downto 0),
@@ -541,7 +541,7 @@ begin
 	pio_wr_s		<= not wr_n_s;
 
 	-- ESCCI
-	mram_cs_s	<= '1' when prim_slot_n_s(1) = '0'	else '0';
+	mram_cs_s	<= '1' when prim_slot_n_s(2) = '0'	else '0';		-- slot 2
 
 	-- MUX data CPU
 	d_to_cpu_s	<= 
@@ -702,6 +702,6 @@ begin
 
 	-- Debug
 	D_slots_o		<= pio_port_a_s;
-	D_wait_o			<= not vdp_wait_s;
+	D_wait_o			<= vdp_wait_s;
 
 end architecture;

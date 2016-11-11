@@ -34,8 +34,9 @@ static const unsigned char mymkid = 40;
 #define REG_HWID	0
 #define REG_HWTXT	1
 #define REG_HWVER	2
-#define REG_NEXTOR	16
-#define REG_MAPPER	17
+#define REG_NEXTOR	0x10
+#define REG_MAPPER	0x11
+#define REG_TURBO	0x12
 
 // VDP
 __sfr __at 0x98 VDP_DATA;

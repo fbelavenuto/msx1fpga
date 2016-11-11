@@ -130,9 +130,9 @@ architecture testbench of tb is
 		joy2_out_o		: out   std_logic;
 		-- Video
 		col_o				: out std_logic_vector( 3 downto 0);
-		rgb_r_o				: out std_logic_vector( 7 downto 0);
-		rgb_g_o				: out std_logic_vector( 7 downto 0);
-		rgb_b_o				: out std_logic_vector( 7 downto 0);
+		rgb_r_o				: out std_logic_vector( 3 downto 0);
+		rgb_g_o				: out std_logic_vector( 3 downto 0);
+		rgb_b_o				: out std_logic_vector( 3 downto 0);
 		hsync_n_o			: out std_logic;
 		vsync_n_o			: out std_logic;
 		csync_n_o			: out std_logic;
@@ -225,9 +225,9 @@ architecture testbench of tb is
 	signal joy2_btn2_s			: std_logic;
 	signal joy2_out_s			: std_logic;
 	signal col_s				: std_logic_vector( 3 downto 0);
-	signal rgb_r_s				: std_logic_vector( 7 downto 0);
-	signal rgb_g_s				: std_logic_vector( 7 downto 0);
-	signal rgb_b_s				: std_logic_vector( 7 downto 0);
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
 	signal hsync_n_s			: std_logic;
 	signal vsync_n_s			: std_logic;
 	signal csync_n_s			: std_logic;
@@ -337,6 +337,7 @@ begin
 		spi_mosi_o			=> spi_mosi_s,
 		spi_miso_i			=> spi_miso_s,
 		-- DEBUG
+		D_wait_o			=> open,
 		D_slots_o			=> D_slots_s
 	);
 
