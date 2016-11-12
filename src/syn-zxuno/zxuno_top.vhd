@@ -406,6 +406,7 @@ begin
 	vga_pal_o		<= '1'	when is_pal_g	else '0';
 
 	-- DEBUG
-	led_o		<= sd_cs_n_s;
+	led_o		<= not sd_cs_n_s;
+	--led_o <= turbo_on_s;
 
 end architecture;

@@ -168,7 +168,7 @@ architecture Behavior of msx is
 
 	-- Bus and Wait
 	signal m1_wait_n_s		: std_logic;
-	signal m1_wait_qn_s		: std_logic;
+	signal m1_wait_ff_s		: std_logic_vector(1 downto 0);
 	signal vdp_int_n_s		: std_logic;
 	signal nrd_s				: std_logic;
 	signal nwr_s				: std_logic;
@@ -507,17 +507,18 @@ begin
 	process (reset_i, clock_cpu_i)
 	begin
 		if reset_i = '1' then
-			m1_wait_n_s		<= '1';
-			m1_wait_qn_s	<= '0';
+			m1_wait_ff_s	<= "10";
 		elsif rising_edge(clock_cpu_i) then
 			if turbo_on_s = '0' then
-				m1_wait_n_s		<= m1_n_s or m1_wait_qn_s;
-				m1_wait_qn_s	<= not (m1_n_s or m1_wait_qn_s);
+				m1_wait_ff_s(1)	<= m1_n_s or m1_wait_ff_s(0);
+				m1_wait_ff_s(0)	<= not (m1_n_s or m1_wait_ff_s(0));
 			else
-				m1_wait_n_s		<= '1';
+				m1_wait_ff_s	<= "10";
 			end if;
 		end if;
 	end process;
+
+	m1_wait_n_s		<= m1_wait_ff_s(1) or m1_n_s;
 
 	-- Address decoding
 	io_access_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1'							else '0';

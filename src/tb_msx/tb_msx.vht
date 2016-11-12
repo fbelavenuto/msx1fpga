@@ -410,11 +410,11 @@ begin
 		wait until( rising_edge(clock_s) );
 
 		-- Liga turbo
-		turbo_on_k_s <= '1';
-		wait for 1 us;
-		turbo_on_k_s <= '0';
+--		turbo_on_k_s <= '1';
+--		wait for 1 us;
+--		turbo_on_k_s <= '0';
 
-		wait for 3.5 ms;
+		wait for 10 us;
 
 		-- wait
 		tb_end <= '1';

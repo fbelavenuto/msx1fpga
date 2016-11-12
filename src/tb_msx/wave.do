@@ -32,6 +32,9 @@ add wave -noupdate -radix hexadecimal /tb/vram_data_i_s
 add wave -noupdate -radix hexadecimal /tb/vram_data_o_s
 add wave -noupdate /tb/vram_we_s
 add wave -noupdate /tb/clock_cpu_s
+add wave -noupdate /tb/u_target/m1_n_s
+add wave -noupdate /tb/u_target/m1_wait_n_s
+add wave -noupdate /tb/u_target/m1_wait_qn_s
 add wave -noupdate /tb/clock_3m_s
 add wave -noupdate /tb/turbo_on_k_s
 add wave -noupdate /tb/turbo_on_s
@@ -42,9 +45,6 @@ add wave -noupdate /tb/u_target/iorq_n_s
 add wave -noupdate /tb/u_target/rd_n_s
 add wave -noupdate /tb/u_target/wr_n_s
 add wave -noupdate /tb/u_target/mreq_n_s
-add wave -noupdate /tb/u_target/m1_n_s
-add wave -noupdate /tb/u_target/m1_wait_n_s
-add wave -noupdate /tb/u_target/m1_wait_qn_s
 add wave -noupdate /tb/u_target/wait_n_s
 add wave -noupdate -divider {New Divider}
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/mode_i
@@ -60,7 +60,7 @@ add wave -noupdate /tb/u_target/vdp/cpu_io_b/write_pal_s
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/wrpal_byte2_s
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/palette_val_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {8855 ns} 0}
+WaveRestoreCursors {{Cursor 1} {708 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 264
 configure wave -valuecolwidth 100
@@ -76,4 +76,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {13917 ns}
+WaveRestoreZoom {0 ns} {6958 ns}
