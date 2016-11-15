@@ -22,8 +22,8 @@ all: dir loader
 
 loader: loader.bin
 	$(FILL) $< 8192
-#	$(SRCAT) $< --bin -o $@.mif --mif 8
-#	$(ROMGEN) $< ipl_rom a r > ../../src/rom/ipl_rom.vhd
+	$(SRCAT) $< --bin -o $@.mif --mif 8
+	$(ROMGEN) $< ipl_rom a r > ../../src/rom/ipl_rom.vhd
 
 loader.bin: loader.ihx
 
