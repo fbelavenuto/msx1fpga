@@ -6,7 +6,7 @@ run
 -ofmt NGC
 -p xc6slx9-2-tqg144
 -top zxuno_top
--opt_mode Speed
+-opt_mode Area
 -opt_level 2
 -power NO
 -iuc YES

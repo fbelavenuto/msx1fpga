@@ -163,6 +163,9 @@ architecture behavior of multicore_top is
 	signal rows_s				: std_logic_vector(3 downto 0);
 	signal cols_s				: std_logic_vector(7 downto 0);
 	signal caps_en_s			: std_logic;
+	signal keymap_addr_s		: std_logic_vector(9 downto 0);
+	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal keymap_we_s		: std_logic;
 
 	-- Joystick
 	signal joy1_out_s			: std_logic;
@@ -250,6 +253,9 @@ begin
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
 		caps_en_o		=> caps_en_s,
+		keymap_addr_o	=> keymap_addr_s,
+		keymap_data_o	=> keymap_data_s,
+		keymap_we_o		=> keymap_we_s,
 		-- Audio
 		audio_scc_o		=> audio_scc_s,
 		audio_psg_o		=> audio_psg_s,
@@ -301,6 +307,9 @@ begin
 		-- MSX
 		rows_coded_i	=> rows_s,
 		cols_o			=> cols_s,
+		keymap_addr_i	=> keymap_addr_s,
+		keymap_data_i	=> keymap_data_s,
+		keymap_we_i		=> keymap_we_s,
 		-- LEDs
 		led_caps_i		=> '0',
 		-- PS/2 interface
