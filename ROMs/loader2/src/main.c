@@ -1,6 +1,6 @@
 /*
 
-MSX FPGA project
+MSX1 FPGA project
 
 Copyright (c) 2016 Fabio Belavenuto
 
@@ -115,7 +115,7 @@ void main()
 		vdp_putstring("Error");
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
-		error("Error monting SD card!");
+		error("FAT FS not found!");
 	}
 	vdp_putstring("OK\n\nZeroing RAM: ");
 

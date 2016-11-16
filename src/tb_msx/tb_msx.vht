@@ -1,5 +1,8 @@
+-------------------------------------------------------------------------------
 --
--- Copyright (c) 2016 - Fabio Belavenuto
+-- MSX1 FPGA project
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved
 --
@@ -17,7 +20,7 @@
 -- be used to endorse or promote products derived from this software without
 -- specific prior written permission.
 --
--- THIS CODE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 -- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 -- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 -- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
@@ -29,9 +32,11 @@
 -- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 -- POSSIBILITY OF SUCH DAMAGE.
 --
--- You are responsible for any legal issues arising from your use of this code.
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
 --
---
+-------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;

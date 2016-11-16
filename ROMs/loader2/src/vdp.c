@@ -1,6 +1,6 @@
 /*
 
-MSX FPGA project
+MSX1 FPGA project
 
 Copyright (c) 2016 Fabio Belavenuto
 

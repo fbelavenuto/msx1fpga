@@ -1,3 +1,12 @@
+/*
+
+Original source code: https://github.com/ben0109/Papilio-Master-System
+All credits go to Ben.
+Ben's Blog: http://fpga-hacks.blogspot.com.es/
+
+11/2016 - Modified by Fabio Belavenuto to MSX1FPGA project.
+
+*/
 
 #ifndef __FAT_H
 #define __FAT_H

@@ -1,5 +1,7 @@
 -------------------------------------------------------------------------------
 --
+-- MSX1 FPGA project
+--
 -- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved

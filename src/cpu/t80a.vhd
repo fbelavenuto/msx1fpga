@@ -38,7 +38,7 @@
 -- you have the latest version of this file.
 --
 -- The latest version of this file can be found at:
---  http://www.opencores.org/cvsweb.shtml/t80/
+--  http://opencores.org/project,T80
 --
 -- Limitations :
 --
