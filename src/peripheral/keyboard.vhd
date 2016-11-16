@@ -50,6 +50,9 @@ entity keyboard is
 		-- MSX
 		rows_coded_i	: in    std_logic_vector(3 downto 0);
 		cols_o			: out   std_logic_vector(7 downto 0);
+		keymap_addr_i	: in    std_logic_vector(9 downto 0);
+		keymap_data_i	: in    std_logic_vector(7 downto 0);
+		keymap_we_i		: in    std_logic;
 		-- LEDs
 		led_caps_i		: in    std_logic;
 		-- PS/2 interface
@@ -103,9 +106,12 @@ begin
 	-- The keymap
 	keymap: entity work.keymap
 	port map (
-		clock_i	=> clock_i,
-		addr_i	=> keymap_addr_s,
-		data_o	=> keymap_data_s
+		clock_i		=> clock_i,
+		we_i			=> keymap_we_i,
+		addr_wr_i	=> keymap_addr_i,
+		data_i		=> keymap_data_i,
+		addr_rd_i	=> keymap_addr_s,
+		data_o		=> keymap_data_s
 	);
 
 	-- Interpret scancode received

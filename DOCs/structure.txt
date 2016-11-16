@@ -30,7 +30,11 @@ Registers:
 (R )	00 => Machine ID number
 (R )	01 => Machine name (text), read to receive a null character.
 (R )	02 => Version (Nibble most significant = Major, Nibble less significant = Minor)
-
+( W)	0A =>
+			bit 0 = Soft reset
+( W)	0D => Lower address of Keymap
+( W)	0E => High address of Keymap (bits 1-0)
+( W)	0F => Write a byte to keymap (address auto-increment)
 (RW)	10 =>
 			bit 0 = Nextor SD interface enable (slot 3.2) (1 = enabled)
 (RW)	11 =>

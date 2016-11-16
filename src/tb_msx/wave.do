@@ -34,7 +34,6 @@ add wave -noupdate /tb/vram_we_s
 add wave -noupdate /tb/clock_cpu_s
 add wave -noupdate /tb/u_target/m1_n_s
 add wave -noupdate /tb/u_target/m1_wait_n_s
-add wave -noupdate /tb/u_target/m1_wait_qn_s
 add wave -noupdate /tb/clock_3m_s
 add wave -noupdate /tb/turbo_on_k_s
 add wave -noupdate /tb/turbo_on_s
@@ -46,6 +45,9 @@ add wave -noupdate /tb/u_target/rd_n_s
 add wave -noupdate /tb/u_target/wr_n_s
 add wave -noupdate /tb/u_target/mreq_n_s
 add wave -noupdate /tb/u_target/wait_n_s
+add wave -noupdate -radix hexadecimal /tb/keymap_addr_s
+add wave -noupdate -radix hexadecimal /tb/keymap_data_s
+add wave -noupdate /tb/keymap_we_s
 add wave -noupdate -divider {New Divider}
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/mode_i
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/access_type_i
@@ -76,4 +78,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {6958 ns}
+WaveRestoreZoom {0 ns} {13916 ns}

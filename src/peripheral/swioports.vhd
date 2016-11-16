@@ -65,7 +65,10 @@ entity swioports is
 		nextor_en_o		: out std_logic;
 		mr_type_o		: out std_logic_vector(1 downto 0);
 		turbo_on_o		: out std_logic;
-		softreset_o		: out std_logic
+		softreset_o		: out std_logic;
+		keymap_addr_o	: out std_logic_vector(9 downto 0);
+		keymap_data_o	: out std_logic_vector(7 downto 0);
+		keymap_we_o		: out std_logic
 	);
 end entity;
 
@@ -80,6 +83,9 @@ architecture Behavior of swioports is
 	signal mapper_q			: std_logic_vector(1 downto 0);
 	signal turbo_on_q			: std_logic;
 	signal softreset_q		: std_logic								:= '0';
+	signal keymap_addr_q		: unsigned(9 downto 0);
+	signal keymap_data_q		: std_logic_vector(7 downto 0);
+	signal keymap_we_s		: std_logic;
 
 begin
 
@@ -126,21 +132,33 @@ begin
 	-- Write to Switched I/O ports
 	process (reset_i, clock_i, nextor_en_i, mr_type_i)
 		variable turbo_on_de_v	: std_logic_vector(1 downto 0) := "00";
+		variable keymap_we_a_v	: std_logic;
 	begin
 		if reset_i = '1' then
 			nextor_en_q	<= nextor_en_i;
 			mapper_q		<= mr_type_i;
 			turbo_on_q	<= '0';
 			softreset_q	<= '0';
+			keymap_we_s	<= '0';
 		elsif falling_edge(clock_i) then
 			turbo_on_de_v := turbo_on_de_v(0) & turbo_on_k_i;
 			if turbo_on_de_v = "01" then
 				turbo_on_q <= not turbo_on_q;
 			end if;
+			keymap_we_s	<= '0';		-- default
 
 			-- MSX1FPGA ID
 			if cs_i = '1' and wr_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
 				case reg_addr_q is
+					when X"0A" =>
+						softreset_q		<= data_i(0);
+					when X"0D" =>
+						keymap_addr_q(7 downto 0) <= unsigned(data_i);
+					when X"0E" =>
+						keymap_addr_q(9 downto 8) <= unsigned(data_i(1 downto 0));
+					when X"0F" =>
+						keymap_data_q	<= data_i;
+						keymap_we_s		<= '1';
 					when X"10" =>
 						nextor_en_q		<= data_i(0);
 					when X"11" =>
@@ -175,6 +193,10 @@ begin
 					end if;
 				end if;
 			end if;
+			if keymap_we_a_v = '1' and keymap_we_s = '0' then
+				keymap_addr_q <= keymap_addr_q + 1;
+			end if;
+			keymap_we_a_v	:= keymap_we_s;
 		end if;
 	end process;
 
@@ -246,9 +268,12 @@ begin
 	end process;
 
 	--
-	nextor_en_o	<= nextor_en_q;
-	mr_type_o	<= mapper_q;
-	turbo_on_o	<= turbo_on_q;
-	softreset_o	<= softreset_q;
+	nextor_en_o		<= nextor_en_q;
+	mr_type_o		<= mapper_q;
+	turbo_on_o		<= turbo_on_q;
+	softreset_o		<= softreset_q;
+	keymap_addr_o	<= std_logic_vector(keymap_addr_q);
+	keymap_data_o	<= keymap_data_q;
+	keymap_we_o		<= keymap_we_s;
 
 end architecture;

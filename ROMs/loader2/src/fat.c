@@ -13,7 +13,9 @@ Ben's Blog: http://fpga-hacks.blogspot.com.es/
 #include "hardware.h"
 
 typedef struct {
+#if USE_FAT32 == 1
 	unsigned char fat32;
+#endif
 	unsigned char sectors_per_cluster;
 	unsigned long first_fat_sector;
 	unsigned long first_data_sector;
@@ -81,28 +83,41 @@ static unsigned long fat_next_cluster(unsigned long current)
 {
 	unsigned long fat_sector;
 
+#if USE_FAT32 == 1
 	fat_sector = (fat.fat32) ? (current >> 7) : (current >> 8);
+#else
+	fat_sector = (current >> 8);
+#endif
 	if (!load_fat_sector(fat_sector)) {
 		return 0;
 	}
 
+#if USE_FAT32 == 1
 	if (fat.fat32) {
 		return load_dword(&fat_buffer[(current & 0x7F) << 2]);
 	} else {
 		return load_word(&fat_buffer[(current & 0xFF) << 1]);
 	}
+#else
+	return load_word(&fat_buffer[(current & 0xFF) << 1]);
+#endif
 }
 
 /******************************************************************************/
 static int fat_is_last_cluster(unsigned long cluster)
 {
+#if USE_FAT32 == 1
 	if (fat.fat32) {
 		return ((cluster & 0xFFFFFFF8) == 0xFFFFFFF8);
 	} else {
 		return ((cluster & 0xFFF8) == 0xFFF8);
 	}
+#else
+	return ((cluster & 0xFFF8) == 0xFFF8);
+#endif
 }
 
+#if USE_FAT32 == 1
 /******************************************************************************/
 static void fat_init32()
 {
@@ -119,6 +134,7 @@ static void fat_init32()
 	fat.root_directory = load_dword(&data_buffer[0x2C]);
 	fat.root_directory_size = 8;
 }
+#endif
 
 /******************************************************************************/
 static void fat_init16()
@@ -157,20 +173,29 @@ int fat_init()
 	switch (data_buffer[0x1C2]) {
 	case 0x06:
 	case 0x04:
+#if USE_FAT32 == 1
 		fat.fat32 = FALSE;
+#endif
 		hasMBR = TRUE;
 		break;
-	case 0x0b:
-	case 0x0c:	
+#if USE_FAT32 == 1
+	case 0x0B:
+	case 0x0C:	
 		fat.fat32 = TRUE;
 		hasMBR = TRUE;
 		break;
+#endif
 	default:
+#if USE_FAT32 == 1
 		if (data_buffer[0x55] == 0x33) {		//check possible FAT type when NO MBR found (32)
 			fat.fat32 = TRUE;
 			hasMBR = FALSE;
-		} else if (data_buffer[0x39] == 0x31) {	//check possible FAT type when NO MBR found (16)
+		} else
+#endif
+		if (data_buffer[0x39] == 0x31) {	//check possible FAT type when NO MBR found (16)
+#if USE_FAT32 == 1
 			fat.fat32 = FALSE;
+#endif
 			hasMBR = FALSE;
 		} else {
 			return FALSE;
@@ -199,11 +224,15 @@ int fat_init()
 	// reserved sectors
 	fat.first_fat_sector = sector + load_word(&data_buffer[14]);
 
+#if USE_FAT32 == 1
 	if (fat.fat32) {
 		fat_init32();
 	} else {
 		fat_init16();
 	}
+#else
+	fat_init16();
+#endif
 
 	return TRUE;
 }
@@ -370,6 +399,7 @@ int fat_fopen(file_t *file, const char *name)
 	unsigned char i, n;
 	unsigned char* buffer_ptr;
 
+#if USE_FAT32 == 1
 	if (fat.fat32) {
 		cluster = fat.root_directory;
 		sector = first_sector_of_cluster(cluster);
@@ -377,6 +407,9 @@ int fat_fopen(file_t *file, const char *name)
 		sector = fat.root_directory;
 	}
 	do {
+#else
+	sector = fat.root_directory;
+#endif
 		for(i = fat.root_directory_size; i > 0; --i) {
 			if (!MMC_Read(sector, data_buffer)) {
 				return 0;
@@ -388,9 +421,11 @@ int fat_fopen(file_t *file, const char *name)
 						if (compare((const char*)buffer_ptr, name, 11)) {
 							file->size = load_dword(&buffer_ptr[28]);
 							file->cluster = load_word(&buffer_ptr[26]);
+#if USE_FAT32 == 1
 							if (fat.fat32) {
 								file->cluster |= ((unsigned long)load_word(&buffer_ptr[21])) << 16;
 							}
+#endif
 							file->sector = first_sector_of_cluster(file->cluster);
 							return TRUE;
 						}
@@ -400,15 +435,17 @@ int fat_fopen(file_t *file, const char *name)
 			}
 			sector++;
 		}
+#if USE_FAT32 == 1
 		if (!fat.fat32) {
 			break;
-		}			
+		}
 		cluster = fat_next_cluster(cluster);
 		if (cluster == 0) {
 			return FALSE;
 		}
 		sector = first_sector_of_cluster(fat.root_directory);
 	} while (!fat_is_last_cluster(cluster));
+#endif
 
 	return FALSE;
 }

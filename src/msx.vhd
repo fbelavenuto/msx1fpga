@@ -102,6 +102,9 @@ entity msx is
 		rows_o			: out std_logic_vector(3 downto 0);
 		cols_i			: in  std_logic_vector(7 downto 0)		:= (others => '1');
 		caps_en_o		: out std_logic;
+		keymap_addr_o	: out std_logic_vector(9 downto 0);
+		keymap_data_o	: out std_logic_vector(7 downto 0);
+		keymap_we_o		: out std_logic;
 		-- Audio
 		audio_scc_o		: out signed(14 downto 0);
 		audio_psg_o		: out unsigned(7 downto 0);
@@ -152,7 +155,7 @@ architecture Behavior of msx is
 
 	-- Reset
 	signal reset_n_s			: std_logic;
-	signal por_n_s				: std_logic;
+--	signal por_n_s				: std_logic;
 	signal softreset_s		: std_logic;
 
 	-- CPU signals
@@ -415,7 +418,10 @@ begin
 		nextor_en_o		=> nextor_en_s,
 		mr_type_o		=> mr_type_s,
 		turbo_on_o		=> turbo_on_s,
-		softreset_o		=> softreset_s
+		softreset_o		=> softreset_s,
+		keymap_addr_o	=> keymap_addr_o,
+		keymap_data_o	=> keymap_data_o,
+		keymap_we_o		=> keymap_we_o
 	);
 
 	-- SPI
@@ -480,7 +486,7 @@ begin
 
 	-- Glue
 	softreset_o		<= softreset_s;
-	por_n_s			<= not por_i;
+--	por_n_s			<= not por_i;
 	reset_n_s		<= not reset_i;
 	nrd_s				<= not rd_n_s;
 	nwr_s				<= not wr_n_s;

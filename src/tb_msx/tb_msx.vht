@@ -110,6 +110,9 @@ architecture testbench of tb is
 		rows_o				: out std_logic_vector(3 downto 0);
 		cols_i				: in  std_logic_vector(7 downto 0)		:= (others => '1');
 		caps_en_o			: out std_logic;
+		keymap_addr_o	: out std_logic_vector(9 downto 0);
+		keymap_data_o	: out std_logic_vector(7 downto 0);
+		keymap_we_o		: out std_logic;
 		-- Audio
 		audio_scc_o		: out signed(14 downto 0);
 		audio_psg_o		: out unsigned(7 downto 0);
@@ -201,14 +204,17 @@ architecture testbench of tb is
 	signal bus_nmi_n_s			: std_logic;
 	signal bus_int_n_s			: std_logic;
 	signal vram_addr_s			: std_logic_vector(13 downto 0);	-- 16K
-	signal vram_data_i_s			: std_logic_vector( 7 downto 0);
-	signal vram_data_o_s			: std_logic_vector( 7 downto 0);
+	signal vram_data_i_s		: std_logic_vector( 7 downto 0);
+	signal vram_data_o_s		: std_logic_vector( 7 downto 0);
 	signal vram_ce_s			: std_logic;
 	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 	signal rows_s				: std_logic_vector(3 downto 0);
 	signal cols_s				: std_logic_vector(7 downto 0)		:= (others => '1');
 	signal caps_en_s			: std_logic;
+	signal keymap_addr_s		: std_logic_vector(9 downto 0);
+	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal keymap_we_s			: std_logic;
 	signal audio_scc_s			: signed(14 downto 0);
 	signal audio_psg_s			: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
@@ -305,6 +311,9 @@ begin
 		rows_o				=> rows_s,
 		cols_i				=> cols_s,
 		caps_en_o			=> caps_en_s,
+		keymap_addr_o		=> keymap_addr_s,
+		keymap_data_o		=> keymap_data_s,
+		keymap_we_o			=> keymap_we_s,
 		-- Audio
 		audio_scc_o			=> audio_scc_s,
 		audio_psg_o			=> audio_psg_s,
@@ -419,7 +428,7 @@ begin
 --		wait for 1 us;
 --		turbo_on_k_s <= '0';
 
-		wait for 10 us;
+		wait for 100 us;
 
 		-- wait
 		tb_end <= '1';

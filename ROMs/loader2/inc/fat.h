@@ -15,6 +15,8 @@ Ben's Blog: http://fpga-hacks.blogspot.com.es/
 #define FALSE 0
 #define TRUE 1
 
+#define USE_FAT32 0
+
 /*
 typedef struct {
 	unsigned char type;		// first byte : directories are 0x01, files are 0x11

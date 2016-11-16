@@ -32,27 +32,30 @@
 -- 2013.08.12 modified by KdL
 -- Added RWIN and LWIN usable as alternatives to the space-bar.
 --
--- 2015.05.20 - Brazilian ABNT2 keymap by Fabio Belavenuto
+-- 2015.05.20	- Brazilian ABNT2 keymap by Fabio Belavenuto
+-- 2016.11		- Implemented Keymap change via software (SWIOPORTS)
 --
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity keymap is
 	port (
-		clock_i	: in  std_logic;
-		addr_i	: in  std_logic_vector(9 downto 0);
-		data_o	: out std_logic_vector(7 downto 0)
+		clock_i		: in  std_logic;
+		we_i			: in  std_logic;
+		addr_wr_i	: in  std_logic_vector(9 downto 0);
+		data_i		: in  std_logic_vector(7 downto 0);
+		addr_rd_i	: in  std_logic_vector(9 downto 0);
+		data_o		: out std_logic_vector(7 downto 0)
 	);
 end entity;
 
 architecture RTL of keymap is
 
-	type rom101_t is array (0 to 1023) of std_logic_vector(7 downto 0);
-
-	constant rom101_c : rom101_t := (
-
+	signal read_addr_q : unsigned(9 downto 0);
+	type ram_t is array (0 to 1023) of std_logic_vector(7 downto 0);
+	signal ram_q : ram_t := (
 	-- Internacional Key Matrix Table
 	--
 	--  bit    7 F   6 E   5 D   4 C   3 B   2 A   1 9   0 8
@@ -296,18 +299,20 @@ architecture RTL of keymap is
         X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", -- E8..EF
         X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", -- F0..F7
         X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", X"FF", X"FF"  -- F8..FF
+
 	);
-
-  signal data_s	: std_logic_vector(7 downto 0);
-
 begin
 
-	process (clock_i) begin
+	process (clock_i)
+	begin
 		if rising_edge(clock_i) then
-			data_s <= rom101_c(conv_integer(addr_i));
+			if we_i = '1' then
+				ram_q(to_integer(unsigned(addr_wr_i))) <= data_i;
+			end if;
+			read_addr_q <= unsigned(addr_rd_i);
 		end if;
 	end process;
 
-	data_o <= data_s;
+	data_o <= ram_q(to_integer(read_addr_q));
 
 end RTL;
