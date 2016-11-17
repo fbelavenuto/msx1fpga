@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mmc.h"
 #include "fat.h"
 
-
+static const char * msxdir   = "MSX1FPGA   ";
 static const char * nxtfile  = "NEXTOR  ROM";
 static const char * biosfile = "MSX1BIOSROM";
 
@@ -70,11 +70,6 @@ void main()
 
 	// Read Hardware ID
 	SWIOP_MKID = mymkid;
-	if (SWIOP_MKID != (mymkid ^ 255)) {
-		//              11111111112222222222333
-		//     12345678901234567890123456789012
-		error("Error setting MakerID!");
-	}
 	SWIOP_REGNUM = REG_TURBO;
 	SWIOP_REGVAL = 1;
 	SWIOP_REGNUM = REG_HWID;
@@ -137,8 +132,13 @@ void main()
 		__asm__("pop de");
 		__asm__("pop hl");
 	}
-
 	vdp_putstring(" OK\n");
+
+	if (!fat_chdir(msxdir)) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("'MSX1FPGA' directory not found!");
+	}
 
 	if (hwid == 5 || hwid == 6) {
 		vdp_putstring("\nLoading MSX1BIOS.ROM ");
