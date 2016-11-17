@@ -27,9 +27,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "mmc.h"
 #include "fat.h"
 
+//                              12345678...
 static const char * msxdir   = "MSX1FPGA   ";
+static const char * cfgfile  = "CONFIG  TXT";
 static const char * nxtfile  = "NEXTOR  ROM";
 static const char * biosfile = "MSX1BIOSROM";
+
+static char *km_files[4] = {
+//   12345678...
+	"EN      KMP",
+	"PTBR    KMP",
+	"FR      KMP",
+	"SPA     KMP",
+};
 
 //                             11111111112222222222333
 //                    12345678901234567890123456789012
@@ -57,11 +67,14 @@ void error(unsigned char *error)
 /*******************************************************************************/
 void main()
 {
-	unsigned char hwid, hwversion, hwtxt[20];
+	unsigned char hwid, hwversion, hwtxt[20], buffer[512];
 	unsigned char *prampage = (unsigned char *)0x3FFF;
 	unsigned char *pramrom  = (unsigned char *)0x8000;
 	unsigned char *ppl      = (unsigned char *)0xFF00;
 	unsigned char c, i, page;
+	unsigned int  k;
+	unsigned char cfgnxt, cfgkm, cfgcor;
+	char *kmpfile = NULL;
 	file_t        file;
 
 	vdp_init();
@@ -112,6 +125,41 @@ void main()
 		//     12345678901234567890123456789012
 		error("FAT FS not found!");
 	}
+	if (!fat_chdir(msxdir)) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("'MSX1FPGA' directory not found!");
+	}
+	if (!fat_fopen(&file, cfgfile)) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Config file not found!");
+	}
+	if (file.size < 3) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Config file error!");
+	}
+	if (!fat_bread(&file, buffer)) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Error reading Config file!");
+	}
+	cfgnxt = (buffer[0] == '1') ? 1 : 0;
+	cfgkm  = buffer[1];
+	if (cfgkm != 'E' && cfgkm != 'B' && cfgkm != 'F' && cfgkm != 'S') {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Invalid keymap!");
+	}
+	cfgcor = (buffer[2] == 'P') ? 2 : 0;
+
+	VDP_CMD = cfgcor;
+	VDP_CMD = 0x89;
+	
+	SWIOP_REGNUM = REG_NEXTOR;
+	SWIOP_REGVAL = cfgnxt;
+
 	vdp_putstring("OK\n\nZeroing RAM: ");
 
 	for (page = 0; page < 32; page++) {
@@ -134,12 +182,6 @@ void main()
 	}
 	vdp_putstring(" OK\n");
 
-	if (!fat_chdir(msxdir)) {
-		//              11111111112222222222333
-		//     12345678901234567890123456789012
-		error("'MSX1FPGA' directory not found!");
-	}
-
 	if (hwid == 5 || hwid == 6) {
 		vdp_putstring("\nLoading MSX1BIOS.ROM ");
 		if (!fat_fopen(&file, biosfile)) {
@@ -159,6 +201,34 @@ void main()
 				if (!fat_bread(&file, pramrom)) {
 					//              11111111112222222222333
 					//     12345678901234567890123456789012
+					error("Error reading BIOS file!");
+				}
+				pramrom += 512;
+			}
+			vdp_putchar('.');
+		}
+		vdp_putstring(" OK\n");
+	}
+
+	if (cfgnxt == 1) {
+		vdp_putstring("\nLoading NEXTOR.ROM ");
+		if (!fat_fopen(&file, nxtfile)) {
+			//              11111111112222222222333
+			//     12345678901234567890123456789012
+			error("NEXTOR file not found!");
+		}
+		if (file.size != 131072) {
+			//              11111111112222222222333
+			//     12345678901234567890123456789012
+			error("NEXTOR file size must be 131072!");
+		}
+		for (page = 0; page < 8; page++) {
+			*prampage = page;
+			pramrom  = (unsigned char *)0x8000;
+			for (i = 0; i < 32; i++) {
+				if (!fat_bread(&file, pramrom)) {
+					//              11111111112222222222333
+					//     12345678901234567890123456789012
 					error("Error reading NEXTOR file!");
 				}
 				pramrom += 512;
@@ -168,31 +238,46 @@ void main()
 		vdp_putstring(" OK\n");
 	}
 
-	vdp_putstring("\nLoading NEXTOR.ROM ");
-	if (!fat_fopen(&file, nxtfile)) {
+	switch(cfgkm) {
+		case 'E':
+			kmpfile = (char *)km_files[0];
+			break;
+		case 'B':
+			kmpfile = (char *)km_files[1];
+			break;
+		case 'F':
+			kmpfile = (char *)km_files[2];
+			break;
+		case 'S':
+			kmpfile = (char *)km_files[3];
+			break;
+	};
+	if (!fat_fopen(&file, kmpfile)) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
-		error("NEXTOR file not found!");
+		error("Keymap file not found!");
 	}
-	if (file.size != 131072) {
+	if (file.size != 1024) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
-		error("NEXTOR file size must be 131072!");
+		error("Keymap file size must be 1024!");
 	}
-	for (page = 0; page < 8; page++) {
-		*prampage = page;
-		pramrom  = (unsigned char *)0x8000;
-		for (i = 0; i < 32; i++) {
-			if (!fat_bread(&file, pramrom)) {
-				//              11111111112222222222333
-				//     12345678901234567890123456789012
-				error("Error reading NEXTOR file!");
-			}
-			pramrom += 512;
+	SWIOP_REGNUM = REG_KMLOWADDR;
+	SWIOP_REGVAL = 0;
+	SWIOP_REGNUM = REG_KMHIGHADDR;
+	SWIOP_REGVAL = 0;
+	SWIOP_REGNUM = REG_KMBYTE;
+	for (i = 0; i < 2; i++) {
+		if (!fat_bread(&file, buffer)) {
+			//              11111111112222222222333
+			//     12345678901234567890123456789012
+			error("Error reading Keymap file!");
 		}
-		vdp_putchar('.');
+		for (k = 0; k < 512; k++) {
+			SWIOP_REGVAL = buffer[k];
+		}
 	}
-	vdp_putstring(" OK\n");
+
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
 	SWIOP_REGNUM = REG_TURBO;
