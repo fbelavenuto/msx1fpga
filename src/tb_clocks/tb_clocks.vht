@@ -56,6 +56,7 @@ architecture testbench of tb is
 		por_i				: in  std_logic;
 		turbo_on_i		: in  std_logic;				-- 0 = 3.57, 1 = 7.15
 		clock_vdp_o		: out std_logic;
+		clock_5m_en_o	: out std_logic;
 		clock_cpu_o		: out std_logic;
 		clock_psg_en_o	: out std_logic
 	);
@@ -66,6 +67,7 @@ architecture testbench of tb is
 	signal por_s			: std_logic;
 	signal turbo_on_s		: std_logic;
 	signal clock_vdp_s		: std_logic;
+	signal clock_5m_en_s	: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 
@@ -78,6 +80,7 @@ begin
 		por_i			=> por_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
+		clock_5m_en_o	=> clock_5m_en_s,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s
 	);

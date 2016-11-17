@@ -73,7 +73,7 @@ void main()
 	unsigned char *ppl      = (unsigned char *)0xFF00;
 	unsigned char c, i, page;
 	unsigned int  k;
-	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor;
+	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor, cfgturbo;
 	char *kmpfile = NULL;
 	file_t        file;
 
@@ -152,7 +152,8 @@ void main()
 		//     12345678901234567890123456789012
 		error("Invalid keymap!");
 	}
-	cfgcor = (buffer[3] == 'P') ? 2 : 0;
+	cfgcor   = (buffer[3] == 'P') ? 2 : 0;
+	cfgturbo = (buffer[4] == '1') ? 1 : 0;
 
 	VDP_CMD = cfgcor;
 	VDP_CMD = 0x89;
@@ -283,8 +284,10 @@ void main()
 
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
-	SWIOP_REGNUM = REG_TURBO;
-	SWIOP_REGVAL = 0;
+	if (cfgturbo == 0) {
+		SWIOP_REGNUM = REG_TURBO;
+		SWIOP_REGVAL = 0;
+	}
 	*prampage = 15;	// Main RAM
 	// start ROM
 	*ppl++=0x3E;		// LD A, $F0

@@ -3,7 +3,7 @@ I/O map (in hex):
 
 40-4F		Switched I/O ports
 90-91		Printer
-98-99		VDP TMS9918
+98-9A		VDP TMS9918 (with extensions)
 9E-9F		(new) MMC/SD ports
 A0-A3		PSG
 A8-AB		PPI

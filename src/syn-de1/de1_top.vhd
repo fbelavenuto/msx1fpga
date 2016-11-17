@@ -155,6 +155,7 @@ architecture behavior of de1_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_vdp_s		: std_logic;
+	signal clock_5m_en_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
@@ -189,15 +190,17 @@ architecture behavior of de1_top is
 	signal k7_ai_s				: std_logic;
 
 	-- Video
-	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
-	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
 	signal rgb_g_s				: std_logic_vector( 3 downto 0);
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
---	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
---	signal vga_hsync_n_s		: std_logic;								-- 31KHz
---	signal vga_vsync_n_s		: std_logic;								-- 31KHz
+	signal rgb_hsync_n_s		: std_logic;
+	signal rgb_vsync_n_s		: std_logic;
+	signal vga_en_s			: std_logic;
+--	signal vga_r_s				: std_logic_vector( 3 downto 0)	:= "0000";
+--	signal vga_g_s				: std_logic_vector( 3 downto 0)	:= "0000";
+--	signal vga_b_s				: std_logic_vector( 3 downto 0)	:= "0000";
+--	signal vga_hsync_n_s		: std_logic;
+--	signal vga_vsync_n_s		: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector(3 downto 0);
@@ -245,6 +248,7 @@ begin
 		por_i				=> por_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
+		clock_5m_en_o	=> clock_5m_en_s,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
 		clock_3m_o		=> clock_3m_s
@@ -344,6 +348,8 @@ begin
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		csync_n_o		=> open,
+		vga_on_k_i		=> extra_keys_s(2),
+		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		spi_cs_n_o		=> SD_nCS,
 		spi_sclk_o		=> SD_SCLK,
@@ -453,6 +459,11 @@ begin
 	FL_WE_N				<= '1';
 	
 	-- VGA Output
+--	VGA_R		<= rgb_r_s			when vga_en_s = '0'	else vga_r_s;
+--	VGA_G		<= rgb_g_s			when vga_en_s = '0'	else vga_g_s;
+--	VGA_B		<= rgb_b_s			when vga_en_s = '0'	else vga_b_s;
+--	VGA_HS	<= rgb_hsync_n_s	when vga_en_s = '0'	else vga_hsync_n_s;
+--	VGA_VS	<= rgb_vsync_n_s	when vga_en_s = '0'	else vga_vsync_n_s;
 	VGA_R		<= rgb_r_s;
 	VGA_G		<= rgb_g_s;
 	VGA_B		<= rgb_b_s;
@@ -463,6 +474,7 @@ begin
 	D_display_s	<= D_cpu_addr_s;
 
 	LEDG(0) <= turbo_on_s;
+	LEDG(1) <= vga_en_s;
 
 	ld3: entity work.seg7
 	port map(

@@ -178,8 +178,8 @@ begin
 				elsif keyb_data_s = X"7C" and extended_v = "01" then		-- PRINT SCREEN E0,12,E0,7C  E0,F0,7C,E0,F0,12
 					if break_v = '0' then
 						extended_v		:= "00";
-						extra_keys_s(2) <= not extra_keys_s(2);
 					end if;
+					extra_keys_s(2) <= not break_v;
 				else
 					if (keyb_data_s = X"12" or keyb_data_s = X"59") and extended_v = "00" then		-- SHIFT
 						shift_v		:= not break_v;

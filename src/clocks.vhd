@@ -48,6 +48,7 @@ entity clocks is
 		por_i				: in  std_logic;
 		turbo_on_i		: in  std_logic;				-- 0 = 3.57, 1 = 7.15
 		clock_vdp_o		: out std_logic;
+		clock_5m_en_o	: out std_logic;
 		clock_cpu_o		: out std_logic;
 		clock_psg_en_o	: out std_logic;
 		clock_3m_o		: out std_logic
@@ -57,11 +58,13 @@ end entity;
 architecture rtl of clocks is
 
 	-- Clocks
-	signal clk_cnt_q			: unsigned(2 downto 0)				:= (others => '0');
+	signal clk1_cnt_q			: unsigned(2 downto 0)				:= (others => '0');
+	signal clk2_cnt_q			: unsigned(2 downto 0)				:= (others => '0');
 	signal pos_cnt3_q			: unsigned(1 downto 0)				:= "00";
 	signal neg_cnt3_q			: unsigned(1 downto 0)				:= "00";
 	signal div3_s				: std_logic								:= '0';
 	signal clock_vdp_s		: std_logic								:= '0';
+	signal clock_5m_en_s		: std_logic								:= '0';
 	signal clock_3m_s			: std_logic								:= '0';
 	signal clock_7m_s			: std_logic								:= '0';
 	signal clock_psg_en_s	: std_logic								:= '0';
@@ -72,27 +75,46 @@ architecture rtl of clocks is
 
 begin
 
-	-- Counter: 5 4 3 2 1 0
+	-- clk1_cnt_q: 5 4 3 2 1 0
 	-- 0 and 3 = 3.57
+	-- 0, 2, 4 = 10.7
 
 	-- Clocks generation
 	process (por_i, clock_i)
 	begin
 		if por_i = '1' then
-			clk_cnt_q	<= (others => '0');
+			clk2_cnt_q	<= (others => '0');
+			clock_5m_en_s	<= '0';
+		elsif rising_edge(clock_i) then
+			clock_5m_en_s	<= '0';
+			if clk2_cnt_q = 0 then
+				clk2_cnt_q <= "111";
+			else
+				clk2_cnt_q <= clk2_cnt_q - 1;
+			end if;
+			if clk2_cnt_q = 0 or clk2_cnt_q = 4 then
+				clock_5m_en_s <= '1';				-- Scandoubler: 5.37 MHz enable
+			end if;
+		end if;
+	end process;
+
+	process (por_i, clock_i)
+	begin
+		if por_i = '1' then
+			clk1_cnt_q	<= (others => '0');
 			clock_vdp_s	<= '0';
 			clock_3m_s	<= '0';
 			pos_cnt3_q	<= "00";
 		elsif rising_edge(clock_i) then
 			clock_psg_en_s	<= '0';					-- PSG clock enable
-			if clk_cnt_q = 0 then
-				clk_cnt_q <= "101";
+			if clk1_cnt_q = 0 then
+				clk1_cnt_q <= "101";
 				clock_psg_en_s	<= '1';				-- PSG clock enable
 			else
-				clk_cnt_q <= clk_cnt_q - 1;
+				clk1_cnt_q <= clk1_cnt_q - 1;
 			end if;
 			clock_vdp_s	<= not clock_vdp_s;		-- VDP: 10.7 MHz
-			if clk_cnt_q = 0 or clk_cnt_q = 3 then
+			if clk1_cnt_q = 0 or clk1_cnt_q = 3 then
 				clock_3m_s	<= not clock_3m_s;	-- 3.57 MHz
 			end if;
 			-- /3
@@ -135,6 +157,7 @@ begin
 
 	-- Out
 	clock_vdp_o		<= clock_vdp_s;
+	clock_5m_en_o	<= clock_5m_en_s;
 	clock_psg_en_o	<= clock_psg_en_s;
 	clock_3m_o		<= clock_3m_s;
 	

@@ -135,6 +135,8 @@ entity msx is
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
 		csync_n_o		: out std_logic;
+		vga_on_k_i		: in  std_logic;
+		vga_en_o			: out std_logic;
 		-- SPI/SD
 		spi_cs_n_o		: out std_logic;
 		spi_sclk_o		: out std_logic;
@@ -412,11 +414,13 @@ begin
 		nextor_en_i 	=> opt_nextor_i,
 		mr_type_i		=> opt_mr_type_i,
 		turbo_on_k_i	=> turbo_on_k_i,
+		vga_on_k_i		=> vga_on_k_i,
 		--
 		nextor_en_o		=> nextor_en_s,
 		mr_type_o		=> mr_type_s,
 		turbo_on_o		=> turbo_on_s,
 		softreset_o		=> softreset_s,
+		vga_en_o			=> vga_en_o,
 		keymap_addr_o	=> keymap_addr_o,
 		keymap_data_o	=> keymap_data_o,
 		keymap_we_o		=> keymap_we_o
