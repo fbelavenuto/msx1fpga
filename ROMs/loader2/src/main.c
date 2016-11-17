@@ -73,7 +73,7 @@ void main()
 	unsigned char *ppl      = (unsigned char *)0xFF00;
 	unsigned char c, i, page;
 	unsigned int  k;
-	unsigned char cfgnxt, cfgkm, cfgcor;
+	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor;
 	char *kmpfile = NULL;
 	file_t        file;
 
@@ -114,17 +114,16 @@ void main()
 	vdp_putstring("Initializing SD Card: ");
 
 	if (!MMC_Init()) {
-		vdp_putstring("Error");
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Error on SD card initialization!");
 	}
 	if (!fat_init()) {
-		vdp_putstring("Error");
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("FAT FS not found!");
 	}
+	vdp_putstring("OK\n\nLoading config file: ");
 	if (!fat_chdir(msxdir)) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
@@ -146,19 +145,20 @@ void main()
 		error("Error reading Config file!");
 	}
 	cfgnxt = (buffer[0] == '1') ? 1 : 0;
-	cfgkm  = buffer[1];
+	cfgvga = (buffer[1] == '1') ? 2 : 0;
+	cfgkm  = buffer[2];
 	if (cfgkm != 'E' && cfgkm != 'B' && cfgkm != 'F' && cfgkm != 'S') {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Invalid keymap!");
 	}
-	cfgcor = (buffer[2] == 'P') ? 2 : 0;
+	cfgcor = (buffer[3] == 'P') ? 2 : 0;
 
 	VDP_CMD = cfgcor;
 	VDP_CMD = 0x89;
 	
-	SWIOP_REGNUM = REG_NEXTOR;
-	SWIOP_REGVAL = cfgnxt;
+	SWIOP_REGNUM = REG_OPTIONS;
+	SWIOP_REGVAL = cfgvga | cfgnxt;
 
 	vdp_putstring("OK\n\nZeroing RAM: ");
 
@@ -252,6 +252,7 @@ void main()
 			kmpfile = (char *)km_files[3];
 			break;
 	};
+	vdp_putstring("\nLoading Keymap ");
 	if (!fat_fopen(&file, kmpfile)) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
@@ -276,7 +277,9 @@ void main()
 		for (k = 0; k < 512; k++) {
 			SWIOP_REGVAL = buffer[k];
 		}
+		vdp_putchar('.');
 	}
+	vdp_putstring(" OK\n");
 
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");

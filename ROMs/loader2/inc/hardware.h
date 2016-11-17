@@ -38,7 +38,7 @@ static const unsigned char mymkid = 40;
 #define REG_KMLOWADDR	0x0D
 #define REG_KMHIGHADDR	0x0E
 #define REG_KMBYTE		0x0F
-#define REG_NEXTOR		0x10
+#define REG_OPTIONS		0x10
 #define REG_MAPPER		0x11
 #define REG_TURBO		0x12
 
