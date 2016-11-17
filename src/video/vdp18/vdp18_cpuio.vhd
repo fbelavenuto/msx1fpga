@@ -88,6 +88,7 @@ entity vdp18_cpuio is
 		palette_idx_o	: out std_logic_vector(0 to  3);
 		palette_val_o	: out std_logic_vector(0 to 15);
 		palette_wr_o	: out std_logic;
+		ntsc_pal_o		: out std_logic;
 		irq_i				: in  boolean;
 		int_n_o			: out std_logic
 	);
@@ -137,6 +138,7 @@ architecture rtl of vdp18_cpuio is
 	type   read_mux_t is (RDMUX_STATUS, RDMUX_READAHEAD);
 	signal read_mux_s				: read_mux_t;
 
+	signal ntsc_pal_s			: std_logic := '0';
 	-- palette
 	signal palette_idx_s		: unsigned(0 to 3);
 	signal incr_palidx_s		: boolean;
@@ -308,7 +310,8 @@ begin
 			ctrl_reg_q(3) <= X"2C";
 			ctrl_reg_q(7) <= X"F7";
 	-- pragma translate_on
-			palette_idx_s <= X"0";
+			palette_idx_s	<= X"0";
+			ntsc_pal_s		<= '0';
 
 		elsif clock_i'event and clock_i = '1' then
 			if clk_en_10m7_i then
@@ -319,8 +322,10 @@ begin
 
 				-- Registers 0 to 7 and 16 ---------------------------------------------------
 				if write_reg_s then
-					if cd_i(3 to 7) = "10000" then
+					if    cd_i(3 to 7) = "10000" then				-- 16
 						palette_idx_s <= unsigned(tmp_q(4 to 7));
+					elsif cd_i(3 to 7) = "01001" then				-- 9
+						ntsc_pal_s	<= tmp_q(6);
 					else
 						reg_addr_v := unsigned(cd_i(5 to 7));
 						ctrl_reg_q(to_integer(reg_addr_v)) <= tmp_q;
@@ -628,6 +633,7 @@ begin
 	int_n_o     <= int_n_q or not ctrl_reg_q(1)(2);
 	palette_val_o	<= palette_val_s;
 	palette_wr_o	<= to_std_logic_f(incr_palidx_s) when palette_idx_s /= 0 else '0';
+	ntsc_pal_o		<= ntsc_pal_s;
 --	wait_o		<= '1' when wait_s	else '0';
 
 	process (reset_i, clock_i)

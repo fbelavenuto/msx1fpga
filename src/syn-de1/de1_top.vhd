@@ -255,8 +255,7 @@ begin
 	generic map (
 		hw_id_g			=> 1,
 		hw_txt_g			=> "DE-1 Board",
-		hw_version_g	=> X"10",			-- Version 1.0
-		is_pal_g			=> false
+		hw_version_g	=> X"10"				-- Version 1.0
 	)
 	port map (
 		-- Clocks

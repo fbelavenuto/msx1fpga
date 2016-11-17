@@ -54,7 +54,6 @@ use work.vdp18_pack.hv_t;
 entity vdp18_hor_vert is
 
   generic (
-    is_pal_g      : boolean := false;
 	 is_cvbs_g		: boolean := false
   );
   port (
@@ -62,6 +61,7 @@ entity vdp18_hor_vert is
     clk_en_5m37_i : in  boolean;
     reset_i       : in  boolean;
     opmode_i      : in  opmode_t;
+	 ntsc_pal_i		: in  std_logic;
     num_pix_o     : out hv_t;
     num_line_o    : out hv_t;
     vert_inc_o    : out boolean;
@@ -96,15 +96,8 @@ begin
   -----------------------------------------------------------------------------
   -- Prepare comparison signals for NTSC and PAL.
   --
-  is_ntsc: if not is_pal_g generate
-    first_line_s <= hv_first_line_ntsc_c;
-    last_line_s  <= hv_last_line_ntsc_c;
-  end generate;
-  --
-  is_pal: if is_pal_g generate
-    first_line_s <= hv_first_line_pal_c;
-    last_line_s  <= hv_last_line_pal_c;
-  end generate;
+	first_line_s <= hv_first_line_ntsc_c when ntsc_pal_i = '0' else hv_first_line_pal_c;
+	last_line_s  <= hv_last_line_ntsc_c  when ntsc_pal_i = '0' else hv_last_line_pal_c;
   --
   -----------------------------------------------------------------------------
 
@@ -192,7 +185,7 @@ begin
 				end if;
 
 				-- Vertical sync ------------------------------------------------------
-				if is_pal_g then
+				if ntsc_pal_i = '1' then
 					if    cnt_vert_q = 244 then
 						vsync_n_o <= '0';
 					elsif cnt_vert_q = 247 then
@@ -204,7 +197,6 @@ begin
 					elsif cnt_vert_q = first_line_s + 13 then
 						vblank_q  <= false;
 					end if;
-
 				else
 					if    cnt_vert_q = 218 then
 						vsync_n_o <= '0';

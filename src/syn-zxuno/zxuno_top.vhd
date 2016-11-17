@@ -44,9 +44,6 @@ use ieee.numeric_std.all;
 use work.vdp18_paletas_3bit_pack.all;
 
 entity zxuno_top is
-	generic (
-		is_pal_g      		: boolean := false
-	);
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
@@ -205,8 +202,7 @@ begin
 	generic map (
 		hw_id_g			=> 8,
 		hw_txt_g			=> "ZX-Uno Board",
-		hw_version_g	=> X"10",			-- Version 1.0
-		is_pal_g			=> is_pal_g
+		hw_version_g	=> X"10"				-- Version 1.0
 	)
 	port map (
 		-- Clocks

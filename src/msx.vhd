@@ -46,8 +46,7 @@ entity msx is
 	generic (
 		hw_id_g			: integer								:= 0;
 		hw_txt_g			: string 								:= "NONE";
-		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
-		is_pal_g			: boolean								:= false
+		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00"
 	);
 	port (
 		-- Clocks
@@ -305,7 +304,6 @@ begin
 	-- VDP
 	vdp: entity work.vdp18_core
 	generic map (
-		is_pal_g			=> is_pal_g,
 		is_cvbs_g		=> (hw_id_g = 8)
 	)
 	port map (

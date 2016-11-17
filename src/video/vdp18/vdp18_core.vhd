@@ -79,7 +79,6 @@ use work.vdp18_pack.to_boolean_f;
 
 entity vdp18_core is
 	generic (
-		is_pal_g		: boolean := false;
 		is_cvbs_g		: boolean := false
 	);
 	port (
@@ -180,6 +179,7 @@ architecture struct of vdp18_core is
 	signal palette_idx_s		: std_logic_vector(0 to  3);
 	signal palette_val_s		: std_logic_vector(0 to 15);
 	signal palette_wr_s		: std_logic;
+	signal ntsc_pal_s			: std_logic;
 
 begin
 
@@ -212,7 +212,6 @@ begin
   -----------------------------------------------------------------------------
   hor_vert_b: entity  work.vdp18_hor_vert
     generic map (
-      is_pal_g		=> is_pal_g,
 		is_cvbs_g	=> is_cvbs_g
     )
     port map (
@@ -220,6 +219,7 @@ begin
       clk_en_5m37_i => clk_en_5m37_s,
       reset_i       => reset_s,
       opmode_i      => opmode_s,
+		ntsc_pal_i		=> ntsc_pal_s,
       num_pix_o     => num_pix_s,
       num_line_o    => num_line_s,
       vert_inc_o    => vert_inc_s,
@@ -302,6 +302,7 @@ begin
 		palette_idx_o	=> palette_idx_s,
 		palette_val_o	=> palette_val_s,
 		palette_wr_o	=> palette_wr_s,
+		ntsc_pal_o		=> ntsc_pal_s,
 		irq_i				=> irq_s,
 		int_n_o			=> int_n_o
  );
