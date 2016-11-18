@@ -1,0 +1,14 @@
+1.0: first release
+
+1.1:
+	- Implemented VDP99x8 Palette system: Register 16 and port #2 (0x9A in MSX)
+	- Implemented in Switched I/O ports new makers: 0x08 (Panasoic) turbo register, 0xD4 (OCM) some smart commands
+	- ESCCI (Megaram SCC from OCM) is now allocated in slot 2 (Partial support to MGLCOM.COM software)
+	- Fixed M1 Wait generator
+	- Fixed color index 2 in palette
+	- New Loader with new FAT driver (from SMS papilio), saving some space in code.
+	- New loader configured to FAT16 partitions only (ID 0x0E is not supported anymore)
+	- Implemented Keymap reconfiguration by SWIOPORTS
+	- Implemented V99x8 NTSC/PAL register #9 bit 1
+	- Implemented Scandoubler (VGA mode)
+	- Added configuration system: All files should now be in MSX1FPGA directory
