@@ -416,8 +416,10 @@ begin
 	vga_b_o			<= rgb_b_s(3 downto 1);
 	vga_csync_n_o	<= rgb_hsync_n_s	when vga_en_s = '1'	else (rgb_hsync_n_s and rgb_vsync_n_s);
 	vga_vsync_n_o	<= rgb_vsync_n_s	when vga_en_s = '1'	else '1';
-	vga_ntsc_o		<= not ntsc_pal_s;
-	vga_pal_o		<= ntsc_pal_s;
+--	vga_ntsc_o		<= not ntsc_pal_s;
+--	vga_pal_o		<= ntsc_pal_s;
+	vga_ntsc_o		<= '1';
+	vga_pal_o		<= '0';
 
 	-- DEBUG
 	led_o		<= not sd_cs_n_s;

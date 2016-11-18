@@ -313,7 +313,8 @@ begin
 	port map (
 		clock_i			=> clock_i,
 		clk_en_10m7_i	=> clock_vdp_i,
-		reset_n_i		=> reset_n_s,
+		por_i				=> por_i,
+		reset_i			=> reset_i,
 		csr_n_i			=> vdp_rd_n_s,
 		csw_n_i			=> vdp_wr_n_s,
 		mode_i			=> cpu_addr_s(1 downto 0),
