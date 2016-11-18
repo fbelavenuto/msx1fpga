@@ -76,10 +76,12 @@ use work.vdp18_pack.opmode_t;
 use work.vdp18_pack.hv_t;
 use work.vdp18_pack.access_t;
 use work.vdp18_pack.to_boolean_f;
+use work.vdp18_pack.to_std_logic_f;
 
 entity vdp18_core is
 	generic (
-		is_cvbs_g		: boolean := false
+		is_cvbs_g		: boolean		:= false;
+		use_scandbl_g	: boolean		:= false
 	);
 	port (
 		-- Global Interface -------------------------------------------------------
@@ -102,13 +104,13 @@ entity vdp18_core is
 		vram_d_o			: out std_logic_vector(0 to  7);
 		vram_d_i			: in  std_logic_vector(0 to  7);
 		-- Video Interface --------------------------------------------------------
-		col_o				: out std_logic_vector(0 to 3);
+		vga_en_i			: in  std_logic;
 		rgb_r_o			: out std_logic_vector(0 to 3);
 		rgb_g_o			: out std_logic_vector(0 to 3);
 		rgb_b_o			: out std_logic_vector(0 to 3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
-		comp_sync_n_o	: out std_logic
+		ntsc_pal_o		: out std_logic
 	);
 
 end vdp18_core;
@@ -128,8 +130,12 @@ architecture struct of vdp18_core is
 
   signal num_pix_s,
          num_line_s       : hv_t;
-  signal hsync_n_s,
-         vsync_n_s        : std_logic;
+
+	signal rgb_hsync_n_s		: std_logic;
+	signal rgb_vsync_n_s		: std_logic;
+	signal vga_hsync_n_s		: std_logic;
+	signal vga_vsync_n_s		: std_logic;
+
   signal blank_s          : boolean;
 
   signal vert_inc_s       : boolean;
@@ -171,11 +177,13 @@ architecture struct of vdp18_core is
   signal spr_coll_s       : boolean;
 
   signal irq_s            : boolean;
-
---  signal false_s          : boolean;
  
 	signal vram_read_s		: boolean;
 	signal vram_write_s		: boolean;
+	signal col_s				: std_logic_vector(0 to  3);
+	signal col_rgb_s			: std_logic_vector(0 to  3);
+	signal col_vga_s			: std_logic_vector(0 to  3);
+	signal rgb_s				: std_logic_vector(0 to 15);
 	signal palette_idx_s		: std_logic_vector(0 to  3);
 	signal palette_val_s		: std_logic_vector(0 to 15);
 	signal palette_wr_s		: std_logic;
@@ -183,28 +191,24 @@ architecture struct of vdp18_core is
 
 begin
 
-  -- temporary defaults
- -- false_s       <= false;
+	clk_en_10m7_s <= to_boolean_f(clk_en_10m7_i);
+	rd_s          <= not to_boolean_f(csr_n_i);
+	wr_s          <= not to_boolean_f(csw_n_i);
+	reset_s			<= reset_n_i = '0';
+	ntsc_pal_o		<= ntsc_pal_s;
 
-  clk_en_10m7_s <= to_boolean_f(clk_en_10m7_i);
-  rd_s          <= not to_boolean_f(csr_n_i);
-  wr_s          <= not to_boolean_f(csw_n_i);
-
-  reset_s <= reset_n_i = '0';
-
-
-  -----------------------------------------------------------------------------
-  -- Clock Generator
-  -----------------------------------------------------------------------------
-  clk_gen_b: entity  work.vdp18_clk_gen
-    port map (
-      clock_i         => clock_i,
-      clk_en_10m7_i => clk_en_10m7_i,
-      reset_i       => reset_s,
-      clk_en_5m37_o => clk_en_5m37_s,
-      clk_en_3m58_o => open, --clk_en_3m58_s,
-      clk_en_2m68_o => open
-    );
+	-----------------------------------------------------------------------------
+	-- Clock Generator
+	-----------------------------------------------------------------------------
+	clk_gen_b: entity work.vdp18_clk_gen
+	port map (
+		clock_i			=> clock_i,
+		clk_en_10m7_i	=> clk_en_10m7_i,
+		reset_i			=> reset_s,
+		clk_en_5m37_o	=> clk_en_5m37_s,
+		clk_en_3m58_o	=> open, --clk_en_3m58_s,
+		clk_en_2m68_o	=> open
+	);
 
 
   -----------------------------------------------------------------------------
@@ -223,15 +227,10 @@ begin
       num_pix_o     => num_pix_s,
       num_line_o    => num_line_s,
       vert_inc_o    => vert_inc_s,
-      hsync_n_o     => hsync_n_s,
-      vsync_n_o     => vsync_n_s,
+      hsync_n_o     => rgb_hsync_n_s,
+      vsync_n_o     => rgb_vsync_n_s,
       blank_o       => blank_s
     );
-
-  hsync_n_o     <= hsync_n_s;
-  vsync_n_o     <= vsync_n_s;
-  comp_sync_n_o <= not (hsync_n_s xor vsync_n_s);
-
 
   -----------------------------------------------------------------------------
   -- Control Module
@@ -258,7 +257,6 @@ begin
       hor_active_o  => hor_active_s,
       irq_o         => irq_s
     );
-
 
 	-----------------------------------------------------------------------------
 	-- CPU I/O Module
@@ -346,7 +344,7 @@ begin
       num_line_i    => num_line_s,
       vram_d_i      => vram_d_i,
       vert_inc_i    => vert_inc_s,
-      vsync_n_i     => vsync_n_s,
+      vsync_n_i     => rgb_vsync_n_s,
       reg_col1_i    => reg_col1_s,
       reg_col0_i    => reg_col0_s,
       pat_table_o   => pat_table_s,
@@ -384,31 +382,92 @@ begin
       spr3_col_o    => spr3_col_s
     );
 
+	-----------------------------------------------------------------------------
+	-- Color Multiplexer
+	-----------------------------------------------------------------------------
+	col_mux_b: entity  work.vdp18_col_mux
+	port map (
+		clock_i			=> clock_i,
+		clk_en_5m37_i	=> clk_en_5m37_s,
+		reset_i			=> reset_s,
+		vert_active_i	=> vert_active_s,
+		hor_active_i	=> hor_active_s,
+		blank_i			=> blank_s,
+		reg_col0_i		=> reg_col0_s,
+		pat_col_i		=> pat_col_s,
+		spr0_col_i		=> spr0_col_s,
+		spr1_col_i		=> spr1_col_s,
+		spr2_col_i		=> spr2_col_s,
+		spr3_col_i		=> spr3_col_s,
+		col_o				=> col_rgb_s
+	);
 
-  -----------------------------------------------------------------------------
-  -- Color Multiplexer
-  -----------------------------------------------------------------------------
-  col_mux_b: entity  work.vdp18_col_mux
-    port map (
-      clock_i         => clock_i,
-      clk_en_5m37_i => clk_en_5m37_s,
-      reset_i       => reset_s,
-      vert_active_i => vert_active_s,
-      hor_active_i  => hor_active_s,
-      blank_i       => blank_s,
-      reg_col0_i    => reg_col0_s,
-      pat_col_i     => pat_col_s,
-      spr0_col_i    => spr0_col_s,
-      spr1_col_i    => spr1_col_s,
-      spr2_col_i    => spr2_col_s,
-      spr3_col_i    => spr3_col_s,
-		palette_idx_i	=> palette_idx_s,
-		palette_val_i	=> palette_val_s,
-		palette_wr_i	=> palette_wr_s,
-      col_o         => col_o,
-      rgb_r_o       => rgb_r_o,
-      rgb_g_o       => rgb_g_o,
-      rgb_b_o       => rgb_b_o
-    );
+
+	palette: entity work.vdp18_palette
+	port map (
+		reset_i		=> reset_s,
+		clock_i		=> clock_i,
+		we_i			=> palette_wr_s,
+		addr_wr_i	=> palette_idx_s,
+		data_i		=> palette_val_s,
+		addr_rd_i	=> col_s,
+		data_o		=> rgb_s
+	);
+
+	nusd: if not use_scandbl_g generate
+		col_s			<= col_rgb_s;
+		hsync_n_o	<= rgb_hsync_n_s;
+		vsync_n_o	<= rgb_vsync_n_s;
+	end generate;
+
+	usd: if use_scandbl_g generate
+
+		col_s	<= col_vga_s	when vga_en_i = '1'	else col_rgb_s;
+
+		scandbl: entity work.dblscan
+		port map (
+			--  NOTE CLOCKS MUST BE PHASE LOCKED !!
+			clk_6m_i			=> clock_i,
+			clk_en_6m_i		=> to_std_logic_f(clk_en_5m37_s),
+			clk_12m_i		=> clock_i,
+			clk_en_12m_i	=> to_std_logic_f(clk_en_10m7_s),
+			col_i				=> col_rgb_s,
+			col_o				=> col_vga_s,
+			oddline_o		=> open,
+			hsync_n_i		=> rgb_hsync_n_s,
+			vsync_n_i		=> rgb_vsync_n_s,
+			hsync_n_o		=> vga_hsync_n_s,
+			vsync_n_o		=> vga_vsync_n_s,
+			blank_o			=> open
+		);
+
+		hsync_n_o		<= vga_hsync_n_s	when vga_en_i = '1'	else rgb_hsync_n_s;
+		vsync_n_o		<= vga_vsync_n_s	when vga_en_i = '1'	else rgb_vsync_n_s;
+
+	end generate;
+	-----------------------------------------------------------------------------
+	-- Process rgb_reg
+	--
+	-- Purpose:
+	--   Converts the color information to simple RGB and saves these in
+	--   output registers.
+	--
+	rgb_reg: process (clock_i, reset_s)
+	begin
+		if reset_s then
+			rgb_r_o   <= (others => '0');
+			rgb_g_o   <= (others => '0');
+			rgb_b_o   <= (others => '0');
+
+		elsif rising_edge(clock_i) then
+			if clk_en_10m7_s then
+				rgb_r_o <= rgb_s( 0 to 3);
+				rgb_g_o <= rgb_s(12 to 15);
+				rgb_b_o <= rgb_s( 4 to 7);
+			end if;
+		end if;
+	end process rgb_reg;
+	--
+	-----------------------------------------------------------------------------
 
 end struct;

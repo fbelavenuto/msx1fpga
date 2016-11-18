@@ -154,8 +154,8 @@ architecture behavior of de1_top is
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
+--	signal clock_sdram_s		: std_logic;
 	signal clock_vdp_s		: std_logic;
-	signal clock_5m_en_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
@@ -177,10 +177,10 @@ architecture behavior of de1_top is
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
-	signal vram_do_s			: std_logic_vector(7 downto 0);
-	signal vram_di_s			: std_logic_vector(7 downto 0);
---	signal vram_ce_s			: std_logic;
---	signal vram_oe_s			: std_logic;
+	signal vram_data_from_s	: std_logic_vector(7 downto 0);
+	signal vram_data_to_s	: std_logic_vector(7 downto 0);
+	signal vram_ce_s			: std_logic;
+	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 
 	-- Audio
@@ -195,12 +195,8 @@ architecture behavior of de1_top is
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
+	signal ntsc_pal_s			: std_logic;
 	signal vga_en_s			: std_logic;
---	signal vga_r_s				: std_logic_vector( 3 downto 0)	:= "0000";
---	signal vga_g_s				: std_logic_vector( 3 downto 0)	:= "0000";
---	signal vga_b_s				: std_logic_vector( 3 downto 0)	:= "0000";
---	signal vga_hsync_n_s		: std_logic;
---	signal vga_vsync_n_s		: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector(3 downto 0);
@@ -238,6 +234,8 @@ begin
 	port map (
 		inclk0	=> CLOCK_50,
 		c0			=> clock_master_s,		-- 21.428571 MHz (6x NTSC)
+--		c1			=> clock_sdram_s,			-- 85.714286
+--		c2			=> DRAM_CLK,				-- 85.714286 90°
 		locked	=> pll_locked_s
 	);
 
@@ -248,7 +246,7 @@ begin
 		por_i				=> por_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
-		clock_5m_en_o	=> clock_5m_en_s,
+		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
 		clock_3m_o		=> clock_3m_s
@@ -259,7 +257,8 @@ begin
 	generic map (
 		hw_id_g			=> 1,
 		hw_txt_g			=> "DE-1 Board",
-		hw_version_g	=> X"10"				-- Version 1.0
+		hw_version_g	=> X"11",				-- Version 1.1
+		use_scandbl_g	=> false
 	)
 	port map (
 		-- Clocks
@@ -275,7 +274,7 @@ begin
 		por_i				=> por_s,
 		softreset_o		=> soft_reset_s_s,
 		-- Options
-		opt_nextor_i	=> SW(0),
+		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> SW(2 downto 1),
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
@@ -305,10 +304,10 @@ begin
 		bus_int_n_i		=> '1',
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
-		vram_data_i		=> vram_do_s,
-		vram_data_o		=> vram_di_s,
-		vram_ce_o		=> open,--vram_ce_s,
-		vram_oe_o		=> open,--vram_oe_s,
+		vram_data_i		=> vram_data_from_s,
+		vram_data_o		=> vram_data_to_s,
+		vram_ce_o		=> vram_ce_s,
+		vram_oe_o		=> vram_oe_s,
 		vram_we_o		=> vram_we_s,
 		-- Keyboard
 		rows_o			=> rows_s,
@@ -341,14 +340,13 @@ begin
 		joy2_btn2_io	=> J1_BTN2,
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> open,
 		rgb_r_o			=> rgb_r_s,
 		rgb_g_o			=> rgb_g_s,
 		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
-		csync_n_o		=> open,
-		vga_on_k_i		=> extra_keys_s(2),
+		ntsc_pal_o		=> ntsc_pal_s,
+		vga_on_k_i		=> extra_keys_s(2),			-- Print Screen
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		spi_cs_n_o		=> SD_nCS,
@@ -414,9 +412,38 @@ begin
 		clk_i		=> clock_master_s,
 		we_i		=> vram_we_s,
 		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
+		data_i	=> vram_data_to_s,
+		data_o	=> vram_data_from_s
 	);
+
+--	vram: entity work.ssdram
+--	generic map (
+--		freq_g		=> 100
+--	)
+--	port map (
+--		clock_i		=> clock_sdram_s,
+--		reset_i		=> reset_s,
+--		refresh_i	=> '1',
+--		-- Static RAM bus
+--		addr_i		=> "000000000" & vram_addr_s,
+--		data_i		=> vram_data_to_s,
+--		data_o		=> vram_data_from_s,
+--		cs_i			=> vram_ce_s,
+--		oe_i			=> vram_oe_s,
+--		we_i			=> vram_we_s,
+--		-- SD-RAM ports
+--		mem_cke_o	=> DRAM_CKE,
+--		mem_cs_n_o	=> DRAM_CS_N,
+--		mem_ras_n_o	=> DRAM_RAS_N,
+--		mem_cas_n_o	=> DRAM_CAS_N,
+--		mem_we_n_o	=> DRAM_WE_N,
+--		mem_udq_o	=> DRAM_UDQM,
+--		mem_ldq_o	=> DRAM_LDQM,
+--		mem_ba_o(0)	=> DRAM_BA_0,
+--		mem_ba_o(1)	=> DRAM_BA_1,
+--		mem_addr_o	=> DRAM_ADDR,
+--		mem_data_io	=> DRAM_DQ
+--	);
 
 	-- Glue logic
 	
@@ -459,11 +486,6 @@ begin
 	FL_WE_N				<= '1';
 	
 	-- VGA Output
---	VGA_R		<= rgb_r_s			when vga_en_s = '0'	else vga_r_s;
---	VGA_G		<= rgb_g_s			when vga_en_s = '0'	else vga_g_s;
---	VGA_B		<= rgb_b_s			when vga_en_s = '0'	else vga_b_s;
---	VGA_HS	<= rgb_hsync_n_s	when vga_en_s = '0'	else vga_hsync_n_s;
---	VGA_VS	<= rgb_vsync_n_s	when vga_en_s = '0'	else vga_vsync_n_s;
 	VGA_R		<= rgb_r_s;
 	VGA_G		<= rgb_g_s;
 	VGA_B		<= rgb_b_s;
@@ -475,6 +497,8 @@ begin
 
 	LEDG(0) <= turbo_on_s;
 	LEDG(1) <= vga_en_s;
+	LEDG(2) <= ntsc_pal_s;
+
 
 	ld3: entity work.seg7
 	port map(

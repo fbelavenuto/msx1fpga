@@ -8,8 +8,8 @@
 --
 -------------------------------------------------------------------------------
 --
--- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 -- Copyright (c) 2006, Arnim Laeuger (arnim.laeuger@gmx.net)
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved
 --
@@ -76,7 +76,7 @@ begin
 				--      RB0G
 				0  => X"0000",
 				1  => X"0000",
-				2  => X"2402",
+				2  => X"240C",
 				3  => X"570D",
 				4  => X"5E05",
 				5  => X"7F07",
@@ -87,7 +87,7 @@ begin
 				10 => X"D50C",
 				11 => X"E80C",
 				12 => X"230B",
-				13 => X"CB05",
+				13 => X"CB09",
 				14 => X"CC0C",
 				15 => X"FF0F"
 			);

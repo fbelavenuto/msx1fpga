@@ -99,7 +99,7 @@ begin
 			maker_id_s <= (others => '0');
 		elsif falling_edge(clock_i) then
 			if cs_i = '1' and wr_i = '1' and addr_i = X"40" then
-				if data_i = X"28" or data_i = X"D4" then
+				if data_i = X"08" or data_i = X"28" or data_i = X"D4" then
 					maker_id_s <= data_i;
 				else
 					maker_id_s <= X"00";
@@ -156,8 +156,13 @@ begin
 			end if;
 			keymap_we_s	<= '0';		-- default
 
+			-- Panasonic
+			if    cs_i = '1' and wr_i = '1' and maker_id_s = X"08" then
+				if addr_i = X"41" then
+					turbo_on_q <= not data_i(0);
+				end if;
 			-- MSX1FPGA ID
-			if cs_i = '1' and wr_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
+			elsif cs_i = '1' and wr_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
 				case reg_addr_q is
 					when X"0A" =>
 						softreset_q		<= data_i(0);
@@ -222,8 +227,14 @@ begin
 		elsif falling_edge(clock_i) then
 			has_data_regv_s	<= '0';
 			reg_data_s			<= (others => '0');
+			-- Panasonic
+			if    cs_i = '1' and rd_i = '1' and maker_id_s = X"08" then
+				if addr_i = X"41" then
+					reg_data_s			<= "0000000" & not turbo_on_q;
+					has_data_regv_s	<= '1';
+				end if;
 			-- MSX1FPGA ID
-			if cs_i = '1' and rd_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
+			elsif cs_i = '1' and rd_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
 				case reg_addr_q is
 					when X"00" =>
 						reg_data_s			<= hw_id_i;
@@ -242,7 +253,7 @@ begin
 						reg_data_s			<= hw_version_i;
 						has_data_regv_s	<= '1';
 					when X"10" =>
-						reg_data_s			<= "0000000" & nextor_en_q;
+						reg_data_s			<= "000000" & vga_en_q & nextor_en_q;
 						has_data_regv_s	<= '1';
 					when X"11" =>
 						reg_data_s			<= "000000" & mapper_q;

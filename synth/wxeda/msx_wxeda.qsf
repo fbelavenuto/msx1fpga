@@ -188,11 +188,11 @@ set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_pattern.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_hor_vert.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_ctrl.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_cpuio.vhd
-set_global_assignment -name VHDL_FILE "../../src/video/vdp18/vdp18_col_pack-p.vhd"
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_col_mux.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_clk_gen.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_addr_mux.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_palette.vhd
+set_global_assignment -name VHDL_FILE ../../src/video/dblscan.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keymap.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/ps2_iobase.vhd

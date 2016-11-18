@@ -46,7 +46,8 @@ entity msx is
 	generic (
 		hw_id_g			: integer								:= 0;
 		hw_txt_g			: string 								:= "NONE";
-		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00"
+		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
+		use_scandbl_g	: boolean								:= false
 	);
 	port (
 		-- Clocks
@@ -128,13 +129,12 @@ entity msx is
 		joy2_btn2_io	: inout std_logic;
 		joy2_out_o		: out   std_logic;
 		-- Video
-		col_o				: out std_logic_vector( 3 downto 0);
 		rgb_r_o			: out std_logic_vector( 3 downto 0);
 		rgb_g_o			: out std_logic_vector( 3 downto 0);
 		rgb_b_o			: out std_logic_vector( 3 downto 0);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
-		csync_n_o		: out std_logic;
+		ntsc_pal_o		: out std_logic;
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
 		-- SPI/SD
@@ -218,6 +218,7 @@ architecture Behavior of msx is
 	signal d_from_vdp_s     : std_logic_vector( 7 downto 0);
 	signal vdp_rd_n_s			: std_logic;
 	signal vdp_wr_n_s			: std_logic;
+	signal vga_en_s			: std_logic;
 
 	-- PSG
 	signal psg_cs_s			: std_logic;
@@ -306,7 +307,8 @@ begin
 	-- VDP
 	vdp: entity work.vdp18_core
 	generic map (
-		is_cvbs_g		=> (hw_id_g = 8)
+		is_cvbs_g		=> (hw_id_g = 8),
+		use_scandbl_g	=> use_scandbl_g
 	)
 	port map (
 		clock_i			=> clock_i,
@@ -325,13 +327,13 @@ begin
 		vram_a_o			=> vram_addr_o,
 		vram_d_o			=> vram_data_o,
 		vram_d_i			=> vram_data_i,
-		col_o				=> col_o,
+		vga_en_i			=> vga_en_s,
 		rgb_r_o			=> rgb_r_o,
 		rgb_g_o			=> rgb_g_o,
 		rgb_b_o			=> rgb_b_o,
 		hsync_n_o		=> hsync_n_o,
 		vsync_n_o		=> vsync_n_o,
-		comp_sync_n_o	=> csync_n_o
+		ntsc_pal_o		=> ntsc_pal_o
 	);
 
 	-- PSG
@@ -420,7 +422,7 @@ begin
 		mr_type_o		=> mr_type_s,
 		turbo_on_o		=> turbo_on_s,
 		softreset_o		=> softreset_s,
-		vga_en_o			=> vga_en_o,
+		vga_en_o			=> vga_en_s,
 		keymap_addr_o	=> keymap_addr_o,
 		keymap_data_o	=> keymap_data_o,
 		keymap_we_o		=> keymap_we_o
@@ -710,6 +712,8 @@ begin
 
 	wait_n_s			<= m1_wait_n_s and bus_wait_n_i and not vdp_wait_s;
 	int_n_s			<= bus_int_n_i and vdp_int_n_s;
+
+	vga_en_o			<= vga_en_s;
 
 	-- Debug
 	D_slots_o		<= pio_port_a_s;

@@ -387,6 +387,7 @@ set_global_assignment -name VHDL_FILE ../../src/cpu/t80_alu.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
+set_global_assignment -name VHDL_FILE ../../src/ram/ssdram.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/ipl_rom.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/seg7.vhd

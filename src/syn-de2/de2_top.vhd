@@ -242,15 +242,13 @@ architecture behavior of de2_top is
 	signal k7_ai_s				: std_logic;
 
 	-- Video
---	signal rgb_col_s			: std_logic_vector( 3 downto 0);		-- 15KHz
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
 	signal rgb_g_s				: std_logic_vector( 3 downto 0);
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
-	signal rgb_hsync_n_s		: std_logic;								-- 15KHz
-	signal rgb_vsync_n_s		: std_logic;								-- 15KHz
---	signal vga_col_s			: std_logic_vector( 3 downto 0);		-- 31KHz
---	signal vga_hsync_n_s		: std_logic;								-- 31KHz
---	signal vga_vsync_n_s		: std_logic;								-- 31KHz
+	signal rgb_hsync_n_s		: std_logic;
+	signal rgb_vsync_n_s		: std_logic;
+	signal ntsc_pal_s			: std_logic;
+	signal vga_en_s			: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
@@ -306,6 +304,7 @@ begin
 		por_i				=> por_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
+		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
 		clock_3m_o		=> clock_3m_s
@@ -316,7 +315,8 @@ begin
 	generic map (
 		hw_id_g			=> 2,
 		hw_txt_g			=> "DE-2 Board",
-		hw_version_g	=> X"10"				-- Version 1.0
+		hw_version_g	=> X"10",				-- Version 1.0
+		use_scandbl_g	=> true
 	)
 	port map (
 		clock_i			=> clock_master_s,
@@ -331,7 +331,7 @@ begin
 		por_i				=> por_s,
 		softreset_o		=> soft_reset_s_s,
 		-- Options
-		opt_nextor_i	=> SW(0),
+		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> SW(2 downto 1),
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
@@ -397,13 +397,14 @@ begin
 		joy2_btn2_io	=> J1_BTN2,
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> open,
 		rgb_r_o			=> rgb_r_s,
 		rgb_g_o			=> rgb_g_s,
 		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
-		csync_n_o		=> open,
+		ntsc_pal_o		=> ntsc_pal_s,
+		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
+		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		spi_cs_n_o		=> SD_DAT3,
 		spi_sclk_o		=> SD_CLK,
@@ -556,6 +557,9 @@ begin
 	VGA_CLK		<= clock_master_s;
 
 	-- DEBUG
+	LEDG(0) <= turbo_on_s;
+	LEDG(1) <= vga_en_s;
+	LEDG(2) <= ntsc_pal_s;
 --	LEDG(8) <= reset_s;
 
 	D_display_s	<= D_cpu_addr_s;

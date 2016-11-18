@@ -61,12 +61,8 @@ entity dblscan is
 		clk_en_6m_i		: in  std_logic;
 		clk_12m_i		: in  std_logic;				-- output clock      (12MHz)
 		clk_en_12m_i	: in  std_logic;
-		rgb_r_i			: in  std_logic_vector(2 downto 0);
-		rgb_g_i			: in  std_logic_vector(2 downto 0);
-		rgb_b_i			: in  std_logic_vector(2 downto 0);
-		vga_r_o			: out std_logic_vector(2 downto 0);
-		vga_g_o			: out std_logic_vector(2 downto 0);
-		vga_b_o			: out std_logic_vector(2 downto 0);
+		col_i				: in  std_logic_vector(3 downto 0);
+		col_o				: out std_logic_vector(3 downto 0);
 		oddline_o		: out std_logic;
 		hsync_n_i		: in  std_logic;
 		vsync_n_i		: in  std_logic;
@@ -87,7 +83,6 @@ architecture rtl of dblscan is
 	signal ibank_s				: std_logic;
 	signal we_a_s				: std_logic;
 	signal we_b_s				: std_logic;
-	signal rgb_in_s			: std_logic_vector(8 downto 0);
 	--
 	-- output timing
 	--
@@ -100,37 +95,37 @@ architecture rtl of dblscan is
 	signal oddline_s			: std_logic;
 	--
 	signal vs_cnt_s			: std_logic_vector(2 downto 0);
-	signal vga_out_a_s		: std_logic_vector(8 downto 0);
-	signal vga_out_b_s		: std_logic_vector(8 downto 0);
+	signal vga_out_a_s		: std_logic_vector(3 downto 0);
+	signal vga_out_b_s		: std_logic_vector(3 downto 0);
 
 begin
 
-	u_ram_a : work.dpram
+	u_ram_a: entity work.dpram
 	generic map (
 		addr_width_g => 9,
-		data_width_g => 9
+		data_width_g => 4
 	)
 	port map (
 		clk_a_i  => clk_6m_i,
 		we_i     => we_a_s,
 		addr_a_i => hpos_s,
-		data_a_i => rgb_in_s,
+		data_a_i => col_i,
 		data_a_o => open,
 		clk_b_i  => clk_12m_i,
 		addr_b_i => hpos_o_s,
 		data_b_o => vga_out_a_s
 	);
 
-	u_ram_b : work.dpram
+	u_ram_b: entity work.dpram
 	generic map (
 		addr_width_g => 9,
-		data_width_g => 9
+		data_width_g => 4
 	)
 	port map (
 		clk_a_i  => clk_6m_i,
 		we_i     => we_b_s,
 		addr_a_i => hpos_s,
-		data_a_i => rgb_in_s,
+		data_a_i => col_i,
 		data_a_o => open,
 		clk_b_i  => clk_12m_i,
 		addr_b_i => hpos_o_s,
@@ -139,7 +134,6 @@ begin
 
 	we_a_s	<=     ibank_s and clk_en_6m_i;
 	we_b_s	<= not ibank_s and clk_en_6m_i;
-	rgb_in_s	<= rgb_r_i & rgb_g_i & rgb_b_i;
 
 	p_input_timing : process(clk_6m_i)
 		variable rising_h_v : boolean;
@@ -220,13 +214,9 @@ begin
 				end if;
 
 				if (obank_s = '1') then
-					vga_r_o <= vga_out_b_s(8 downto 6);
-					vga_g_o <= vga_out_b_s(5 downto 3);
-					vga_b_o <= vga_out_b_s(2 downto 0);
+					col_o <= vga_out_b_s;
 				else
-					vga_r_o <= vga_out_a_s(8 downto 6);
-					vga_g_o <= vga_out_a_s(5 downto 3);
-					vga_b_o <= vga_out_a_s(2 downto 0);
+					col_o <= vga_out_a_s;
 				end if;
 
 				vsync_n_o <= vs_cnt_s(2);

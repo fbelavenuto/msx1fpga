@@ -62,33 +62,15 @@ entity vdp18_col_mux is
 		spr1_col_i		: in  std_logic_vector(0 to  3);
 		spr2_col_i		: in  std_logic_vector(0 to  3);
 		spr3_col_i		: in  std_logic_vector(0 to  3);
-		palette_idx_i	: in  std_logic_vector(0 to  3);
-		palette_val_i	: in  std_logic_vector(0 to 15);
-		palette_wr_i	: in  std_logic;
-		col_o				: out std_logic_vector(0 to  3);
-		rgb_r_o			: out std_logic_vector(0 to  3);
-		rgb_g_o			: out std_logic_vector(0 to  3);
-		rgb_b_o			: out std_logic_vector(0 to  3)
+		col_o				: out std_logic_vector(0 to  3)
 	);
 end vdp18_col_mux;
 
 architecture rtl of vdp18_col_mux is
 
-	signal col_s	: std_logic_vector(3 downto 0);
-	signal rgb_s	: std_logic_vector(15 downto 0);
+	signal col_s	: std_logic_vector( 3 downto 0);
 
 begin
-
-	palette: entity work.vdp18_palette
-	port map (
-		reset_i		=> reset_i,
-		clock_i		=> clock_i,
-		we_i			=> palette_wr_i,
-		addr_wr_i	=> palette_idx_i,
-		data_i		=> palette_val_i,
-		addr_rd_i	=> col_s,
-		data_o		=> rgb_s
-	);
 
 	-----------------------------------------------------------------------------
 	-- Process col_mux
@@ -134,36 +116,6 @@ begin
 	--
 	-----------------------------------------------------------------------------
 
-	-----------------------------------------------------------------------------
-	-- Process rgb_reg
-	--
-	-- Purpose:
-	--   Converts the color information to simple RGB and saves these in
-	--   output registers.
-	--
-	rgb_reg: process (clock_i, reset_i)
-	begin
-		if reset_i then
-			rgb_r_o   <= (others => '0');
-			rgb_g_o   <= (others => '0');
-			rgb_b_o   <= (others => '0');
-
-		elsif clock_i'event and clock_i = '1' then
-			if clk_en_5m37_i then
-
-				rgb_r_o <= rgb_s(15 downto 12);
-				rgb_g_o <= rgb_s( 3 downto  0);
-				rgb_b_o <= rgb_s(11 downto  8);
-			end if;
-
-		end if;
-	end process rgb_reg;
-	--
-	-----------------------------------------------------------------------------
-
-	-----------------------------------------------------------------------------
-	-- Output mapping
-	-----------------------------------------------------------------------------
 	col_o <= col_s;
 
 end rtl;

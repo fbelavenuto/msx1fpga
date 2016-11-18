@@ -159,6 +159,8 @@ architecture behavior of zxuno_top is
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
+	signal ntsc_pal_s			: std_logic;
+	signal vga_en_s			: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector(3 downto 0);
@@ -192,6 +194,7 @@ begin
 		por_i				=> por_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
+		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
 		clock_3m_o		=> clock_3m_s
@@ -202,7 +205,8 @@ begin
 	generic map (
 		hw_id_g			=> 8,
 		hw_txt_g			=> "ZX-Uno Board",
-		hw_version_g	=> X"10"				-- Version 1.0
+		hw_version_g	=> X"11",				-- Version 1.1
+		use_scandbl_g	=> true
 	)
 	port map (
 		-- Clocks
@@ -284,13 +288,14 @@ begin
 		joy2_btn2_io	=> joy2_btn2_io,
 		joy2_out_o		=> open,
 		-- Video
-		col_o				=> open,
 		rgb_r_o			=> rgb_r_s,
 		rgb_g_o			=> rgb_g_s,
 		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
-		csync_n_o		=> open,
+		ntsc_pal_o		=> ntsc_pal_s,
+		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
+		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		spi_cs_n_o		=> sd_cs_n_s,
 		spi_sclk_o		=> sd_sclk_o,
@@ -409,10 +414,10 @@ begin
 	vga_r_o			<= rgb_r_s(3 downto 1);
 	vga_g_o			<= rgb_g_s(3 downto 1);
 	vga_b_o			<= rgb_b_s(3 downto 1);
-	vga_csync_n_o	<= rgb_hsync_n_s and rgb_vsync_n_s;
-	vga_vsync_n_o	<= '1';
-	vga_ntsc_o		<= '0'	when is_pal_g	else '1';
-	vga_pal_o		<= '1'	when is_pal_g	else '0';
+	vga_csync_n_o	<= rgb_hsync_n_s	when vga_en_s = '1'	else (rgb_hsync_n_s and rgb_vsync_n_s);
+	vga_vsync_n_o	<= rgb_vsync_n_s	when vga_en_s = '1'	else '1';
+	vga_ntsc_o		<= not ntsc_pal_s;
+	vga_pal_o		<= ntsc_pal_s;
 
 	-- DEBUG
 	led_o		<= not sd_cs_n_s;
