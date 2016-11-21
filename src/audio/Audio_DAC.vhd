@@ -43,9 +43,10 @@ entity Audio_DAC is
 	port (
 		clock_i		: in  std_logic;
 		reset_i		: in  std_logic;
-		audio_scc_i	: in    signed(14 downto 0);
-		audio_psg_i	: in    unsigned(7 downto 0);
+		audio_scc_i	: in  signed(14 downto 0);
+		audio_psg_i	: in  unsigned(7 downto 0);
 		beep_i		: in  std_logic;
+		audio_mix_o	: out std_logic_vector(15 downto 0);
 		dac_out_o	: out std_logic
 	);
 end entity;
@@ -84,6 +85,8 @@ begin
 						unsigned(beep_s) + 
 						unsigned(audio_psg_i & "00000000") +
 						unsigned(audio_scc_i + 16384)
-					);
+	);
+
+	audio_mix_o <= pcm_s;
 
 end architecture;

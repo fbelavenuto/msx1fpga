@@ -315,8 +315,8 @@ begin
 	generic map (
 		hw_id_g			=> 2,
 		hw_txt_g			=> "DE-2 Board",
-		hw_version_g	=> X"10",				-- Version 1.0
-		use_scandbl_g	=> true
+		hw_version_g	=> X"11",				-- Version 1.1
+		use_scandbl_g	=> 1
 	)
 	port map (
 		clock_i			=> clock_master_s,

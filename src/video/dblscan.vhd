@@ -68,7 +68,7 @@ entity dblscan is
 		vsync_n_i		: in  std_logic;
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
-		blank_o			: out std_logic
+		hblank_o			: out std_logic
   );
 end entity;
 
@@ -169,7 +169,7 @@ begin
 			if clk_en_12m_i = '1' then
 				rising_h_v := (ohs_s = '0') and (ohs_t1_s = '1');
 
-				if rising_h_v or (hpos_o_s = "101010101") then			-- 341
+				if rising_h_v or (hpos_o_s = 341) then			-- 341
 					hpos_o_s <= (others => '0');
 					oddline_s <= not oddline_s;
 				else
@@ -204,13 +204,13 @@ begin
 			if clk_en_12m_i = '1' then
 
 				hsync_n_o <= '1';
-				if (hpos_o_s < 32) then								-- 8
+				if (hpos_o_s < 26) then
 					hsync_n_o <= '0';
 				end if;
 
-				blank_o <= '0';
-				if hpos_o_s < 56 or hpos_o_s > 295 then		-- <56  >295
-					blank_o <= '1';
+				hblank_o <= '0';
+				if hpos_o_s < 51 or hpos_o_s > 333 then
+					hblank_o <= '1';
 				end if;
 
 				if (obank_s = '1') then

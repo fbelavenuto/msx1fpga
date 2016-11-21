@@ -42,7 +42,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity multicore_top is
+entity multicore_top_VGA is
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
@@ -100,17 +100,12 @@ entity multicore_top is
 		vga_hsync_n_o		: out   std_logic								:= '1';
 		vga_vsync_n_o		: out   std_logic								:= '1';
 
-		-- HDMI
---		hdmi_d_o				: out   std_logic_vector(2 downto 0)	:= (others => '0');
---		hdmi_clk_o			: out   std_logic								:= '0';
---		hdmi_cec_o			: out   std_logic								:= '0';
-
 		-- Debug
 		leds_n_o				: out   std_logic_vector(7 downto 0)	:= (others => '0')
 	);
 end entity;
 
-architecture behavior of multicore_top is
+architecture behavior of multicore_top_VGA is
 
 	-- Resets
 	signal pll_locked_s		: std_logic;
@@ -176,10 +171,10 @@ architecture behavior of multicore_top is
 begin
 
 	-- PLL
-	pll_1: entity work.pll1
+	pll_1: entity work.pll_VGA
 	port map (
 		inclk0	=> clock_50_i,
-		c0			=> clock_master_s,			-- 21.512 MHz (6x NTSC)
+		c0			=> clock_master_s,			-- 21.477 MHz (6x NTSC) (21.474)
 		locked	=> pll_locked_s
 	);
 
@@ -202,7 +197,7 @@ begin
 		hw_id_g			=> 6,
 		hw_txt_g			=> "Multicore Board",
 		hw_version_g	=> X"10",				-- Version 1.0
-		use_scandbl_g	=> true
+		use_scandbl_g	=> 1
 	)
 	port map (
 		-- Clocks
@@ -289,6 +284,7 @@ begin
 		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
+--		hblank_o			=> open,
 		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),			-- Print Screen
 		vga_en_o			=> vga_en_s,

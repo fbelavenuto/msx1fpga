@@ -81,8 +81,7 @@ use work.vdp18_pack.to_std_logic_f;
 
 entity vdp18_core is
 	generic (
-		is_cvbs_g		: boolean		:= false;
-		use_scandbl_g	: boolean		:= false
+		use_scandbl_g	: integer		:= 0		-- 0 = no, 1 = configurable, 2 = always enabled
 	);
 	port (
 		-- Global Interface -------------------------------------------------------
@@ -107,11 +106,14 @@ entity vdp18_core is
 		vram_d_i			: in  std_logic_vector(0 to  7);
 		-- Video Interface --------------------------------------------------------
 		vga_en_i			: in  std_logic;
+		cnt_hor_o		: out std_logic_vector( 8 downto 0);
+		cnt_ver_o		: out std_logic_vector( 8 downto 0);
 		rgb_r_o			: out std_logic_vector(0 to 3);
 		rgb_g_o			: out std_logic_vector(0 to 3);
 		rgb_b_o			: out std_logic_vector(0 to 3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
+--		hblank_o			: out std_logic;
 		ntsc_pal_o		: out std_logic
 	);
 end vdp18_core;
@@ -214,9 +216,6 @@ begin
 	-- Horizontal and Vertical Timing Generator
 	-----------------------------------------------------------------------------
 	hor_vert_b: entity  work.vdp18_hor_vert
-	generic map (
-		is_cvbs_g		=> is_cvbs_g
-	)
 	port map (
 		clock_i			=> clock_i,
 		clk_en_5m37_i	=> clk_en_5m37_s,
@@ -228,7 +227,9 @@ begin
 		vert_inc_o		=> vert_inc_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
-		blank_o			=> blank_s
+		blank_o			=> blank_s,
+		cnt_hor_o		=> cnt_hor_o,
+		cnt_ver_o		=> cnt_ver_o
 	);
 
 	-----------------------------------------------------------------------------
@@ -383,9 +384,6 @@ begin
 	-----------------------------------------------------------------------------
 	col_mux_b: entity  work.vdp18_col_mux
 	port map (
-		clock_i			=> clock_i,
-		clk_en_5m37_i	=> clk_en_5m37_s,
-		reset_i			=> por_s,
 		vert_active_i	=> vert_active_s,
 		hor_active_i	=> hor_active_s,
 		blank_i			=> blank_s,
@@ -412,15 +410,16 @@ begin
 		data_o		=> rgb_s
 	);
 
-	nusd: if not use_scandbl_g generate
+	sd0: if use_scandbl_g = 0 generate
 		col_s			<= col_rgb_s;
 		hsync_n_o	<= rgb_hsync_n_s;
 		vsync_n_o	<= rgb_vsync_n_s;
+--		hblank_o		<= '0';
 	end generate;
 
-	usd: if use_scandbl_g generate
+	sd1: if use_scandbl_g = 1 or use_scandbl_g = 2 generate
 
-		col_s	<= col_vga_s	when vga_en_i = '1'	else col_rgb_s;
+		col_s	<= col_vga_s	when vga_en_i = '1' or use_scandbl_g = 2	else col_rgb_s;
 
 		scandbl: entity work.dblscan
 		port map (
@@ -435,12 +434,12 @@ begin
 			hsync_n_i		=> rgb_hsync_n_s,
 			vsync_n_i		=> rgb_vsync_n_s,
 			hsync_n_o		=> vga_hsync_n_s,
-			vsync_n_o		=> vga_vsync_n_s,
-			blank_o			=> open
+			vsync_n_o		=> vga_vsync_n_s
+--			hblank_o			=> hblank_o
 		);
 
-		hsync_n_o		<= vga_hsync_n_s	when vga_en_i = '1'	else rgb_hsync_n_s;
-		vsync_n_o		<= vga_vsync_n_s	when vga_en_i = '1'	else rgb_vsync_n_s;
+		hsync_n_o		<= vga_hsync_n_s	when vga_en_i = '1' or use_scandbl_g = 2	else rgb_hsync_n_s;
+		vsync_n_o		<= vga_vsync_n_s	when vga_en_i = '1' or use_scandbl_g = 2	else rgb_vsync_n_s;
 
 	end generate;
 

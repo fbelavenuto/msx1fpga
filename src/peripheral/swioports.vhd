@@ -83,7 +83,7 @@ architecture Behavior of swioports is
 	signal reg_data_s			: std_logic_vector(7 downto 0);
 	signal nextor_en_q		: std_logic;
 	signal mapper_q			: std_logic_vector(1 downto 0);
-	signal turbo_on_q			: std_logic;
+	signal turbo_on_q			: std_logic								:= '0';
 	signal softreset_q		: std_logic								:= '0';
 	signal keymap_addr_q		: unsigned(9 downto 0);
 	signal keymap_data_q		: std_logic_vector(7 downto 0);
@@ -141,10 +141,10 @@ begin
 		if reset_i = '1' then
 			nextor_en_q	<= nextor_en_i;
 			mapper_q		<= mr_type_i;
-			turbo_on_q	<= '0';
+--			turbo_on_q	<= '0';
 			softreset_q	<= '0';
 			keymap_we_s	<= '0';
-			vga_en_q		<= '0';
+--			vga_en_q		<= '0';
 		elsif falling_edge(clock_i) then
 			turbo_on_de_v := turbo_on_de_v(0) & turbo_on_k_i;
 			vga_on_de_v   := vga_on_de_v(0) & vga_on_k_i;

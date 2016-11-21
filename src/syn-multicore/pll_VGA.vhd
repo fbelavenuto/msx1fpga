@@ -4,7 +4,7 @@
 -- MODULE: altpll 
 
 -- ============================================================
--- File Name: pll1.vhd
+-- File Name: pll_VGA.vhd
 -- Megafunction Name(s):
 -- 			altpll
 --
@@ -39,17 +39,17 @@ USE ieee.std_logic_1164.all;
 LIBRARY altera_mf;
 USE altera_mf.all;
 
-ENTITY pll1 IS
+ENTITY pll_VGA IS
 	PORT
 	(
 		inclk0		: IN STD_LOGIC  := '0';
 		c0		: OUT STD_LOGIC ;
 		locked		: OUT STD_LOGIC 
 	);
-END pll1;
+END pll_VGA;
 
 
-ARCHITECTURE SYN OF pll1 IS
+ARCHITECTURE SYN OF pll_vga IS
 
 	SIGNAL sub_wire0	: STD_LOGIC_VECTOR (4 DOWNTO 0);
 	SIGNAL sub_wire1	: STD_LOGIC ;
@@ -145,7 +145,7 @@ BEGIN
 		compensate_clock => "CLK0",
 		inclk0_input_frequency => 20000,
 		intended_device_family => "Cyclone IV E",
-		lpm_hint => "CBX_MODULE_PREFIX=pll1",
+		lpm_hint => "CBX_MODULE_PREFIX=pll_VGA",
 		lpm_type => "altpll",
 		operation_mode => "NORMAL",
 		pll_type => "AUTO",
@@ -267,7 +267,7 @@ END SYN;
 -- Retrieval info: PRIVATE: PLL_PFDENA_CHECK STRING "0"
 -- Retrieval info: PRIVATE: PLL_TARGET_HARCOPY_CHECK NUMERIC "0"
 -- Retrieval info: PRIVATE: PRIMARY_CLK_COMBO STRING "inclk0"
--- Retrieval info: PRIVATE: RECONFIG_FILE STRING "pll1.mif"
+-- Retrieval info: PRIVATE: RECONFIG_FILE STRING "pll_VGA.mif"
 -- Retrieval info: PRIVATE: SACN_INPUTS_CHECK STRING "0"
 -- Retrieval info: PRIVATE: SCAN_FEATURE_ENABLED STRING "1"
 -- Retrieval info: PRIVATE: SELF_RESET_LOCK_LOSS STRING "0"
@@ -350,11 +350,11 @@ END SYN;
 -- Retrieval info: CONNECT: @inclk 0 0 1 0 inclk0 0 0 0 0
 -- Retrieval info: CONNECT: c0 0 0 0 0 @clk 0 0 1 0
 -- Retrieval info: CONNECT: locked 0 0 0 0 @locked 0 0 0 0
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll1.vhd TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll1.ppf TRUE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll1.inc FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll1.cmp FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll1.bsf FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL pll1_inst.vhd FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_VGA.vhd TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_VGA.ppf TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_VGA.inc FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_VGA.cmp FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_VGA.bsf FALSE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL pll_VGA_inst.vhd FALSE
 -- Retrieval info: LIB_FILE: altera_mf
 -- Retrieval info: CBX_MODULE_PREFIX: ON

@@ -52,13 +52,14 @@ architecture testbench of tb is
 	-- test target
 	component vdp18_core
 	generic (
-		is_pal_g		: boolean := false;
-		is_cvbs_g		: boolean := false
+		is_cvbs_g		: boolean := false;	
+		use_scandbl_g	: integer		:= 0		-- 0 = no, 1 = configurable, 2 = always enabled
 	);
 	port (
 		clock_i			: in  std_logic;
 		clk_en_10m7_i	: in  std_logic;
-		reset_n_i		: in  std_logic;
+		por_i				: in  std_logic;
+		reset_i			: in  std_logic;
 		csr_n_i			: in  std_logic;
 		csw_n_i			: in  std_logic;
 		mode_i			: in  std_logic_vector(0 to  1);
@@ -72,19 +73,22 @@ architecture testbench of tb is
 		vram_a_o		: out std_logic_vector(0 to 13);
 		vram_d_o		: out std_logic_vector(0 to  7);
 		vram_d_i		: in  std_logic_vector(0 to  7);
-		col_o			: out std_logic_vector(0 to  3);
-		rgb_r_o			: out std_logic_vector(0 to  7);
-		rgb_g_o			: out std_logic_vector(0 to  7);
-		rgb_b_o			: out std_logic_vector(0 to  7);
+		vga_en_i			: in  std_logic;
+		rgb_r_o			: out std_logic_vector(0 to  3);
+		rgb_g_o			: out std_logic_vector(0 to  3);
+		rgb_b_o			: out std_logic_vector(0 to  3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
-		comp_sync_n_o	: out std_logic
+		hblank_o			: out std_logic;
+		ntsc_pal_o		: out std_logic
 	);
 	end component;
 
 	signal tb_end				: std_logic;
 	signal clock_s				: std_logic;
-	signal reset_n_s			: std_logic;
+	signal clock_en_10m7_s		: std_logic;
+	signal por_s				: std_logic;
+	signal reset_s				: std_logic;
 	signal csr_n_s				: std_logic;
 	signal csw_n_s				: std_logic;
 	signal mode_s				: std_logic_vector( 1 downto 0);
@@ -98,22 +102,27 @@ architecture testbench of tb is
 	signal vram_addr_s			: std_logic_vector(13 downto 0);	-- 16K
 	signal vram_data_i_s		: std_logic_vector( 7 downto 0);
 	signal vram_data_o_s		: std_logic_vector( 7 downto 0);
-	signal col_s				: std_logic_vector( 3 downto 0);
+--	signal vga_en_s				: std_logic;
+	signal rgb_r_s				: std_logic_vector( 3 downto 0);
+	signal rgb_g_s				: std_logic_vector( 3 downto 0);
+	signal rgb_b_s				: std_logic_vector( 3 downto 0);
 	signal hsync_n_s			: std_logic;
 	signal vsync_n_s			: std_logic;
+	signal hblank_s				: std_logic;
 
 begin
 
 	--  instance
 	u_target: vdp18_core
 	generic map (
-		is_pal_g		=> false,
-		is_cvbs_g		=> false
+		is_cvbs_g		=> false,
+		use_scandbl_g	=> 0
 	)
     port map (
       clock_i       => clock_s,
-      clk_en_10m7_i => '1',
-      reset_n_i     => reset_n_s,
+      clk_en_10m7_i => clock_en_10m7_s,
+      por_i			=> por_s,
+      reset_i 	    => reset_s,
       csr_n_i       => csr_n_s,
       csw_n_i       => csw_n_s,
       mode_i        => mode_s,
@@ -127,15 +136,14 @@ begin
       vram_a_o      => vram_addr_s,
       vram_d_o      => vram_data_o_s,
       vram_d_i      => vram_data_i_s,
-      col_o         => col_s,
-      rgb_r_o       => open,
-      rgb_g_o       => open,
-      rgb_b_o       => open,
+      vga_en_i		=> '0',
+      rgb_r_o       => rgb_r_s,
+      rgb_g_o       => rgb_g_s,
+      rgb_b_o       => rgb_b_s,
       hsync_n_o     => hsync_n_s,
       vsync_n_o     => vsync_n_s,
-      comp_sync_n_o => open
+      ntsc_pal_o	=> open
     );
-
 
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
@@ -146,11 +154,21 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for 46.729 ns;
+		wait for 23.364 ns;
 		clock_s <= '1';
-		wait for 46.729 ns;
+		wait for 23.364 ns;
 	end process;
 
+	process
+	begin
+		if tb_end = '1' then
+			wait;
+		end if;
+		clock_en_10m7_s <= '0';
+		wait for 46.729 ns;
+		clock_en_10m7_s <= '1';
+		wait for 46.729 ns;
+	end process;
 
 	-- ----------------------------------------------------- --
 	--  test bench                                           --
@@ -165,119 +183,17 @@ begin
 		vram_data_i_s	<= (others => '0');
 
 		-- reset
-		reset_n_s		<= '0';
+		por_s			<= '1';
+		reset_s			<= '1';
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
-		reset_n_s		<= '1';
+		por_s			<= '0';
+		reset_s			<= '0';
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 
-		wait for 30.4 ms;
-
-		-- Escrita 98
---		cd_i_s		<= X"AA";
---		csw_n_s		<= '0';
---		wait until( rising_edge(clock_s) );
---		wait until( rising_edge(clock_s) );
---		csw_n_s		<= '1';
---		wait until( rising_edge(clock_s) );
---		wait until( rising_edge(clock_s) );
---		cd_i_s		<= X"00";
---		wait for 2 us;
---		-- Escrita 99
---		cd_i_s		<= X"55";
---		csw_n_s		<= '0';
---		mode_s		<= "01";
---		wait until( rising_edge(clock_s) );
---		wait until( rising_edge(clock_s) );
---		wait until( falling_edge(wait_s) );
---		wait until( rising_edge(clock_s) );
---		wait until( rising_edge(clock_s) );
---		csw_n_s		<= '1';
---		wait until( rising_edge(clock_s) );
---		wait until( rising_edge(clock_s) );
---		cd_i_s		<= X"00";
---		mode_s		<= "00";
---		wait for 1 us;
---		wait for 3 us;
-
-		-- Leitura
-		csr_n_s		<= '0';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		if wait_s = '1' then
-			wait until( falling_edge(wait_s) );
-		end if;
-		csr_n_s		<= '1';
-		wait for 1 us;
-		csr_n_s		<= '0';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		if wait_s = '1' then
-			wait until( falling_edge(wait_s) );
-		end if;
-		csr_n_s		<= '1';
-		wait for 1 us;
-
-		wait for 7 us;
-
-		-- Escrita registro 16
-		cd_i_s		<= X"02";					-- dado
-		csw_n_s		<= '0';
-		mode_s		<= "01";
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		if wait_s = '1' then
-			wait until( falling_edge(wait_s) );
-		end if;
-		csw_n_s		<= '1';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		cd_i_s		<= X"00";
-		wait for 1 us;
-		cd_i_s		<= X"D0";					-- escrita registro 16
-		csw_n_s		<= '0';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		if wait_s = '1' then
-			wait until( falling_edge(wait_s) );
-		end if;
-		csw_n_s		<= '1';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		cd_i_s		<= X"00";
-		mode_s		<= "00";
-		wait for 2 us;
-
-		-- escrita paleta
-		cd_i_s		<= X"A5";
-		csw_n_s		<= '0';
-		mode_s		<= "10";
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		if wait_s = '1' then
-			wait until( falling_edge(wait_s) );
-		end if;
-		csw_n_s		<= '1';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		cd_i_s		<= X"00";
-		wait for 850 ns;
-		cd_i_s		<= X"5A";
-		csw_n_s		<= '0';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		if wait_s = '1' then
-			wait until( falling_edge(wait_s) );
-		end if;
-		csw_n_s		<= '1';
-		wait until( rising_edge(clock_s) );
-		wait until( rising_edge(clock_s) );
-		cd_i_s		<= X"00";
-		mode_s		<= "00";
-
-		wait for 10 us;
+		wait for 100 ms;
 
 		-- wait
 		tb_end <= '1';

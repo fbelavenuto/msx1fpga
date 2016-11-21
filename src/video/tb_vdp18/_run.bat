@@ -20,6 +20,10 @@ vcom ..\vdp18\vdp18_pattern.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_sprite.vhd
 IF ERRORLEVEL 1 GOTO error
+vcom ..\..\ram\dpram.vhd
+IF ERRORLEVEL 1 GOTO error
+vcom ..\dblscan.vhd
+IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_core.vhd
 IF ERRORLEVEL 1 GOTO error
 

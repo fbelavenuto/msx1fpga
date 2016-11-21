@@ -197,7 +197,7 @@ begin
 		hw_id_g			=> 5,
 		hw_txt_g			=> "WXEDA Board",
 		hw_version_g	=> X"10",				-- Version 1.0
-		use_scandbl_g	=> true
+		use_scandbl_g	=> 1
 	)
 	port map (
 		-- Clocks

@@ -50,9 +50,6 @@ use ieee.numeric_std.all;
 
 entity vdp18_col_mux is
 	port (
-		clock_i			: in  std_logic;
-		clk_en_5m37_i	: in  boolean;
-		reset_i			: in  boolean;
 		vert_active_i	: in  boolean;
 		hor_active_i	: in  boolean;
 		blank_i			: in  boolean;

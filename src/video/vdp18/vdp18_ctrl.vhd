@@ -342,8 +342,7 @@ begin
 
 		elsif clock_i'event and clock_i = '1' then
 			if clk_en_5m37_i then
-				if not reg_blank_i and
-					num_pix_i = -1  then
+				if not reg_blank_i and num_pix_i = -1  then
 					hor_active_q <= true;
 				end if;
 

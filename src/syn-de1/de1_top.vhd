@@ -258,7 +258,7 @@ begin
 		hw_id_g			=> 1,
 		hw_txt_g			=> "DE-1 Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		use_scandbl_g	=> false
+		use_scandbl_g	=> 0
 	)
 	port map (
 		-- Clocks

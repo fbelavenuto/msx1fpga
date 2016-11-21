@@ -52,10 +52,6 @@ use work.vdp18_pack.opmode_t;
 use work.vdp18_pack.hv_t;
 
 entity vdp18_hor_vert is
-
-  generic (
-	 is_cvbs_g		: boolean := false
-  );
   port (
     clock_i       : in  std_logic;
     clk_en_5m37_i : in  boolean;
@@ -67,7 +63,9 @@ entity vdp18_hor_vert is
     vert_inc_o    : out boolean;
     hsync_n_o     : out std_logic;
     vsync_n_o     : out std_logic;
-    blank_o       : out boolean
+    blank_o       : out boolean;
+	 cnt_hor_o		: out std_logic_vector(8 downto 0);
+	 cnt_ver_o		: out std_logic_vector(8 downto 0)
   );
 
 end vdp18_hor_vert;
@@ -130,23 +128,7 @@ begin
 	--   Implements the horizontal and vertical counters.
 	--
 	counters: process (clock_i, reset_i, first_line_s)
-		variable ch1_v	: integer;
-		variable ch2_v	: integer;
-		variable ch3_v	: integer;
-		variable ch4_v	: integer;
 	begin
-		if is_cvbs_g then
-			ch1_v := -64;
-			ch2_v := -38;
-			ch3_v := -72;
-			ch4_v := -14;
-		else
-			ch1_v := -56;
-			ch2_v := -30;
-			ch3_v := -69;
-			ch4_v := -11;
-		end if;
-
 		if reset_i then
 			cnt_hor_q  <= hv_first_pix_text_c;
 			cnt_vert_q <= first_line_s;
@@ -173,14 +155,14 @@ begin
 				end if;
 
 				-- Horizontal sync ----------------------------------------------------
-				if    cnt_hor_q = ch1_v then		-- -64		-44		-56
+				if    cnt_hor_q = -64 then		-- -64		-44		-56
 					hsync_n_o <= '0';
-				elsif cnt_hor_q = ch2_v then		-- -38		-18		-30
+				elsif cnt_hor_q = -38 then		-- -38		-18		-30
 					hsync_n_o <= '1';
 				end if;
-				if    cnt_hor_q = ch3_v then		-- -72		-62		-69
+				if    cnt_hor_q = -72 then		-- -72		-62		-69
 					hblank_q  <= true;
-				elsif cnt_hor_q = ch4_v then		-- -14		-4			-11
+				elsif cnt_hor_q = -13 then		-- -14		-4			-11
 					hblank_q  <= false;
 				end if;
 
@@ -220,13 +202,15 @@ begin
   -- comparator for vertical line increment
   vert_inc_s <= clk_en_5m37_i and cnt_hor_q = hv_vertical_inc_c;
 
-
   -----------------------------------------------------------------------------
   -- Output mapping
   -----------------------------------------------------------------------------
   num_pix_o  <= cnt_hor_q;
   num_line_o <= cnt_vert_q;
   vert_inc_o <= vert_inc_s;
-  blank_o    <= hblank_q or vblank_q;
+	blank_o    <= hblank_q or vblank_q;
+
+	cnt_hor_o	<= std_logic_vector(cnt_hor_q);
+	cnt_ver_o	<= std_logic_vector(cnt_vert_q+15);	-- for vertical borders
 
 end rtl;
