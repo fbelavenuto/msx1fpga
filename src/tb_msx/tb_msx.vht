@@ -55,7 +55,7 @@ architecture testbench of tb is
 		hw_id_g			: integer								:= 0;
 		hw_txt_g			: string 								:= "NONE";
 		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
-		is_pal_g			: boolean								:= false
+		video_opt_g		: integer								:= 0		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
 	);
 	port(
 		-- clocks
@@ -137,13 +137,16 @@ architecture testbench of tb is
 		joy2_btn2_io	: inout std_logic;
 		joy2_out_o		: out   std_logic;
 		-- Video
-		col_o				: out std_logic_vector( 3 downto 0);
+		cnt_hor_o		: out std_logic_vector( 8 downto 0);
+		cnt_ver_o		: out std_logic_vector( 7 downto 0);
 		rgb_r_o				: out std_logic_vector( 3 downto 0);
 		rgb_g_o				: out std_logic_vector( 3 downto 0);
 		rgb_b_o				: out std_logic_vector( 3 downto 0);
 		hsync_n_o			: out std_logic;
 		vsync_n_o			: out std_logic;
-		csync_n_o			: out std_logic;
+		ntsc_pal_o		: out std_logic;
+		vga_on_k_i		: in  std_logic;
+		vga_en_o			: out std_logic;
 		-- SPI/SD
 		spi_cs_n_o			: out std_logic;
 		spi_sclk_o			: out std_logic;
@@ -235,7 +238,8 @@ architecture testbench of tb is
 	signal joy2_btn1_s			: std_logic;
 	signal joy2_btn2_s			: std_logic;
 	signal joy2_out_s			: std_logic;
-	signal col_s				: std_logic_vector( 3 downto 0);
+	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
+	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
 	signal rgb_g_s				: std_logic_vector( 3 downto 0);
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
@@ -256,7 +260,7 @@ begin
 		hw_id_g			=> 255,
 		hw_txt_g			=> "SIMUL",
 		hw_version_g	=> X"10",
-		is_pal_g		=> false
+		video_opt_g		=> 0
 	)
 	port map(
 		-- clocks
@@ -338,13 +342,16 @@ begin
 		joy2_btn2_io		=> joy2_btn2_s,
 		joy2_out_o			=> joy2_out_s,
 		-- Video
-		col_o				=> col_s,
+		cnt_hor_o			=> cnt_hor_s,
+		cnt_ver_o			=> cnt_ver_s,
 		rgb_r_o				=> rgb_r_s,
 		rgb_g_o				=> rgb_g_s,
 		rgb_b_o				=> rgb_b_s,
 		hsync_n_o			=> hsync_n_s,
 		vsync_n_o			=> vsync_n_s,
-		csync_n_o			=> csync_n_s,
+		ntsc_pal_o			=> open,
+		vga_on_k_i			=> '0',
+		vga_en_o			=> open,
 		-- SPI/SD
 		spi_cs_n_o			=> spi_cs_n_s,
 		spi_sclk_o			=> spi_sclk_s,
@@ -428,7 +435,7 @@ begin
 --		wait for 1 us;
 --		turbo_on_k_s <= '0';
 
-		wait for 100 us;
+		wait for 16 ms;
 
 		-- wait
 		tb_end <= '1';

@@ -89,7 +89,8 @@ architecture rtl of vdp18_hor_vert is
   signal hblank_q,
          vblank_q     : boolean;
 
-	signal cnt_ver_s	: std_logic_vector(8 downto 0);
+	signal cnt_hor_s	: unsigned(8 downto 0);
+	signal cnt_ver_s	: unsigned(7 downto 0);
 
 begin
 
@@ -212,8 +213,31 @@ begin
   vert_inc_o <= vert_inc_s;
 	blank_o    <= hblank_q or vblank_q;
 
-	cnt_hor_o	<= std_logic_vector(cnt_hor_q+12);
-	cnt_ver_s	<= std_logic_vector(cnt_vert_q+12);
-	cnt_ver_o	<= cnt_ver_s(7 downto 0);
+	-- Generate horizontal and vertical counters for VGA/HDMI (in top)
+	process (reset_i, clock_i)
+	begin
+		if reset_i then
+			cnt_hor_s <= (others => '0');
+			cnt_ver_s <= (others => '0');
+		elsif rising_edge(clock_i) then
+			if clk_en_5m37_i then
+				if cnt_hor_q = -12 then
+					cnt_hor_s <= (others => '0');
+				else
+					cnt_hor_s <= cnt_hor_s + 1;
+				end if;
+				if vert_inc_s then
+					if cnt_vert_q = -12 then
+						cnt_ver_s <= (others => '0');
+					else
+						cnt_ver_s <= cnt_ver_s + 1;
+					end if;
+				end if;
+			end if;
+		end if;
+	end process;
+
+	cnt_hor_o	<= std_logic_vector(cnt_hor_s);
+	cnt_ver_o	<= std_logic_vector(cnt_ver_s);
 
 end rtl;

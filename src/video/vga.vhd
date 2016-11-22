@@ -112,12 +112,12 @@ begin
 		end if;
 	end process;
 
-	process (I_HCNT, I_VCNT)
+	process (I_HCNT, I_VCNT, window_hcnt, window_vcnt)
 		variable wr_result_v : std_logic_vector(16 downto 0);
 		variable rd_result_v : std_logic_vector(16 downto 0);
 	begin
 		wr_result_v := std_logic_vector((unsigned(I_VCNT)                  * to_unsigned(hc_max, 9)) + unsigned(I_HCNT));
-		rd_result_v := std_logic_vector((unsigned(window_vcnt(8 downto 1)) * to_unsigned(hc_max, 9)) + unsigned(window_hcnt(8 downto 1)));
+		rd_result_v := std_logic_vector((unsigned(window_vcnt(8 downto 1)) * to_unsigned(hc_max, 9)) + unsigned(window_hcnt(9 downto 1)));
 		addr_wr	<= wr_result_v(15 downto 0);
 		addr_rd	<= rd_result_v(15 downto 0);
 	end process;
