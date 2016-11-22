@@ -196,7 +196,7 @@ begin
 	clks: entity work.clocks
 	port map (
 		clock_i			=> clock_master_s,
-		por_i				=> por_s,
+		por_i				=> not pll_locked_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> open,
@@ -355,19 +355,19 @@ begin
 	port map (
 		clk_i				=> clock_mem_s,
 		-- Port 0
-		porta0_addr_i	=> ram_addr_s,
-		porta0_ce_i		=> ram_ce_s,
-		porta0_oe_i		=> ram_oe_s,
-		porta0_we_i		=> ram_we_s,
-		porta0_data_i	=> ram_data_to_s,
-		porta0_data_o	=> ram_data_from_s,
+		porta0_addr_i	=> "11101" & vram_addr_s,
+		porta0_ce_i		=> vram_ce_s,
+		porta0_oe_i		=> vram_oe_s,
+		porta0_we_i		=> vram_we_s,
+		porta0_data_i	=> vram_di_s,
+		porta0_data_o	=> vram_do_s,
 		-- Port 1
-		porta1_addr_i	=> "11101" & vram_addr_s,
-		porta1_ce_i		=> vram_ce_s,
-		porta1_oe_i		=> vram_oe_s,
-		porta1_we_i		=> vram_we_s,
-		porta1_data_i	=> vram_di_s,
-		porta1_data_o	=> vram_do_s,
+		porta1_addr_i	=> ram_addr_s,
+		porta1_ce_i		=> ram_ce_s,
+		porta1_oe_i		=> ram_oe_s,
+		porta1_we_i		=> ram_we_s,
+		porta1_data_i	=> ram_data_to_s,
+		porta1_data_o	=> ram_data_from_s,
 		-- SRAM in board
 		sram_addr_o		=> sram_addr_o,
 		sram_data_io	=> sram_data_io,
@@ -380,14 +380,16 @@ begin
 
 	-- Resets
 	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_n_i(2) = '0'		else '0';
-	reset_s		<= '1'	when por_s = '1' or soft_rst_cnt_s = X"00"  or btn_n_i(4) = '0'		else '0';
+	reset_s		<= '1'	when soft_rst_cnt_s = X"01"                 or btn_n_i(4) = '0'		else '0';
 
 	process(reset_s, clock_master_s)
 	begin
 		if reset_s = '1' then
-			soft_rst_cnt_s	<= X"FF";
+			soft_rst_cnt_s	<= X"00";
 		elsif rising_edge(clock_master_s) then
-			if (soft_reset_k_s = '1' or soft_reset_s_s = '1') and soft_rst_cnt_s /= X"00" then
+			if (soft_reset_k_s = '1' or soft_reset_s_s = '1' or por_s = '1') and soft_rst_cnt_s = X"00" then
+				soft_rst_cnt_s	<= X"FF";
+			elsif soft_rst_cnt_s /= X"00" then
 				soft_rst_cnt_s <= soft_rst_cnt_s - 1;
 			end if;
 		end if;
@@ -492,8 +494,8 @@ begin
 
 	-- DEBUG
 	leds_n_o(0)		<= not turbo_on_s;
-	leds_n_o(1)		<= not caps_en_s;
---	leds_n_o(2)		<= not vga_en_s;
---	leds_n_o(3)		<= not ntsc_pal_s;
+--	leds_n_o(1)		<= not caps_en_s;
+--	leds_n_o(2)		<= not soft_reset_k_s;
+--	leds_n_o(3)		<= not soft_por_s;
 
 end architecture;

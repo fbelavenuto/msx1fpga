@@ -177,7 +177,6 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_r_o
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top_VGA.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll_VGA.qip"
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
-set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_reg.vhd
@@ -188,6 +187,7 @@ set_global_assignment -name VHDL_FILE ../../src/cpu/t80.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/ipl_rom.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
+set_global_assignment -name VHDL_FILE ../../src/ram/dpSRAM_5128.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/YM2149.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/Audio_DAC.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/dac.vhd

@@ -55,9 +55,9 @@ architecture rtl of vga is
 	constant hc_max				: integer := 280;
 	constant vc_max				: integer := 216;
 
-	constant h_start				: integer := 64;
+	constant h_start				: integer := 40;
 	constant h_end					: integer := h_start + (hc_max * 2);	-- 64 + (280 * 2) => 64 + 560 = 624
-	constant v_start				: integer := 16;
+	constant v_start				: integer := 22;
 	constant v_end					: integer := v_start + (vc_max * 2);
 	
 begin

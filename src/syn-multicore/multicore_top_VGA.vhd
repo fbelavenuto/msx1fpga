@@ -196,8 +196,8 @@ begin
 	generic map (
 		hw_id_g			=> 6,
 		hw_txt_g			=> "Multicore Board",
-		hw_version_g	=> X"10",				-- Version 1.0
-		use_scandbl_g	=> 1
+		hw_version_g	=> X"11",					-- Version 1.1
+		video_opt_g		=> 1							-- 1 = dblscan configurable
 	)
 	port map (
 		-- Clocks
@@ -279,12 +279,13 @@ begin
 		joy2_btn2_io	=> joy2_p9_io,
 		joy2_out_o		=> joy2_out_s,
 		-- Video
+		cnt_hor_o		=> open,
+		cnt_ver_o		=> open,
 		rgb_r_o			=> rgb_r_s,
 		rgb_g_o			=> rgb_g_s,
 		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
---		hblank_o			=> open,
 		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),			-- Print Screen
 		vga_en_o			=> vga_en_s,
@@ -351,7 +352,7 @@ begin
 	-- Glue logic
 
 	-- Resets
-	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_n_i(1) = '0'		else '0';
+	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_n_i(2) = '0'		else '0';
 	reset_s		<= '1'	when por_s = '1' or soft_rst_cnt_s = X"00"  or btn_n_i(4) = '0'		else '0';
 
 	process(reset_s, clock_master_s)

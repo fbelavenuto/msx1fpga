@@ -163,7 +163,7 @@ void main()
 
 	vdp_putstring("OK\n\nZeroing RAM: ");
 
-	for (page = 0; page < 32; page++) {
+	for (page = 0; page < 29; page++) {
 		if (page == 15) {
 			continue;
 		}

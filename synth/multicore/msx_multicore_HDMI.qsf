@@ -65,7 +65,6 @@ set_global_assignment -name RESERVE_DATA1_AFTER_CONFIGURATION "USE AS REGULAR IO
 set_global_assignment -name RESERVE_FLASH_NCE_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name RESERVE_DCLK_AFTER_CONFIGURATION "USE AS REGULAR IO"
 set_global_assignment -name FORCE_CONFIGURATION_VCCIO OFF
-set_global_assignment -name CONFIGURATION_VCCIO_LEVEL AUTO
 set_global_assignment -name CYCLONEII_OPTIMIZATION_TECHNIQUE BALANCED
 set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS ON
 set_global_assignment -name ALLOW_POWER_UP_DONT_CARE ON
@@ -177,7 +176,6 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_r_o
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top_HDMI.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll_HDMI.qip"
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
-set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_reg.vhd
@@ -220,5 +218,4 @@ set_global_assignment -name VHDL_FILE ../../src/peripheral/exp_slot.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/romnextor.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/escci/escci.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/escci/scc_wave.vhd
-set_global_assignment -name SDC_FILE msx_multicore_HDMI.out.sdc
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
