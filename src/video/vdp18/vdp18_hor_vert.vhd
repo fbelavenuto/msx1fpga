@@ -89,6 +89,8 @@ architecture rtl of vdp18_hor_vert is
   signal hblank_q,
          vblank_q     : boolean;
 
+	signal cnt_ver_s	: std_logic_vector(8 downto 0);
+
 begin
 
   -----------------------------------------------------------------------------
@@ -211,6 +213,7 @@ begin
 	blank_o    <= hblank_q or vblank_q;
 
 	cnt_hor_o	<= std_logic_vector(cnt_hor_q+12);
-	cnt_ver_o	<= std_logic_vector(cnt_vert_q+12)(7 downto 0);
+	cnt_ver_s	<= std_logic_vector(cnt_vert_q+12);
+	cnt_ver_o	<= cnt_ver_s(7 downto 0);
 
 end rtl;

@@ -206,7 +206,7 @@ begin
 		hw_id_g			=> 8,
 		hw_txt_g			=> "ZX-Uno Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		use_scandbl_g	=> 1
+		video_opt_g		=> 1
 	)
 	port map (
 		-- Clocks

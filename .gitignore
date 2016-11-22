@@ -148,3 +148,6 @@ greybox_tmp
 /src/video/tb_vdp18/wave1.bmp
 /src/video/tb_vdp18/wave2.bmp
 /src/video/tb_vdp18/wave3.bmp
+/src/video/tb_vga/transcript
+/src/video/tb_vga/vsim.wlf
+/src/video/tb_vga/work
