@@ -117,6 +117,7 @@ architecture behavior of multicore_top_HDMI is
 	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
 
 	-- Clocks
+	signal clock_mem_s		: std_logic;
 	signal clock_master_s	: std_logic;
 	signal clock_vdp_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
@@ -138,8 +139,8 @@ architecture behavior of multicore_top_HDMI is
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
 	signal vram_do_s			: std_logic_vector(7 downto 0);
 	signal vram_di_s			: std_logic_vector(7 downto 0);
---	signal vram_ce_s			: std_logic;
---	signal vram_oe_s			: std_logic;
+	signal vram_ce_s			: std_logic;
+	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 
 	-- Audio
@@ -150,25 +151,17 @@ architecture behavior of multicore_top_HDMI is
 	signal dac_s				: std_logic;
 
 	-- Video
-	signal rgb_r_s				: std_logic_vector( 3 downto 0);
-	signal rgb_g_s				: std_logic_vector( 3 downto 0);
-	signal rgb_b_s				: std_logic_vector( 3 downto 0);
+	signal rgb_col_s			: std_logic_vector( 3 downto 0);
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
---	signal hblank_s			: std_logic;
-	signal ntsc_pal_s			: std_logic;
-	signal vga_en_s			: std_logic;
 	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
 	signal tdms_s				: std_logic_vector( 7 downto 0);
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
-	signal cnt_ver_s			: std_logic_vector( 8 downto 0);
-
-	-- tmp
+	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_hsync_n_s		: std_logic;
 	signal vga_vsync_n_s		: std_logic;
 	signal vga_blank_s		: std_logic;
---	signal vga_hcounter_s	: std_logic_vector( 9 downto 0);
---	signal vga_vcounter_s	: std_logic_vector( 9 downto 0);
+	signal vga_col_s			: std_logic_vector( 3 downto 0);
 	signal vga_r_s				: std_logic_vector( 3 downto 0);
 	signal vga_g_s				: std_logic_vector( 3 downto 0);
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
@@ -192,9 +185,10 @@ begin
 	pll_1: entity work.pll_HDMI
 	port map (
 		inclk0	=> clock_50_i,
-		c0			=> clock_master_s,			--  21.000
-		c1			=> clock_vga_s,				--  25.200
-		c2			=> clock_dvi_s,				-- 126.000
+		c0			=> clock_mem_s,				--  42.000
+		c1			=> clock_master_s,			--  21.000
+		c2			=> clock_vga_s,				--  25.200
+		c3			=> clock_dvi_s,				-- 126.000
 		locked	=> pll_locked_s
 	);
 
@@ -216,8 +210,8 @@ begin
 	generic map (
 		hw_id_g			=> 6,
 		hw_txt_g			=> "Multicore Board",
-		hw_version_g	=> X"10",				-- Version 1.0
-		use_scandbl_g	=> 0
+		hw_version_g	=> X"11",					-- Version 1.1
+		video_opt_g		=> 3							-- No dblscan and external palette (Color in rgb_r_o)
 	)
 	port map (
 		-- Clocks
@@ -265,8 +259,8 @@ begin
 		vram_addr_o		=> vram_addr_s,
 		vram_data_i		=> vram_do_s,
 		vram_data_o		=> vram_di_s,
-		vram_ce_o		=> open,--vram_ce_s,
-		vram_oe_o		=> open,--vram_oe_s,
+		vram_ce_o		=> vram_ce_s,
+		vram_oe_o		=> vram_oe_s,
 		vram_we_o		=> vram_we_s,
 		-- Keyboard
 		rows_o			=> rows_s,
@@ -301,15 +295,14 @@ begin
 		-- Video
 		cnt_hor_o		=> cnt_hor_s,
 		cnt_ver_o		=> cnt_ver_s,
-		rgb_r_o			=> rgb_r_s,
-		rgb_g_o			=> rgb_g_s,
-		rgb_b_o			=> rgb_b_s,
+		rgb_r_o			=> rgb_col_s,
+		rgb_g_o			=> open,
+		rgb_b_o			=> open,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
---		hblank_o			=> hblank_s,
-		ntsc_pal_o		=> ntsc_pal_s,
-		vga_on_k_i		=> extra_keys_s(2),			-- Print Screen
-		vga_en_o			=> vga_en_s,
+		ntsc_pal_o		=> open,
+		vga_on_k_i		=> '0',
+		vga_en_o			=> open,
 		-- SPI/SD
 		spi_cs_n_o		=> sd_cs_n_o,
 		spi_sclk_o		=> sd_sclk_o,
@@ -357,18 +350,30 @@ begin
 		dac_out_o		=> dac_s
 	);
 
-	-- VRAM
-	vram: entity work.spram
-	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
-	)
+	-- RAM and VRAM
+	sram0: entity work.dpSRAM_5128
 	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
+		clk_i				=> clock_mem_s,
+		-- Port 0
+		porta0_addr_i	=> ram_addr_s,
+		porta0_ce_i		=> ram_ce_s,
+		porta0_oe_i		=> ram_oe_s,
+		porta0_we_i		=> ram_we_s,
+		porta0_data_i	=> ram_data_to_s,
+		porta0_data_o	=> ram_data_from_s,
+		-- Port 1
+		porta1_addr_i	=> "11101" & vram_addr_s,
+		porta1_ce_i		=> vram_ce_s,
+		porta1_oe_i		=> vram_oe_s,
+		porta1_we_i		=> vram_we_s,
+		porta1_data_i	=> vram_di_s,
+		porta1_data_o	=> vram_do_s,
+		-- SRAM in board
+		sram_addr_o		=> sram_addr_o,
+		sram_data_io	=> sram_data_io,
+		sram_ce_n_o		=> sram_ce_n_o(0),
+		sram_oe_n_o		=> sram_oe_n_o,
+		sram_we_n_o		=> sram_we_n_o
 	);
 
 	-- Glue logic
@@ -392,30 +397,59 @@ begin
 	dac_l_o		<= dac_s;
 	dac_r_o		<= dac_s;
 
-	-- RAM
-	sram_addr_o			<= ram_addr_s;
-	sram_data_io		<= ram_data_to_s	when ram_we_s = '1'	else (others => 'Z');
-	ram_data_from_s	<= sram_data_io;
-	sram_we_n_o			<= not ram_we_s;
-	sram_oe_n_o			<= not ram_oe_s;
-	sram_ce_n_o(0)		<= not ram_ce_s;
-
 	-- VGA framebuffer
 	vga: entity work.vga
 	port map (
 		I_CLK			=> clock_master_s,
 		I_CLK_VGA	=> clock_vga_s,
-		I_COLOR		=> rgb_r_s,
+		I_COLOR		=> rgb_col_s,
 		I_HCNT		=> cnt_hor_s,
 		I_VCNT		=> cnt_ver_s,
 		O_HSYNC		=> vga_hsync_n_s,
 		O_VSYNC		=> vga_vsync_n_s,
-		O_COLOR		=> vga_r_s,
+		O_COLOR		=> vga_col_s,
 		O_HCNT		=> open,
 		O_VCNT		=> open,
 		O_H			=> open,
 		O_BLANK		=> vga_blank_s
 	);
+
+	--
+	process (clock_vga_s)
+		variable vga_col_v	: integer range 0 to 15;
+		variable vga_rgb_v	: std_logic_vector(15 downto 0);
+		variable vga_r_v		: std_logic_vector(3 downto 0);
+		variable vga_g_v		: std_logic_vector(3 downto 0);
+		variable vga_b_v		: std_logic_vector(3 downto 0);
+		type ram_t is array (natural range 0 to 15) of std_logic_vector(15 downto 0);
+		constant rgb_c : ram_t := (
+				--      RB0G
+				0  => X"0000",
+				1  => X"0000",
+				2  => X"240C",
+				3  => X"570D",
+				4  => X"5E05",
+				5  => X"7F07",
+				6  => X"D405",
+				7  => X"4F0E",
+				8  => X"F505",
+				9  => X"F707",
+				10 => X"D50C",
+				11 => X"E80C",
+				12 => X"230B",
+				13 => X"CB09",
+				14 => X"CC0C",
+				15 => X"FF0F"
+		);
+	begin
+		if rising_edge(clock_vga_s) then
+			vga_col_v := to_integer(unsigned(vga_col_s));
+			vga_rgb_v := rgb_c(vga_col_v);
+			vga_r_s <= vga_rgb_v(15 downto 12);
+			vga_b_s <= vga_rgb_v(11 downto  8);
+			vga_g_s <= vga_rgb_v( 3 downto  0);
+		end if;
+	end process;
 
 --	vga_hsync_n_o	<= vga_hsync_n_s;
 --	vga_vsync_n_o	<= vga_vsync_n_s;
@@ -445,7 +479,7 @@ begin
 		O_TMDS			=> tdms_s
 	);
 	
-	sound_hdmi_s <= audio_s;
+	sound_hdmi_s <= '0' & audio_s(15 downto 1);
 
 	vga_hsync_n_o	<= tdms_s(7);	-- 2+		10
 	vga_vsync_n_o	<= tdms_s(6);	-- 2-		11
@@ -459,7 +493,7 @@ begin
 	-- DEBUG
 	leds_n_o(0)		<= not turbo_on_s;
 	leds_n_o(1)		<= not caps_en_s;
-	leds_n_o(2)		<= not vga_en_s;
-	leds_n_o(3)		<= not ntsc_pal_s;
+--	leds_n_o(2)		<= not vga_en_s;
+--	leds_n_o(3)		<= not ntsc_pal_s;
 
 end architecture;

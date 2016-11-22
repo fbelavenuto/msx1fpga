@@ -47,7 +47,7 @@ entity msx is
 		hw_id_g			: integer								:= 0;
 		hw_txt_g			: string 								:= "NONE";
 		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
-		use_scandbl_g	: integer								:= 0		-- 0 = no, 1 = configurable, 2 = always enabled
+		video_opt_g		: integer								:= 0		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
 	);
 	port (
 		-- Clocks
@@ -130,13 +130,12 @@ entity msx is
 		joy2_out_o		: out   std_logic;
 		-- Video
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
-		cnt_ver_o		: out std_logic_vector( 8 downto 0);
+		cnt_ver_o		: out std_logic_vector( 7 downto 0);
 		rgb_r_o			: out std_logic_vector( 3 downto 0);
 		rgb_g_o			: out std_logic_vector( 3 downto 0);
 		rgb_b_o			: out std_logic_vector( 3 downto 0);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
---		hblank_o			: out std_logic;
 		ntsc_pal_o		: out std_logic;
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
@@ -310,8 +309,7 @@ begin
 	-- VDP
 	vdp: entity work.vdp18_core
 	generic map (
---		is_cvbs_g		=> (hw_id_g = 8),
-		use_scandbl_g	=> use_scandbl_g
+		video_opt_g		=> video_opt_g
 	)
 	port map (
 		clock_i			=> clock_i,
@@ -339,7 +337,6 @@ begin
 		rgb_b_o			=> rgb_b_o,
 		hsync_n_o		=> hsync_n_o,
 		vsync_n_o		=> vsync_n_o,
---		hblank_o			=> hblank_o,
 		ntsc_pal_o		=> ntsc_pal_o
 	);
 

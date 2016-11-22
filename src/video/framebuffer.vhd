@@ -119,8 +119,8 @@ BEGIN
 		indata_reg_b => "CLOCK1",
 		intended_device_family => "Cyclone IV E",
 		lpm_type => "altsyncram",
-		numwords_a => 61440,
-		numwords_b => 61440,
+		numwords_a => 60480,
+		numwords_b => 60480,
 		operation_mode => "BIDIR_DUAL_PORT",
 		outdata_aclr_a => "NONE",
 		outdata_aclr_b => "NONE",
@@ -187,7 +187,7 @@ END SYN;
 -- Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 -- Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 -- Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
--- Retrieval info: PRIVATE: MEMSIZE NUMERIC "245760"
+-- Retrieval info: PRIVATE: MEMSIZE NUMERIC "241920"
 -- Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
 -- Retrieval info: PRIVATE: MIFfilename STRING ""
 -- Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "3"
@@ -225,8 +225,8 @@ END SYN;
 -- Retrieval info: CONSTANT: INDATA_REG_B STRING "CLOCK1"
 -- Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
 -- Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
--- Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "61440"
--- Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "61440"
+-- Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "60480"
+-- Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "60480"
 -- Retrieval info: CONSTANT: OPERATION_MODE STRING "BIDIR_DUAL_PORT"
 -- Retrieval info: CONSTANT: OUTDATA_ACLR_A STRING "NONE"
 -- Retrieval info: CONSTANT: OUTDATA_ACLR_B STRING "NONE"

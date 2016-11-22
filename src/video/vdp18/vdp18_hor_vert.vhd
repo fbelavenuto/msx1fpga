@@ -65,7 +65,7 @@ entity vdp18_hor_vert is
     vsync_n_o     : out std_logic;
     blank_o       : out boolean;
 	 cnt_hor_o		: out std_logic_vector(8 downto 0);
-	 cnt_ver_o		: out std_logic_vector(8 downto 0)
+	 cnt_ver_o		: out std_logic_vector(7 downto 0)
   );
 
 end vdp18_hor_vert;
@@ -210,7 +210,7 @@ begin
   vert_inc_o <= vert_inc_s;
 	blank_o    <= hblank_q or vblank_q;
 
-	cnt_hor_o	<= std_logic_vector(cnt_hor_q);
-	cnt_ver_o	<= std_logic_vector(cnt_vert_q+15);	-- for vertical borders
+	cnt_hor_o	<= std_logic_vector(cnt_hor_q+12);
+	cnt_ver_o	<= std_logic_vector(cnt_vert_q+12)(7 downto 0);
 
 end rtl;

@@ -81,7 +81,7 @@ use work.vdp18_pack.to_std_logic_f;
 
 entity vdp18_core is
 	generic (
-		use_scandbl_g	: integer		:= 0		-- 0 = no, 1 = configurable, 2 = always enabled
+		video_opt_g	: integer		:= 0		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
 	);
 	port (
 		-- Global Interface -------------------------------------------------------
@@ -107,13 +107,12 @@ entity vdp18_core is
 		-- Video Interface --------------------------------------------------------
 		vga_en_i			: in  std_logic;
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
-		cnt_ver_o		: out std_logic_vector( 8 downto 0);
+		cnt_ver_o		: out std_logic_vector( 7 downto 0);
 		rgb_r_o			: out std_logic_vector(0 to 3);
 		rgb_g_o			: out std_logic_vector(0 to 3);
 		rgb_b_o			: out std_logic_vector(0 to 3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
---		hblank_o			: out std_logic;
 		ntsc_pal_o		: out std_logic
 	);
 end vdp18_core;
@@ -187,7 +186,8 @@ architecture struct of vdp18_core is
 	signal palette_idx_s		: std_logic_vector(0 to  3);
 	signal palette_val_s		: std_logic_vector(0 to 15);
 	signal palette_wr_s		: std_logic;
-	signal ntsc_pal_s			: std_logic;
+	signal ntsc_pal_i_s		: std_logic;
+	signal ntsc_pal_e_s		: std_logic;
 
 begin
 
@@ -196,7 +196,7 @@ begin
 	wr_s          <= not to_boolean_f(csw_n_i);
 	por_s				<= por_i = '1';
 	reset_s			<= reset_i = '1';
-	ntsc_pal_o		<= ntsc_pal_s;
+	ntsc_pal_o		<= ntsc_pal_e_s;
 
 	-----------------------------------------------------------------------------
 	-- Clock Generator
@@ -221,7 +221,7 @@ begin
 		clk_en_5m37_i	=> clk_en_5m37_s,
 		reset_i			=> por_s,
 		opmode_i			=> opmode_s,
-		ntsc_pal_i		=> ntsc_pal_s,
+		ntsc_pal_i		=> ntsc_pal_e_s,
 		num_pix_o		=> num_pix_s,
 		num_line_o		=> num_line_s,
 		vert_inc_o		=> vert_inc_s,
@@ -300,7 +300,7 @@ begin
 		palette_idx_o	=> palette_idx_s,
 		palette_val_o	=> palette_val_s,
 		palette_wr_o	=> palette_wr_s,
-		ntsc_pal_o		=> ntsc_pal_s,
+		ntsc_pal_o		=> ntsc_pal_i_s,
 		irq_i				=> irq_s,
 		int_n_o			=> int_n_o
  );
@@ -396,30 +396,72 @@ begin
 		col_o				=> col_rgb_s
 	);
 
-	-----------------------------------------------------------------------------
-	-- Palette memory
-	-----------------------------------------------------------------------------
-	palette: entity work.vdp18_palette
-	port map (
-		reset_i		=> reset_s,
-		clock_i		=> clock_i,
-		we_i			=> palette_wr_s,
-		addr_wr_i	=> palette_idx_s,
-		data_i		=> palette_val_s,
-		addr_rd_i	=> col_s,
-		data_o		=> rgb_s
-	);
+	von3: if video_opt_g /= 3 generate
 
-	sd0: if use_scandbl_g = 0 generate
+		ntsc_pal_e_s <= ntsc_pal_i_s;
+
+		-----------------------------------------------------------------------------
+		-- Palette memory
+		-----------------------------------------------------------------------------
+		palette: entity work.vdp18_palette
+		port map (
+			reset_i		=> reset_s,
+			clock_i		=> clock_i,
+			we_i			=> palette_wr_s,
+			addr_wr_i	=> palette_idx_s,
+			data_i		=> palette_val_s,
+			addr_rd_i	=> col_s,
+			data_o		=> rgb_s
+		);
+
+		-----------------------------------------------------------------------------
+		-- Process rgb_reg
+		--
+		-- Purpose:
+		--   Converts the color information to simple RGB and saves these in
+		--   output registers.
+		--
+		rgb_reg: process (clock_i, por_s)
+		begin
+			if por_s then
+				rgb_r_o   <= (others => '0');
+				rgb_g_o   <= (others => '0');
+				rgb_b_o   <= (others => '0');
+
+			elsif rising_edge(clock_i) then
+				if clk_en_10m7_s then
+					rgb_r_o <= rgb_s( 0 to 3);
+					rgb_g_o <= rgb_s(12 to 15);
+					rgb_b_o <= rgb_s( 4 to 7);
+				end if;
+			end if;
+		end process rgb_reg;
+		--
+		-----------------------------------------------------------------------------
+	end generate;
+
+	vo0: if video_opt_g = 0 generate
+
 		col_s			<= col_rgb_s;
 		hsync_n_o	<= rgb_hsync_n_s;
 		vsync_n_o	<= rgb_vsync_n_s;
---		hblank_o		<= '0';
+
 	end generate;
 
-	sd1: if use_scandbl_g = 1 or use_scandbl_g = 2 generate
+	vo3: if video_opt_g = 3 generate
 
-		col_s	<= col_vga_s	when vga_en_i = '1' or use_scandbl_g = 2	else col_rgb_s;
+		ntsc_pal_e_s	<= '0';					-- Only NTSC
+		rgb_r_o			<= col_rgb_s;
+		rgb_g_o			<= (others => '0');
+		rgb_b_o			<= (others => '0');
+		hsync_n_o		<= rgb_hsync_n_s;
+		vsync_n_o		<= rgb_vsync_n_s;
+
+	end generate;
+
+	vo1_2: if video_opt_g = 1 or video_opt_g = 2 generate
+
+		col_s	<= col_vga_s	when vga_en_i = '1' or video_opt_g = 2	else col_rgb_s;
 
 		scandbl: entity work.dblscan
 		port map (
@@ -435,37 +477,11 @@ begin
 			vsync_n_i		=> rgb_vsync_n_s,
 			hsync_n_o		=> vga_hsync_n_s,
 			vsync_n_o		=> vga_vsync_n_s
---			hblank_o			=> hblank_o
 		);
 
-		hsync_n_o		<= vga_hsync_n_s	when vga_en_i = '1' or use_scandbl_g = 2	else rgb_hsync_n_s;
-		vsync_n_o		<= vga_vsync_n_s	when vga_en_i = '1' or use_scandbl_g = 2	else rgb_vsync_n_s;
+		hsync_n_o		<= vga_hsync_n_s	when vga_en_i = '1' or video_opt_g = 2	else rgb_hsync_n_s;
+		vsync_n_o		<= vga_vsync_n_s	when vga_en_i = '1' or video_opt_g = 2	else rgb_vsync_n_s;
 
 	end generate;
 
-	-----------------------------------------------------------------------------
-	-- Process rgb_reg
-	--
-	-- Purpose:
-	--   Converts the color information to simple RGB and saves these in
-	--   output registers.
-	--
-	rgb_reg: process (clock_i, por_s)
-	begin
-		if por_s then
-			rgb_r_o   <= (others => '0');
-			rgb_g_o   <= (others => '0');
-			rgb_b_o   <= (others => '0');
-
-		elsif rising_edge(clock_i) then
-			if clk_en_10m7_s then
-				rgb_r_o <= rgb_s( 0 to 3);
-				rgb_g_o <= rgb_s(12 to 15);
-				rgb_b_o <= rgb_s( 4 to 7);
-			end if;
-		end if;
-	end process rgb_reg;
-	--
-	-----------------------------------------------------------------------------
-
-end struct;
+end architecture;
