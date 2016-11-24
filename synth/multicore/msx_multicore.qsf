@@ -38,7 +38,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE10E22C8
-set_global_assignment -name TOP_LEVEL_ENTITY multicore_top_HDMI
+set_global_assignment -name TOP_LEVEL_ENTITY multicore_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:43:40  NOVEMBER 03, 2016"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
@@ -173,8 +173,8 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to joy2_right_i
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to joy2_up_i
 set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_l_o
 set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_r_o
-set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top_HDMI.vhd"
-set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll_HDMI.qip"
+set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top.vhd"
+set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll1.qip"
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd
