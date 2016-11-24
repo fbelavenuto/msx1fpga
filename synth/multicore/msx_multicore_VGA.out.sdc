@@ -19,7 +19,7 @@
 ## PROGRAM "Quartus II"
 ## VERSION "Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition"
 
-## DATE    "Tue Nov 22 21:27:47 2016"
+## DATE    "Thu Nov 24 08:20:09 2016"
 
 ##
 ## DEVICE  "EP4CE10E22C8"
@@ -46,7 +46,7 @@ create_clock -name {clocks:clks|clock_3m_s} -period 279.365 -waveform { 0.000 13
 # Create Generated Clock
 #**************************************************************
 
-create_generated_clock -name {pll_1|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {pll_1|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50.000 -multiply_by 67 -divide_by 78 -master_clock {clock_50_i} [get_pins {pll_1|altpll_component|auto_generated|pll1|clk[0]}] 
+create_generated_clock -name {pll_1|altpll_component|auto_generated|pll1|clk[0]} -source [get_pins {pll_1|altpll_component|auto_generated|pll1|inclk[0]}] -duty_cycle 50.000 -multiply_by 67 -divide_by 156 -master_clock {clock_50_i} [get_pins {pll_1|altpll_component|auto_generated|pll1|clk[0]}] 
 
 
 #**************************************************************

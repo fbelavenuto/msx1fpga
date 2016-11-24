@@ -182,7 +182,7 @@ begin
 	clks: entity work.clocks
 	port map (
 		clock_i			=> clock_master_s,
-		por_i				=> por_s,
+		por_i				=> not pll_locked_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> open,
