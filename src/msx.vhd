@@ -65,6 +65,7 @@ entity msx is
 		-- Options
 		opt_nextor_i	: in  std_logic;
 		opt_mr_type_i	: in  std_logic_vector(1 downto 0);
+		opt_vga_on_i	: in  std_logic							:= '0';
 		-- RAM
 		ram_addr_o		: out std_logic_vector(18 downto 0);	-- 512K
 		ram_data_i		: in  std_logic_vector( 7 downto 0);
@@ -404,6 +405,7 @@ begin
 	-- Switched I/O ports
 	swiop: entity work.swioports
 	port map (
+		por_i				=> por_i,
 		reset_i			=> reset_i,
 		clock_i			=> clock_cpu_i,
 		addr_i			=> cpu_addr_s(7 downto 0),
@@ -419,6 +421,7 @@ begin
 		hw_version_i	=> hw_version_g,
 		nextor_en_i 	=> opt_nextor_i,
 		mr_type_i		=> opt_mr_type_i,
+		vga_on_i			=> opt_vga_on_i,
 		turbo_on_k_i	=> turbo_on_k_i,
 		vga_on_k_i		=> vga_on_k_i,
 		--

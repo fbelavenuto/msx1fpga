@@ -110,6 +110,7 @@ architecture behavior of zxuno_top is
 
 	-- Resets
 	signal por_cnt_s			: unsigned(7 downto 0)				:= (others => '1');
+	signal por_clock_s		: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
 	signal soft_reset_k_s	: std_logic;
@@ -191,7 +192,7 @@ begin
 	clks: entity work.clocks
 	port map (
 		clock_i			=> clock_master_s,
-		por_i				=> por_s,
+		por_i				=> por_clock_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> open,
@@ -224,6 +225,7 @@ begin
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> "00",
+		opt_vga_on_i	=> '0',
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
 		ram_data_i		=> ram_data_from_s,
@@ -386,6 +388,7 @@ begin
 	end process;
 
 	-- Resets
+	por_clock_s	<= '1'	when por_cnt_s /= 0									else '0';
 	por_s			<= '1'	when por_cnt_s /= 0 or soft_por_s = '1'		else '0';
 	reset_s		<= '1'	when por_s = '1' or soft_rst_cnt_s = X"00"	else '0';
 

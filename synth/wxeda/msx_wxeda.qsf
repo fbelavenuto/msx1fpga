@@ -166,7 +166,6 @@ set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
 set_global_assignment -name VHDL_FILE "../../src/syn-wxeda/wxeda_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-wxeda/pll1.qip"
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
-set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80_reg.vhd

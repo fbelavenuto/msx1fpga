@@ -301,7 +301,7 @@ begin
 	clks: entity work.clocks
 	port map (
 		clock_i			=> clock_master_s,
-		por_i				=> por_s,
+		por_i				=> not pll_locked_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> open,
@@ -316,7 +316,7 @@ begin
 		hw_id_g			=> 2,
 		hw_txt_g			=> "DE-2 Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		use_scandbl_g	=> 1
+		video_opt_g		=> 1						-- dblscan configurable
 	)
 	port map (
 		clock_i			=> clock_master_s,
@@ -333,6 +333,7 @@ begin
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> SW(2 downto 1),
+		opt_vga_on_i	=> '1',
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
 		ram_data_i		=> ram_data_from_s,

@@ -196,8 +196,8 @@ begin
 	generic map (
 		hw_id_g			=> 5,
 		hw_txt_g			=> "WXEDA Board",
-		hw_version_g	=> X"10",				-- Version 1.0
-		use_scandbl_g	=> 1
+		hw_version_g	=> X"11",				-- Version 1.1
+		video_opt_g		=> 1						-- dblscan configurable
 	)
 	port map (
 		-- Clocks
@@ -215,6 +215,7 @@ begin
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> "00",
+		opt_vga_on_i	=> '1',
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
 		ram_data_i		=> ram_data_from_s,

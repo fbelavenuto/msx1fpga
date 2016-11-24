@@ -229,6 +229,7 @@ begin
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> "00",
+		opt_vga_on_i	=> '0',
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
 		ram_data_i		=> ram_data_from_s,

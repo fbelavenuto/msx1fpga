@@ -45,6 +45,7 @@ use ieee.numeric_std.all;
 
 entity swioports is
 	port (
+		por_i				: in  std_logic;
 		reset_i			: in  std_logic;
 		clock_i			: in  std_logic;
 		addr_i			: in  std_logic_vector(7 downto 0);
@@ -60,6 +61,7 @@ entity swioports is
 		hw_version_i	: in  std_logic_vector(7 downto 0);
 		nextor_en_i		: in  std_logic;
 		mr_type_i		: in  std_logic_vector(1 downto 0);
+		vga_on_i			: in  std_logic;
 		turbo_on_k_i	: in  std_logic;
 		vga_on_k_i		: in  std_logic;
 		--
@@ -133,18 +135,19 @@ begin
 	end process;
 
 	-- Write to Switched I/O ports
-	process (reset_i, clock_i, nextor_en_i, mr_type_i)
+	process (por_i, reset_i, clock_i, nextor_en_i, mr_type_i, vga_on_i)
 		variable turbo_on_de_v	: std_logic_vector(1 downto 0) := "00";
 		variable vga_on_de_v		: std_logic_vector(1 downto 0) := "00";
 		variable keymap_we_a_v	: std_logic;
 	begin
-		if reset_i = '1' then
+		if por_i = '1' then
 			nextor_en_q	<= nextor_en_i;
 			mapper_q		<= mr_type_i;
---			turbo_on_q	<= '0';
+			turbo_on_q	<= '0';
+			vga_en_q		<= vga_on_i;
+		elsif reset_i = '1' then
 			softreset_q	<= '0';
 			keymap_we_s	<= '0';
---			vga_en_q		<= '0';
 		elsif falling_edge(clock_i) then
 			turbo_on_de_v := turbo_on_de_v(0) & turbo_on_k_i;
 			vga_on_de_v   := vga_on_de_v(0) & vga_on_k_i;
