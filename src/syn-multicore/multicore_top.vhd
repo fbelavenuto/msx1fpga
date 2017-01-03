@@ -391,7 +391,7 @@ begin
 	-- Glue logic
 
 	-- Resets
-	btn_por_n_s		<= btn_n_i(1) or btn_n_i(4);
+	btn_por_n_s		<= btn_n_i(2) or btn_n_i(4);
 	btn_reset_n_s	<= btn_n_i(3) or btn_n_i(4);
 
 	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_por_n_s = '0'		else '0';
@@ -495,19 +495,19 @@ begin
 			vga_rgb_v := rgb_c(vga_col_v);
 			if scanlines_en_s = '1' then
 				--
-				if vga_rgb_v(15 downto 12) > 1 then
+				if vga_rgb_v(15 downto 12) > 1 and odd_line_s = '1' then
 					vga_r_s <= vga_rgb_v(15 downto 12) - 2;
 				else
 					vga_r_s <= vga_rgb_v(15 downto 12);
 				end if;
 				--
-				if vga_rgb_v(11 downto 8) > 1 then
+				if vga_rgb_v(11 downto 8) > 1 and odd_line_s = '1' then
 					vga_b_s <= vga_rgb_v(11 downto 8) - 2;
 				else
 					vga_b_s <= vga_rgb_v(11 downto 8);
 				end if;
 				--
-				if vga_rgb_v(3 downto 0) > 1 then
+				if vga_rgb_v(3 downto 0) > 1 and odd_line_s = '1' then
 					vga_g_s <= vga_rgb_v(3 downto 0) - 2;
 				else
 					vga_g_s <= vga_rgb_v(3 downto 0);
