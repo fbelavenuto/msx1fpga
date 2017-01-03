@@ -41,6 +41,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 
 entity multicore_top is
 	generic (
@@ -110,6 +111,11 @@ end entity;
 
 architecture behavior of multicore_top is
 
+	-- Buttons
+	signal btn_por_n_s		: std_logic;
+	signal btn_reset_n_s		: std_logic;
+	signal btn_scan_s			: std_logic;
+
 	-- Resets
 	signal pll_locked_s		: std_logic;
 	signal por_s				: std_logic;
@@ -168,6 +174,8 @@ architecture behavior of multicore_top is
 	signal vga_r_s				: std_logic_vector( 3 downto 0);
 	signal vga_g_s				: std_logic_vector( 3 downto 0);
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
+	signal scanlines_en_s	: std_logic;
+	signal odd_line_s			: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
@@ -383,8 +391,11 @@ begin
 	-- Glue logic
 
 	-- Resets
-	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_n_i(2) = '0'		else '0';
-	reset_s		<= '1'	when soft_rst_cnt_s = X"01"                 or btn_n_i(4) = '0'		else '0';
+	btn_por_n_s		<= btn_n_i(1) or btn_n_i(4);
+	btn_reset_n_s	<= btn_n_i(3) or btn_n_i(4);
+
+	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_por_n_s = '0'		else '0';
+	reset_s		<= '1'	when soft_rst_cnt_s = X"01"                 or btn_reset_n_s = '0'	else '0';
 
 	process(reset_s, clock_master_s)
 	begin
@@ -403,6 +414,27 @@ begin
 	dac_l_o		<= dac_s;
 	dac_r_o		<= dac_s;
 
+	---------------------------------
+	-- scanlines
+	btnscl: entity work.debounce
+	generic map (
+		counter_size_g	=> 16
+	)
+	port map (
+		clk_i				=> clock_master_s,
+		button_i			=> btn_n_i(1) or btn_n_i(2),
+		result_o			=> btn_scan_s
+	);
+	
+	process (por_s, btn_scan_s)
+	begin
+		if por_s = '1' then
+			scanlines_en_s <= '0';
+		elsif falling_edge(btn_scan_s) then
+			scanlines_en_s <= not scanlines_en_s;
+		end if;
+	end process;
+
 	-- VGA framebuffer
 	vga: entity work.vga
 	port map (
@@ -420,7 +452,17 @@ begin
 		O_BLANK		=> vga_blank_s
 	);
 
-	--
+	-- Scanlines
+	process(vga_hsync_n_s,vga_vsync_n_s)
+	begin
+		if vga_vsync_n_s = '0' then
+			odd_line_s <= '0';
+		elsif rising_edge(vga_hsync_n_s) then
+			odd_line_s <= not odd_line_s;
+		end if;
+	end process;
+
+	-- Index => RGB 
 	process (clock_vga_s)
 		variable vga_col_v	: integer range 0 to 15;
 		variable vga_rgb_v	: std_logic_vector(15 downto 0);
@@ -451,9 +493,30 @@ begin
 		if rising_edge(clock_vga_s) then
 			vga_col_v := to_integer(unsigned(vga_col_s));
 			vga_rgb_v := rgb_c(vga_col_v);
-			vga_r_s <= vga_rgb_v(15 downto 12);
-			vga_b_s <= vga_rgb_v(11 downto  8);
-			vga_g_s <= vga_rgb_v( 3 downto  0);
+			if scanlines_en_s = '1' then
+				--
+				if vga_rgb_v(15 downto 12) > 1 then
+					vga_r_s <= vga_rgb_v(15 downto 12) - 2;
+				else
+					vga_r_s <= vga_rgb_v(15 downto 12);
+				end if;
+				--
+				if vga_rgb_v(11 downto 8) > 1 then
+					vga_b_s <= vga_rgb_v(11 downto 8) - 2;
+				else
+					vga_b_s <= vga_rgb_v(11 downto 8);
+				end if;
+				--
+				if vga_rgb_v(3 downto 0) > 1 then
+					vga_g_s <= vga_rgb_v(3 downto 0) - 2;
+				else
+					vga_g_s <= vga_rgb_v(3 downto 0);
+				end if;
+			else
+				vga_r_s <= vga_rgb_v(15 downto 12);
+				vga_b_s <= vga_rgb_v(11 downto  8);
+				vga_g_s <= vga_rgb_v( 3 downto  0);
+			end if;
 		end if;
 	end process;
 
