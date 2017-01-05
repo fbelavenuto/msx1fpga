@@ -47,23 +47,27 @@ entity wxedax_top is
 	port (
 		-- Clock (48MHz)
 		clock_48M_i				: in    std_logic;
-		-- SDRAM (32MB 16x16bit)
-		sdram_clock_o			: out   std_logic;
+		-- SDRAM (W9864G6JH = 4Mx16 = 8MB)
+		sdram_clock_o			: out   std_logic									:= '0';
 		sdram_cke_o    	  	: out   std_logic									:= '0';
 		sdram_addr_o			: out   std_logic_vector(12 downto 0)		:= (others => '0');
 		sdram_dq_io				: inout std_logic_vector(15 downto 0);
-		sdram_ba_o				: out   std_logic_vector( 1 downto 0);
+		sdram_ba_o				: out   std_logic_vector( 1 downto 0)		:= (others => '0');
 		sdram_dqml_o			: out   std_logic;
 		sdram_dqmh_o			: out   std_logic;
 		sdram_cs_n_o   	  	: out   std_logic									:= '1';
 		sdram_we_n_o			: out   std_logic									:= '1';
 		sdram_cas_n_o			: out   std_logic									:= '1';
 		sdram_ras_n_o			: out   std_logic									:= '1';
-		-- SPI FLASH (W25Q32)
-		flash_clk_o				: out   std_logic;
-		flash_data_i			: in    std_logic;
-		flash_data_o			: out   std_logic;
-		flash_cs_n_o			: out   std_logic									:= '1';
+		-- SPI FLASH (FPGA and Aux)
+		flashf_clk_o			: out   std_logic									:= '0';
+		flashf_data_i			: in    std_logic;
+		flashf_data_o			: out   std_logic									:= '0';
+		flashf_cs_n_o			: out   std_logic									:= '1';
+		flash2_clk_o			: out   std_logic									:= '0';
+		flash2_data_i			: in    std_logic;
+		flash2_data_o			: out   std_logic									:= '0';
+		flash2_cs_n_o			: out   std_logic									:= '1';
 		-- VGA 5:6:5
 		vga_r_o					: out   std_logic_vector(4 downto 0)		:= (others => '0');
 		vga_g_o					: out   std_logic_vector(5 downto 0)		:= (others => '0');
@@ -73,26 +77,28 @@ entity wxedax_top is
 		-- UART
 		uart_tx_o				: out   std_logic									:= '1';
 		uart_rx_i				: in    std_logic;
-		-- External I/O
+		-- Keys and Leds
 		keys_n_i					: in    std_logic_vector(3 downto 0);
-		buzzer_o					: out   std_logic									:= '1';
-		-- ADC
-		adc_clock_o				: out   std_logic;
-		adc_data_i				: in    std_logic;
-		adc_cs_n_o				: out   std_logic									:= '1';
+		leds_n_o					: out   std_logic_vector(3 downto 0)		:= (others => '1');
 		-- PS/2 Keyboard
 		ps2_clk_io				: inout std_logic									:= 'Z';
 		ps2_dat_io		 		: inout std_logic									:= 'Z';
-		-- IrDA
-		irda_o					: out   std_logic;
+		-- ADC
+		adc_clock_o				: out   std_logic									:= '0';
+		adc_data_i				: in    std_logic;
+		adc_cs_n_o				: out   std_logic									:= '1';
+		-- Audio
+		audio_dac_l_o			: out   std_logic									:= '0';
+		audio_dac_r_o			: out   std_logic									:= '0';
+		buzzer_o					: out   std_logic									:= '1';
 		-- SD Card
 		sd_sclk_o				: out   std_logic									:= '0';
 		sd_mosi_o				: out   std_logic									:= '0';
 		sd_miso_i				: in    std_logic;
 		sd_cs_n_o				: out   std_logic									:= '1';
-		-- Audio
-		audio_dac_l_o			: out   std_logic									:= '0';
-		audio_dac_r_o			: out   std_logic									:= '0'
+		-- Others
+		irda_o					: out   std_logic									:= '0';
+		gpio_io					: inout std_logic_vector(1 downto 0)
 	);
 end;
 
@@ -111,6 +117,7 @@ architecture behavior of wxedax_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_sdram_s		: std_logic;
+	signal clock_sdram_o_s	: std_logic;
 	signal clock_vdp_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
@@ -156,6 +163,8 @@ architecture behavior of wxedax_top is
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
+	signal vga_en_s			: std_logic;
+	signal ntsc_pal_s			: std_logic;
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
@@ -166,6 +175,9 @@ architecture behavior of wxedax_top is
 	signal keymap_addr_s		: std_logic_vector(9 downto 0);
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
+	
+	-- SD
+	signal sd_cs_n_s			: std_logic;
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
@@ -177,9 +189,9 @@ begin
 	pll_1: entity work.pll1
 	port map (
 		CLK_IN1	=> clock_48M_i,
-		CLK_OUT1			=> clock_master_s,		-- 21.46667 MHz (6x NTSC)
-		CLK_OUT2			=> clock_sdram_s,			-- 85.86667 MHz (4x master)
-		CLK_OUT3			=> sdram_clock_o
+		CLK_OUT1	=> clock_master_s,		-- 21.46667 MHz (6x NTSC)
+		CLK_OUT2	=> clock_sdram_s,			-- 85.86667 MHz (4x master)
+		CLK_OUT3	=> sdram_clock_o			-- clock sdram -45 degrees
 	);
 
 	-- Clocks
@@ -289,11 +301,11 @@ begin
 		rgb_b_o			=> rgb_b_s,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
-		ntsc_pal_o		=> open,
+		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
-		vga_en_o			=> open,
+		vga_en_o			=> vga_en_s,
 		-- SPI/SD
-		spi_cs_n_o		=> sd_cs_n_o,
+		spi_cs_n_o		=> sd_cs_n_s,
 		spi_sclk_o		=> sd_sclk_o,
 		spi_mosi_o		=> sd_mosi_o,
 		spi_miso_i		=> sd_miso_i,
@@ -466,6 +478,13 @@ begin
 	vga_hs_o	<= rgb_hsync_n_s;
 	vga_vs_o	<= rgb_vsync_n_s;
 
+	-- SD
+	sd_cs_n_o <= sd_cs_n_s;
+
 	-- DEBUG
+	leds_n_o(0) <= sd_cs_n_s;
+	leds_n_o(1) <= not ntsc_pal_s;
+	leds_n_o(2) <= not vga_en_s;
+	leds_n_o(3) <= not turbo_on_s;
 
 end architecture;
