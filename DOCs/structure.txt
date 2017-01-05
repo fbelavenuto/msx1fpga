@@ -15,6 +15,7 @@ Hardware IDs:
 5  = WXEDA Board
 6  = Multicore Board
 8  = ZX-Uno Board
+9  = WXEDAX Board
 
 Switched I/O ports:
 
