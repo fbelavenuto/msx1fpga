@@ -171,7 +171,6 @@ architecture behavior of wxedax_top is
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector(3 downto 0);
-	signal reload_core_s		: std_logic;
 	signal keymap_addr_s		: std_logic_vector(9 downto 0);
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
@@ -372,7 +371,7 @@ begin
 		--
 		reset_o			=> soft_reset_k_s,
 		por_o				=> soft_por_s,
-		reload_core_o	=> reload_core_s,
+		reload_core_o	=> open,
 		extra_keys_o	=> extra_keys_s
 	);
 
@@ -399,15 +398,6 @@ begin
 		addr_i	=> vram_addr_s,
 		data_i	=> vram_di_s,
 		data_o	=> vram_do_s
-	);
-
-	-- Multiboot
-	mb: entity work.multiboot
-	port map (
-		reset_i		=> por_s,
-		clock_i		=> clock_vdp_s,
-		start_i		=> reload_core_s,
-		spi_addr_i	=> X"6B000000"
 	);
 
 	-- Tape In
