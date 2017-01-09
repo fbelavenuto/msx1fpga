@@ -50,7 +50,7 @@ entity wxedax_top is
 		-- SDRAM (W9864G6JH = 4Mx16 = 8MB)
 		sdram_clock_o			: out   std_logic									:= '0';
 		sdram_cke_o    	  	: out   std_logic									:= '0';
-		sdram_addr_o			: out   std_logic_vector(12 downto 0)		:= (others => '0');
+		sdram_addr_o			: out   std_logic_vector(11 downto 0)		:= (others => '0');
 		sdram_dq_io				: inout std_logic_vector(15 downto 0);
 		sdram_ba_o				: out   std_logic_vector( 1 downto 0)		:= (others => '0');
 		sdram_dqml_o			: out   std_logic;
@@ -60,13 +60,13 @@ entity wxedax_top is
 		sdram_cas_n_o			: out   std_logic									:= '1';
 		sdram_ras_n_o			: out   std_logic									:= '1';
 		-- SPI FLASH (FPGA and Aux)
-		flashf_clk_o			: out   std_logic									:= '0';
-		flashf_data_i			: in    std_logic;
-		flashf_data_o			: out   std_logic									:= '0';
-		flashf_cs_n_o			: out   std_logic									:= '1';
-		flash2_clk_o			: out   std_logic									:= '0';
-		flash2_data_i			: in    std_logic;
-		flash2_data_o			: out   std_logic									:= '0';
+--		flashf_clk_o			: out   std_logic									:= '0';
+--		flashf_data_i			: in    std_logic;
+--		flashf_data_o			: out   std_logic									:= '0';
+--		flashf_cs_n_o			: out   std_logic									:= '1';
+--		flash2_clk_o			: out   std_logic									:= '0';
+--		flash2_data_i			: in    std_logic;
+--		flash2_data_o			: out   std_logic									:= '0';
 		flash2_cs_n_o			: out   std_logic									:= '1';
 		-- VGA 5:6:5
 		vga_r_o					: out   std_logic_vector(4 downto 0)		:= (others => '0');
@@ -74,9 +74,9 @@ entity wxedax_top is
 		vga_b_o					: out   std_logic_vector(4 downto 0)		:= (others => '0');
 		vga_hs_o					: out   std_logic									:= '1';
 		vga_vs_o					: out   std_logic									:= '1';
-		-- UART
-		uart_tx_o				: out   std_logic									:= '1';
-		uart_rx_i				: in    std_logic;
+--		-- UART
+--		uart_tx_o				: out   std_logic									:= '1';
+--		uart_rx_i				: in    std_logic;
 		-- Keys and Leds
 		keys_n_i					: in    std_logic_vector(3 downto 0);
 		leds_n_o					: out   std_logic_vector(3 downto 0)		:= (others => '1');
@@ -90,15 +90,15 @@ entity wxedax_top is
 		-- Audio
 		audio_dac_l_o			: out   std_logic									:= '0';
 		audio_dac_r_o			: out   std_logic									:= '0';
-		buzzer_o					: out   std_logic									:= '1';
+--		buzzer_o					: out   std_logic									:= '1';
 		-- SD Card
 		sd_sclk_o				: out   std_logic									:= '0';
 		sd_mosi_o				: out   std_logic									:= '0';
 		sd_miso_i				: in    std_logic;
-		sd_cs_n_o				: out   std_logic									:= '1';
+		sd_cs_n_o				: out   std_logic									:= '1'
 		-- Others
-		irda_o					: out   std_logic									:= '0';
-		gpio_io					: inout std_logic_vector(1 downto 0)
+--		irda_o					: out   std_logic									:= '0';
+--		gpio_io					: inout std_logic_vector(1 downto 0)
 	);
 end;
 
@@ -348,7 +348,7 @@ begin
 		mem_udq_o	=> sdram_dqmh_o,
 		mem_ldq_o	=> sdram_dqml_o,
 		mem_ba_o		=> sdram_ba_o,
-		mem_addr_o	=> sdram_addr_o(11 downto 0),
+		mem_addr_o	=> sdram_addr_o,
 		mem_data_io	=> sdram_dq_io
 	);
 
@@ -407,13 +407,13 @@ begin
 		sample_cycles_g	=> 28
 	)
 	port map (
-		clock_i	 		=> clock_master_s,
-		reset_i	 		=> reset_s,
-		clock_o			=> open,
-		data_o		 	=> tapein_s,
-		adc_data_i		=> adc_data_i,
-		adc_cs_n_o	 	=> adc_cs_n_o,
-		adc_clk_o	  	=> adc_clock_o
+		clock_i	 	=> clock_master_s,
+		reset_i	 	=> reset_s,
+		clock_o		=> open,
+		data_o		=> tapein_s,
+		adc_data_i	=> adc_data_i,
+		adc_cs_n_o	=> adc_cs_n_o,
+		adc_clk_o	=> adc_clock_o
 	);
 
 	-- Glue logic

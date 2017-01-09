@@ -16,7 +16,7 @@ NET "sdram_addr_o<8>"   LOC="P139" | IOSTANDARD = LVCMOS33;
 NET "sdram_addr_o<9>"   LOC="P138" | IOSTANDARD = LVCMOS33;
 NET "sdram_addr_o<10>"  LOC="P6"   | IOSTANDARD = LVCMOS33;
 NET "sdram_addr_o<11>"  LOC="P137" | IOSTANDARD = LVCMOS33;
-NET "sdram_addr_o<12>"  LOC="P134" | IOSTANDARD = LVCMOS33;
+#NET "sdram_addr_o<12>"  LOC="P134" | IOSTANDARD = LVCMOS33;
 NET "sdram_dq_io<0>"    LOC="P100" | IOSTANDARD = LVCMOS33;
 NET "sdram_dq_io<1>"    LOC="P99"  | IOSTANDARD = LVCMOS33;
 NET "sdram_dq_io<2>"    LOC="P102" | IOSTANDARD = LVCMOS33;
@@ -43,13 +43,13 @@ NET "sdram_cas_n_o"     LOC="P116" | IOSTANDARD = LVCMOS33;
 NET "sdram_ras_n_o"     LOC="P117" | IOSTANDARD = LVCMOS33;
 
 # SPI Flash (FPGA and Aux)
-NET "flashf_clk_o"      LOC="P70"  | IOSTANDARD = LVCMOS33;
-NET "flashf_data_i"     LOC="P65"  | IOSTANDARD = LVCMOS33;
-NET "flashf_data_o"     LOC="P64"  | IOSTANDARD = LVCMOS33;
-NET "flashf_cs_n_o"     LOC="P38"  | IOSTANDARD = LVCMOS33;
-NET "flash2_clk_o"      LOC="P88"  | IOSTANDARD = LVCMOS33;
-NET "flash2_data_i"     LOC="P87"  | IOSTANDARD = LVCMOS33;
-NET "flash2_data_o"     LOC="P92"  | IOSTANDARD = LVCMOS33;
+#NET "flashf_clk_o"      LOC="P70"  | IOSTANDARD = LVCMOS33;
+#NET "flashf_data_i"     LOC="P65"  | IOSTANDARD = LVCMOS33;
+#NET "flashf_data_o"     LOC="P64"  | IOSTANDARD = LVCMOS33;
+#NET "flashf_cs_n_o"     LOC="P38"  | IOSTANDARD = LVCMOS33;
+#NET "flash2_clk_o"      LOC="P88"  | IOSTANDARD = LVCMOS33;
+#NET "flash2_data_i"     LOC="P87"  | IOSTANDARD = LVCMOS33;
+#NET "flash2_data_o"     LOC="P92"  | IOSTANDARD = LVCMOS33;
 NET "flash2_cs_n_o"     LOC="P93"  | IOSTANDARD = LVCMOS33;
 
 # Video output
@@ -73,8 +73,8 @@ NET "vga_hs_o"          LOC="P26"  | IOSTANDARD = LVCMOS33;
 NET "vga_vs_o"          LOC="P27"  | IOSTANDARD = LVCMOS33;
 
 # Serial
-NET "uart_tx_o"         LOC="P14"  | IOSTANDARD = LVCMOS33;
-NET "uart_rx_i"         LOC="P12"  | IOSTANDARD = LVCMOS33;
+#NET "uart_tx_o"         LOC="P14"  | IOSTANDARD = LVCMOS33;
+#NET "uart_rx_i"         LOC="P12"  | IOSTANDARD = LVCMOS33;
 
 # Keys
 NET "keys_n_i<0>"       LOC="P17"  | IOSTANDARD = LVCMOS33;
@@ -100,7 +100,7 @@ NET "adc_cs_n_o"        LOC="P61"  | IOSTANDARD = LVCMOS33;
 # Sound output
 NET "audio_dac_l_o"     LOC="P79"  | IOSTANDARD = LVCMOS33;
 NET "audio_dac_r_o"     LOC="P67"  | IOSTANDARD = LVCMOS33;
-NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
+#NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
 
 # SD/MMC
 NET "sd_sclk_o"         LOC="P78"  | IOSTANDARD = LVCMOS33;
@@ -109,9 +109,9 @@ NET "sd_miso_i"         LOC="P74"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "sd_cs_n_o"         LOC="P66"  | IOSTANDARD = LVCMOS33;
 
 # Others
-NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;
-NET "gpio_io<0>"        LOC="P57"  | IOSTANDARD = LVCMOS33;
-NET "gpio_io<1>"        LOC="P58"  | IOSTANDARD = LVCMOS33;
+#NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;
+#NET "gpio_io<0>"        LOC="P57"  | IOSTANDARD = LVCMOS33;
+#NET "gpio_io<1>"        LOC="P58"  | IOSTANDARD = LVCMOS33;
 
 #DS_A   = 80 (usado)
 #DS_B   = 79 (usado)
@@ -126,4 +126,21 @@ NET "gpio_io<1>"        LOC="P58"  | IOSTANDARD = LVCMOS33;
 #DS_EN3 = 67 (usado)
 #DS_EN4 = 75 
 
+# Clock Constraints
+
 PIN "pll_1/clkout3_buf.O" CLOCK_DEDICATED_ROUTE = FALSE;
+
+NET "clock_48M_i" TNM_NET = clock_48M_i;
+TIMESPEC TS_clock_48M_i = PERIOD "clock_48M_i" 20.833 ns HIGH 50%;
+
+NET "clock_master_s" TNM_NET = clock_master_s;
+TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.56 ns HIGH 50%;
+
+NET "clock_sdram_s" TNM_NET = clock_sdram_s;
+TIMESPEC TS_clock_sdram_s = PERIOD "clock_sdram_s" 11.645 ns HIGH 50%;
+
+NET "clks/clock_3m_s" TNM_NET = clks/clock_3m_s;
+TIMESPEC TS_clks_clock_3m_s = PERIOD "clks/clock_3m_s" 279.365 ns HIGH 50%;
+
+NET "clks/clock_vdp_s" TNM_NET = clks/clock_vdp_s;
+TIMESPEC TS_clks_clock_vdp_s = PERIOD "clks/clock_vdp_s" 93.121 ns HIGH 50%;
