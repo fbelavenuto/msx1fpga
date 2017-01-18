@@ -275,6 +275,12 @@ architecture behavior of de2_top is
 	alias J1_BTN				: std_logic						is GPIO_1(25);
 	alias J1_BTN2				: std_logic						is GPIO_1(21);
 
+	-- Alias SD
+	alias SD_nCS  is SD_DAT3;
+	alias SD_MISO is SD_DAT;
+	alias SD_MOSI is SD_CMD;
+	alias SD_SCLK is SD_CLK;
+
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
 	signal D_cpu_addr_s		: std_logic_vector(15 downto 0);
@@ -387,15 +393,19 @@ begin
 		joy1_down_i		=> J0_DOWN,
 		joy1_left_i		=> J0_LEFT,
 		joy1_right_i	=> J0_RIGHT,
-		joy1_btn1_io	=> J0_BTN,
-		joy1_btn2_io	=> J0_BTN2,
+		joy1_btn1_i		=> J0_BTN,
+		joy1_btn1_o		=> J0_BTN,
+		joy1_btn2_i		=> J0_BTN2,
+		joy1_btn2_o		=> J0_BTN2,
 		joy1_out_o		=> open,
 		joy2_up_i		=> J1_UP,
 		joy2_down_i		=> J1_DOWN,
 		joy2_left_i		=> J1_LEFT,
 		joy2_right_i	=> J1_RIGHT,
-		joy2_btn1_io	=> J1_BTN,
-		joy2_btn2_io	=> J1_BTN2,
+		joy2_btn1_i		=> J1_BTN,
+		joy2_btn1_o		=> J1_BTN,
+		joy2_btn2_i		=> J1_BTN2,
+		joy2_btn2_o		=> J1_BTN2,
 		joy2_out_o		=> open,
 		-- Video
 		rgb_r_o			=> rgb_r_s,
@@ -407,10 +417,11 @@ begin
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
-		spi_cs_n_o		=> SD_DAT3,
-		spi_sclk_o		=> SD_CLK,
-		spi_mosi_o		=> SD_CMD,
-		spi_miso_i		=> SD_DAT,
+		flspi_cs_n_o	=> open,
+		spi_cs_n_o		=> SD_nCS,
+		spi_sclk_o		=> SD_SCLK,
+		spi_mosi_o		=> SD_MOSI,
+		spi_miso_i		=> SD_MISO,
 		-- DEBUG
 		D_slots_o		=> open
 	);
@@ -473,7 +484,7 @@ begin
 --		data_o	=> vram_data_from_s
 --	);
 
-	vram: entity work.ssdram
+	ram: entity work.ssdram
 	generic map (
 		freq_g		=> 85
 	)
@@ -482,12 +493,12 @@ begin
 		reset_i		=> reset_s,
 		refresh_i	=> '1',
 		-- Static RAM bus
-		addr_i		=> "000000000" & vram_addr_s,
-		data_i		=> vram_data_to_s,
-		data_o		=> vram_data_from_s,
-		cs_i			=> vram_ce_s,
-		oe_i			=> vram_oe_s,
-		we_i			=> vram_we_s,
+		addr_i		=> "0000" & ram_addr_s,
+		data_i		=> ram_data_to_s,
+		data_o		=> ram_data_from_s,
+		cs_i			=> ram_ce_s,
+		oe_i			=> ram_oe_s,
+		we_i			=> ram_we_s,
 		-- SD-RAM ports
 		mem_cke_o	=> DRAM_CKE,
 		mem_cs_n_o	=> DRAM_CS_N,
@@ -526,18 +537,15 @@ begin
 	end process;
 
 	-- RAM
-	SRAM_ADDR	<= ram_addr_s(18 downto 1);
-	SRAM_DQ		<= "ZZZZZZZZ" & ram_data_to_s	when ram_we_s = '1' and ram_addr_s(0) = '0' 	else
-						ram_data_to_s & "ZZZZZZZZ"	when ram_we_s = '1' and ram_addr_s(0) = '1' 	else
+	SRAM_ADDR	<= "0000" & vram_addr_s;
+	SRAM_DQ		<= "ZZZZZZZZ" & vram_data_to_s	when ram_we_s = '1' else
 						(others => 'Z');
-	ram_data_from_s	<= SRAM_DQ( 7 downto 0)	when ram_oe_s = '1' and ram_addr_s(0) = '0' 	else
-								SRAM_DQ(15 downto 8)	when ram_oe_s = '1' and ram_addr_s(0) = '1' 	else
-								(others => '1');
-	SRAM_UB_N			<= not ram_addr_s(0);
-	SRAM_LB_N			<= ram_addr_s(0);
-	SRAM_CE_N			<= not ram_ce_s;
-	SRAM_OE_N			<= not ram_oe_s;
-	SRAM_WE_N			<= not ram_we_s;
+	vram_data_from_s	<= SRAM_DQ( 7 downto 0);
+	SRAM_UB_N			<= '1';
+	SRAM_LB_N			<= '0';
+	SRAM_CE_N			<= not vram_ce_s;
+	SRAM_OE_N			<= not vram_oe_s;
+	SRAM_WE_N			<= not vram_we_s;
 
 	-- ROM
 --	FL_ADDR				<= "0000000" & rom_addr_s;

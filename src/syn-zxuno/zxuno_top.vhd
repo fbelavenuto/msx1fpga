@@ -97,8 +97,6 @@ entity zxuno_top is
 		vga_pal_o			: out   std_logic								:= '1';
 
 		-- GPIO
-		joy2_btn1_io		: inout std_logic;
-		joy2_btn2_io		: inout std_logic;
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
 
 		-- Debug
@@ -279,15 +277,19 @@ begin
 		joy1_down_i		=> joy_down_i,
 		joy1_left_i		=> joy_left_i,
 		joy1_right_i	=> joy_right_i,
-		joy1_btn1_io	=> joy_fire1_i,
-		joy1_btn2_io	=> joy_fire2_i,
+		joy1_btn1_i		=> joy_fire1_i,
+		joy1_btn1_o		=> joy_fire1_i,
+		joy1_btn2_i		=> joy_fire2_i,
+		joy1_btn2_o		=> joy_fire2_i,
 		joy1_out_o		=> joy_out1_s,
 		joy2_up_i		=> '1',
 		joy2_down_i		=> '1',
 		joy2_left_i		=> '1',
 		joy2_right_i	=> '1',
-		joy2_btn1_io	=> joy2_btn1_io,
-		joy2_btn2_io	=> joy2_btn2_io,
+		joy2_btn1_i		=> '1',
+		joy2_btn1_o		=> open,
+		joy2_btn2_i		=> '1',
+		joy2_btn2_o		=> open,
 		joy2_out_o		=> open,
 		-- Video
 		rgb_r_o			=> rgb_r_s,
@@ -299,6 +301,7 @@ begin
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
+		flspi_cs_n_o	=> open,
 		spi_cs_n_o		=> sd_cs_n_s,
 		spi_sclk_o		=> sd_sclk_o,
 		spi_mosi_o		=> sd_mosi_o,

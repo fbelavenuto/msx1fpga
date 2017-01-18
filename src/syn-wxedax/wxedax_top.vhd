@@ -60,10 +60,10 @@ entity wxedax_top is
 		sdram_cas_n_o			: out   std_logic									:= '1';
 		sdram_ras_n_o			: out   std_logic									:= '1';
 		-- SPI FLASH (FPGA and Aux)
---		flashf_clk_o			: out   std_logic									:= '0';
---		flashf_data_i			: in    std_logic;
---		flashf_data_o			: out   std_logic									:= '0';
---		flashf_cs_n_o			: out   std_logic									:= '1';
+		flashf_clk_o			: out   std_logic									:= '0';
+		flashf_data_i			: in    std_logic;
+		flashf_data_o			: out   std_logic									:= '0';
+		flashf_cs_n_o			: out   std_logic									:= '1';
 --		flash2_clk_o			: out   std_logic									:= '0';
 --		flash2_data_i			: in    std_logic;
 --		flash2_data_o			: out   std_logic									:= '0';
@@ -90,12 +90,16 @@ entity wxedax_top is
 		-- Audio
 		audio_dac_l_o			: out   std_logic									:= '0';
 		audio_dac_r_o			: out   std_logic									:= '0';
---		buzzer_o					: out   std_logic									:= '1';
+		buzzer_o					: out   std_logic									:= '1';
 		-- SD Card
 		sd_sclk_o				: out   std_logic									:= '0';
 		sd_mosi_o				: out   std_logic									:= '0';
 		sd_miso_i				: in    std_logic;
-		sd_cs_n_o				: out   std_logic									:= '1'
+		sd_cs_n_o				: out   std_logic									:= '1';
+		-- Joystick SNES
+		pad_clk_o				: out   std_logic								:= '0';
+		pad_latch_o				: out   std_logic								:= '0';
+		pad_data_i				: in    std_logic
 		-- Others
 --		irda_o					: out   std_logic									:= '0';
 --		gpio_io					: inout std_logic_vector(1 downto 0)
@@ -178,9 +182,19 @@ architecture behavior of wxedax_top is
 	-- SD
 	signal sd_cs_n_s			: std_logic;
 
-	-- Debug
-	signal D_display_s		: std_logic_vector(15 downto 0);
-	signal D_cpu_addr_s		: std_logic_vector(15 downto 0);
+	-- SNES
+	signal but_a_s				: std_logic;
+	signal but_b_s				: std_logic;
+	signal but_x_s				: std_logic;
+	signal but_y_s				: std_logic;
+	signal but_start_s		: std_logic;
+	signal but_sel_s			: std_logic;
+	signal but_tl_s			: std_logic;
+	signal but_tr_s			: std_logic;
+	signal but_up_s			: std_logic;
+	signal but_down_s			: std_logic;
+	signal but_left_s			: std_logic;
+	signal but_right_s		: std_logic;
 
 begin
 
@@ -280,19 +294,23 @@ begin
 		k7_audio_o		=> open,
 		k7_audio_i		=> ear_s,
 		-- Joystick
-		joy1_up_i		=> '1',
-		joy1_down_i		=> '1',
-		joy1_left_i		=> '1',
-		joy1_right_i	=> '1',
-		joy1_btn1_io	=> open,
-		joy1_btn2_io	=> open,
+		joy1_up_i		=> but_up_s,
+		joy1_down_i		=> but_down_s,
+		joy1_left_i		=> but_left_s,
+		joy1_right_i	=> but_right_s,
+		joy1_btn1_i		=> but_b_s,
+		joy1_btn1_o		=> open,
+		joy1_btn2_i		=> but_a_s,
+		joy1_btn2_o		=> open,
 		joy1_out_o		=> open,
 		joy2_up_i		=> '1',
 		joy2_down_i		=> '1',
 		joy2_left_i		=> '1',
 		joy2_right_i	=> '1',
-		joy2_btn1_io	=> open,
-		joy2_btn2_io	=> open,
+		joy2_btn1_i		=> '1',
+		joy2_btn1_o		=> open,
+		joy2_btn2_i		=> '1',
+		joy2_btn2_o		=> open,
 		joy2_out_o		=> open,
 		-- Video
 		rgb_r_o			=> rgb_r_s,
@@ -304,6 +322,7 @@ begin
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
+		flspi_cs_n_o	=> open,
 		spi_cs_n_o		=> sd_cs_n_s,
 		spi_sclk_o		=> sd_sclk_o,
 		spi_mosi_o		=> sd_mosi_o,
@@ -416,6 +435,36 @@ begin
 		adc_clk_o	=> adc_clock_o
 	);
 
+	-----------------------------------------------------------------------------
+	-- SNES Gamepads
+	-----------------------------------------------------------------------------
+	snespads_b : entity work.snespad
+	generic map (
+		num_pads_g			=> 1,
+		reset_level_g		=> 1,
+		button_level_g		=> 0,
+		clocks_per_6us_g	=> 128					-- 6us = 128 ciclos de 21.477MHz
+	)
+	port map (
+		clk_i					=> clock_master_s,
+		reset_i				=> reset_s,
+		pad_clk_o			=> pad_clk_o,
+		pad_latch_o			=> pad_latch_o,
+		pad_data_i(0)		=> pad_data_i,
+		but_a_o(0)			=> but_a_s,
+		but_b_o(0)			=> but_b_s,
+		but_x_o(0)			=> but_x_s,
+		but_y_o(0)			=> but_y_s,
+		but_start_o(0)		=> but_start_s,
+		but_sel_o(0)		=> but_sel_s,
+		but_tl_o(0)			=> but_tl_s,
+		but_tr_o(0)			=> but_tr_s,
+		but_up_o(0)			=> but_up_s,
+		but_down_o(0)		=> but_down_s,
+		but_left_o(0)		=> but_left_s,
+		but_right_o(0)		=> but_right_s
+	);
+
 	-- Glue logic
 
 	-- Power-on counter
@@ -444,8 +493,9 @@ begin
 	end process;
 
 	-- Audio
-	audio_dac_l_o		<= dac_s;
-	audio_dac_r_o		<= dac_s;
+	audio_dac_l_o	<= dac_s;
+	audio_dac_r_o	<= dac_s;
+	buzzer_o			<= beep_s;
 
 	-- Tape In (via ADC)
 	process (clock_master_s)

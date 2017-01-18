@@ -1,3 +1,5 @@
+CONFIG VCCAUX=2.5;
+
 # Clocks
 NET "clock_48M_i"       LOC="P56"  | IOSTANDARD = LVCMOS33;
 
@@ -43,10 +45,10 @@ NET "sdram_cas_n_o"     LOC="P116" | IOSTANDARD = LVCMOS33;
 NET "sdram_ras_n_o"     LOC="P117" | IOSTANDARD = LVCMOS33;
 
 # SPI Flash (FPGA and Aux)
-#NET "flashf_clk_o"      LOC="P70"  | IOSTANDARD = LVCMOS33;
-#NET "flashf_data_i"     LOC="P65"  | IOSTANDARD = LVCMOS33;
-#NET "flashf_data_o"     LOC="P64"  | IOSTANDARD = LVCMOS33;
-#NET "flashf_cs_n_o"     LOC="P38"  | IOSTANDARD = LVCMOS33;
+NET "flashf_clk_o"      LOC="P70"  | IOSTANDARD = LVCMOS33;
+NET "flashf_data_i"     LOC="P65"  | IOSTANDARD = LVCMOS33;
+NET "flashf_data_o"     LOC="P64"  | IOSTANDARD = LVCMOS33;
+NET "flashf_cs_n_o"     LOC="P38"  | IOSTANDARD = LVCMOS33;
 #NET "flash2_clk_o"      LOC="P88"  | IOSTANDARD = LVCMOS33;
 #NET "flash2_data_i"     LOC="P87"  | IOSTANDARD = LVCMOS33;
 #NET "flash2_data_o"     LOC="P92"  | IOSTANDARD = LVCMOS33;
@@ -100,13 +102,18 @@ NET "adc_cs_n_o"        LOC="P61"  | IOSTANDARD = LVCMOS33;
 # Sound output
 NET "audio_dac_l_o"     LOC="P79"  | IOSTANDARD = LVCMOS33;
 NET "audio_dac_r_o"     LOC="P67"  | IOSTANDARD = LVCMOS33;
-#NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
+NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
 
 # SD/MMC
 NET "sd_sclk_o"         LOC="P78"  | IOSTANDARD = LVCMOS33;
 NET "sd_mosi_o"         LOC="P80"  | IOSTANDARD = LVCMOS33;
 NET "sd_miso_i"         LOC="P74"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "sd_cs_n_o"         LOC="P66"  | IOSTANDARD = LVCMOS33;
+
+# SNES joypad
+NET "pad_clk_o"			LOC="P81"  | IOSTANDARD = LVCMOS33;
+NET "pad_latch_o"			LOC="P82"  | IOSTANDARD = LVCMOS33;
+NET "pad_data_i"			LOC="P85"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Others
 #NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;
@@ -116,11 +123,11 @@ NET "sd_cs_n_o"         LOC="P66"  | IOSTANDARD = LVCMOS33;
 #DS_A   = 80 (usado)
 #DS_B   = 79 (usado)
 #DS_C   = 83 
-#DS_D   = 82 
-#DS_E   = 81 
+#DS_D   = 82 (usado)
+#DS_E   = 81 (usado)
 #DS_F   = 78 (usado)
 #DS_G   = 84 
-#DS_DP  = 85 
+#DS_DP  = 85 (usado)
 #DS_EN1 = 66 (usado)
 #DS_EN2 = 74 (usado)
 #DS_EN3 = 67 (usado)

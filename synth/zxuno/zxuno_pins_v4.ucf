@@ -83,8 +83,6 @@ NET "joy_fire2_i"       LOC="P8"   | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy_fire3_o"       LOC="P39"  | IOSTANDARD = LVCMOS33;
 
 # GPIO
-NET "joy2_btn1_io"		LOC="P58"  | IOSTANDARD = LVCMOS33 | PULLUP;		# GPIO 6
-NET "joy2_btn2_io"		LOC="P57"  | IOSTANDARD = LVCMOS33 | PULLUP;		# GPIO 7
 #NET "gpio_io<6>"        LOC="P58"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #NET "gpio_io<7>"        LOC="P57"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #NET "gpio_io<8>"        LOC="P56"  | IOSTANDARD = LVCMOS33 | PULLUP;

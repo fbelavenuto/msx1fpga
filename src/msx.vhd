@@ -119,15 +119,19 @@ entity msx is
 		joy1_down_i		: in    std_logic;
 		joy1_left_i		: in    std_logic;
 		joy1_right_i	: in    std_logic;
-		joy1_btn1_io	: inout std_logic;
-		joy1_btn2_io	: inout std_logic;
+		joy1_btn1_i		: in    std_logic;
+		joy1_btn1_o		: out   std_logic;
+		joy1_btn2_i		: in    std_logic;
+		joy1_btn2_o		: out   std_logic;
 		joy1_out_o		: out   std_logic;
 		joy2_up_i		: in    std_logic;
 		joy2_down_i		: in    std_logic;
 		joy2_left_i		: in    std_logic;
 		joy2_right_i	: in    std_logic;
-		joy2_btn1_io	: inout std_logic;
-		joy2_btn2_io	: inout std_logic;
+		joy2_btn1_i		: in    std_logic;
+		joy2_btn1_o		: out   std_logic;
+		joy2_btn2_i		: in    std_logic;
+		joy2_btn2_o		: out   std_logic;
 		joy2_out_o		: out   std_logic;
 		-- Video
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
@@ -141,6 +145,7 @@ entity msx is
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
 		-- SPI/SD
+		flspi_cs_n_o	: out std_logic;
 		spi_cs_n_o		: out std_logic;
 		spi_sclk_o		: out std_logic;
 		spi_mosi_o		: out std_logic;
@@ -448,7 +453,8 @@ begin
 		data_o			=> d_from_spi_s,
 		has_data_o		=> spi_hd_s,
 		-- SD card interface
-		spi_cs_n_o		=> spi_cs_n_o,
+		spi_cs_n_o(1)	=> flspi_cs_n_o,
+		spi_cs_n_o(0)	=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,
 		spi_miso_i		=> spi_miso_i
@@ -513,12 +519,12 @@ begin
 	k7_motor_o		<= pio_motoron_a;
 	k7_audio_o		<= pio_k7out_a;
 	psg_port_a_s	<= k7_audio_i & '1' & joy_sigs_s;
-	joy_sigs_s		<= joy1_btn2_io & joy1_btn1_io & joy1_right_i & joy1_left_i & joy1_down_i & joy1_up_i	when joy_sel_a = '0' else
-							joy2_btn2_io & joy2_btn1_io & joy2_right_i & joy2_left_i & joy2_down_i & joy2_up_i;
-	joy1_btn1_io	<= '0' when psg_port_b_s(0) = '0'	else 'Z';
-	joy1_btn2_io	<= '0' when psg_port_b_s(1) = '0'	else 'Z';
-	joy2_btn1_io	<= '0' when psg_port_b_s(2) = '0'	else 'Z';
-	joy2_btn2_io	<= '0' when psg_port_b_s(3) = '0'	else 'Z';
+	joy_sigs_s		<= joy1_btn2_i & joy1_btn1_i & joy1_right_i & joy1_left_i & joy1_down_i & joy1_up_i	when joy_sel_a = '0' else
+							joy2_btn2_i & joy2_btn1_i & joy2_right_i & joy2_left_i & joy2_down_i & joy2_up_i;
+	joy1_btn1_o		<= '0' when psg_port_b_s(0) = '0'	else 'Z';
+	joy1_btn2_o		<= '0' when psg_port_b_s(1) = '0'	else 'Z';
+	joy2_btn1_o		<= '0' when psg_port_b_s(2) = '0'	else 'Z';
+	joy2_btn2_o		<= '0' when psg_port_b_s(3) = '0'	else 'Z';
 	joy1_out_o	 	<= psg_port_b_s(4);
 	joy2_out_o	 	<= psg_port_b_s(5);
 
