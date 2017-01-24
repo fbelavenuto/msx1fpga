@@ -45,7 +45,7 @@ use ieee.std_logic_unsigned.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= false
+		hdmi_output_g		: boolean	:= true
 	);
 	port (
 		-- Clocks
@@ -163,8 +163,6 @@ architecture behavior of multicore_top is
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
-	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
-	signal tdms_s				: std_logic_vector( 7 downto 0);
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
 	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_hsync_n_s		: std_logic;
@@ -176,6 +174,12 @@ architecture behavior of multicore_top is
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
 	signal scanlines_en_s	: std_logic;
 	signal odd_line_s			: std_logic;
+	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
+	signal tdms_r_s			: std_logic_vector( 9 downto 0);
+	signal tdms_g_s			: std_logic_vector( 9 downto 0);
+	signal tdms_b_s			: std_logic_vector( 9 downto 0);
+	signal tdms_p_s			: std_logic_vector( 3 downto 0);
+	signal tdms_n_s			: std_logic_vector( 3 downto 0);
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
@@ -527,8 +531,10 @@ begin
 
 	uh: if hdmi_output_g generate
 
+		sound_hdmi_s <= '0' & audio_s(15 downto 1);
+
 		-- HDMI
-		inst_dvid: entity work.hdmi
+		hdmi: entity work.hdmi
 		generic map (
 			FREQ	=> 25200000,	-- pixel clock frequency 
 			FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
@@ -536,28 +542,42 @@ begin
 			N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
 		) 
 		port map (
-			I_CLK_VGA		=> clock_vga_s,
-			I_CLK_TMDS		=> clock_dvi_s,
-			I_RED				=> vga_r_s & vga_r_s,
-			I_GREEN			=> vga_g_s & vga_g_s,
-			I_BLUE			=> vga_b_s & vga_b_s,
+			I_CLK_PIXEL		=> clock_vga_s,
+			I_R				=> vga_r_s & vga_r_s,
+			I_G				=> vga_g_s & vga_g_s,
+			I_B				=> vga_b_s & vga_b_s,
 			I_BLANK			=> vga_blank_s,
 			I_HSYNC			=> vga_hsync_n_s,
 			I_VSYNC			=> vga_vsync_n_s,
+			-- PCM audio
+			I_AUDIO_ENABLE	=> '1',
 			I_AUDIO_PCM_L 	=> sound_hdmi_s,
 			I_AUDIO_PCM_R	=> sound_hdmi_s,
-			O_TMDS			=> tdms_s
+			-- TMDS parallel pixel synchronous outputs (serialize LSB first)
+			O_RED				=> tdms_r_s,
+			O_GREEN			=> tdms_g_s,
+			O_BLUE			=> tdms_b_s
 		);
-		
-		sound_hdmi_s <= '0' & audio_s(15 downto 1);
-		vga_hsync_n_o	<= tdms_s(7);	-- 2+		10
-		vga_vsync_n_o	<= tdms_s(6);	-- 2-		11
-		vga_b_o(2)		<= tdms_s(5);	-- 1+		144	
-		vga_b_o(1)		<= tdms_s(4);	-- 1-		143
-		vga_r_o(0)		<= tdms_s(3);	-- 0+		133
-		vga_g_o(2)		<= tdms_s(2);	-- 0-		132
-		vga_r_o(1)		<= tdms_s(1);	-- CLK+	113
-		vga_r_o(2)		<= tdms_s(0);	-- CLK-	112
+
+		hdmio: entity work.hdmi_out_altera
+		port map (
+			clock_pixel_i		=> clock_vga_s,
+			clock_tdms_i		=> clock_dvi_s,
+			red_i					=> tdms_r_s,
+			green_i				=> tdms_g_s,
+			blue_i				=> tdms_b_s,
+			tmds_out_p			=> tdms_p_s,
+			tmds_out_n			=> tdms_n_s
+		);
+
+		vga_hsync_n_o	<= tdms_p_s(2);	-- 2+		10
+		vga_vsync_n_o	<= tdms_n_s(2);	-- 2-		11
+		vga_b_o(2)		<= tdms_p_s(1);	-- 1+		144	
+		vga_b_o(1)		<= tdms_n_s(1);	-- 1-		143
+		vga_r_o(0)		<= tdms_p_s(0);	-- 0+		133
+		vga_g_o(2)		<= tdms_n_s(0);	-- 0-		132
+		vga_r_o(1)		<= tdms_p_s(3);	-- CLK+	113
+		vga_r_o(2)		<= tdms_n_s(3);	-- CLK-	112
 	end generate;
 
 	nuh: if not hdmi_output_g generate

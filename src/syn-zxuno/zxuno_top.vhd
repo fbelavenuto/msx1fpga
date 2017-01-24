@@ -97,6 +97,8 @@ entity zxuno_top is
 		vga_pal_o			: out   std_logic								:= '1';
 
 		-- GPIO
+--		hdmi_out_p			: out   std_logic_vector(3 downto 0);
+--		hdmi_out_n			: out   std_logic_vector(3 downto 0);
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
 
 		-- Debug
@@ -205,7 +207,7 @@ begin
 		hw_id_g			=> 8,
 		hw_txt_g			=> "ZX-Uno Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 1
+		video_opt_g		=> 1						-- 1 = dblscan configurable
 	)
 	port map (
 		-- Clocks
@@ -292,6 +294,8 @@ begin
 		joy2_btn2_o		=> open,
 		joy2_out_o		=> open,
 		-- Video
+		cnt_hor_o		=> open,
+		cnt_ver_o		=> open,
 		rgb_r_o			=> rgb_r_s,
 		rgb_g_o			=> rgb_g_s,
 		rgb_b_o			=> rgb_b_s,

@@ -203,11 +203,12 @@ set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_addr_mux.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_palette.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/dblscan.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vga.vhd
-set_global_assignment -name QIP_FILE ../../src/video/framebuffer.qip
-set_global_assignment -name VHDL_FILE ../../src/hdmi/hdmi.vhd
-set_global_assignment -name VHDL_FILE ../../src/hdmi/encoder.vhd
-set_global_assignment -name VERILOG_FILE ../../src/hdmi/hdmidataencoder.v
-set_global_assignment -name VHDL_FILE ../../src/hdmi/altddio_out1.vhd
+set_global_assignment -name VHDL_FILE ../../src/hdmi2/hdmi.vhd
+set_global_assignment -name VHDL_FILE ../../src/hdmi2/hdmidelay.vhd
+set_global_assignment -name VHDL_FILE ../../src/hdmi2/encoder.vhd
+set_global_assignment -name VERILOG_FILE ../../src/hdmi2/hdmidataencoder.v
+set_global_assignment -name VHDL_FILE ../../src/hdmi2/hdmi_out_altera.vhd
+set_global_assignment -name QIP_FILE ../../src/hdmi2/altddio_out1.qip
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keymap.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/ps2_iobase.vhd

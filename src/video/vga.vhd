@@ -62,21 +62,22 @@ architecture rtl of vga is
 	
 begin
 	
-	altsram: entity work.framebuffer
+	frbuff: entity work.dpram
+	generic map (
+		addr_width_g	=> 16,
+		data_width_g	=> 4
+	)
 	port map(
-		clock_a		=> I_CLK,
-		data_a		=> I_COLOR,
-		address_a	=> addr_wr,
-		wren_a		=> wren,
-		q_a			=> open,
+		clk_a_i		=> I_CLK,
+		data_a_i		=> I_COLOR,
+		addr_a_i		=> addr_wr,
+		we_i			=> wren,
+		data_a_o		=> open,
 		--
-		clock_b		=> I_CLK_VGA,
-		data_b		=> (others => '0'),
-		address_b	=> addr_rd,
-		wren_b		=> '0',
-		q_b			=> pixel_out
+		clk_b_i		=> I_CLK_VGA,
+		addr_b_i		=> addr_rd,
+		data_b_o		=> pixel_out
 	);
-
 
 	process (I_CLK_VGA)
 	begin

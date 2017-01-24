@@ -83,6 +83,15 @@ NET "joy_fire2_i"       LOC="P8"   | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "joy_fire3_o"       LOC="P39"  | IOSTANDARD = LVCMOS33;
 
 # GPIO
+#NET "hdmi_out_p<0>" LOC="P44" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_n<0>" LOC="P43" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_p<1>" LOC="P46" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_n<1>" LOC="P45" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_p<2>" LOC="P48" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_n<2>" LOC="P47" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_p<3>" LOC="P41" | IOSTANDARD="TMDS_33";
+#NET "hdmi_out_n<3>" LOC="P40" | IOSTANDARD="TMDS_33";
+
 #NET "gpio_io<6>"        LOC="P58"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #NET "gpio_io<7>"        LOC="P57"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #NET "gpio_io<8>"        LOC="P56"  | IOSTANDARD = LVCMOS33 | PULLUP;

@@ -6,7 +6,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 
 entity dpram is
-
   generic (
     addr_width_g : integer := 8;
     data_width_g : integer := 8
