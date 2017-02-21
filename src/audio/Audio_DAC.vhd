@@ -83,7 +83,7 @@ begin
 
 	pcm_s 	<= std_logic_vector(
 						unsigned(beep_s) + 
-						unsigned(audio_psg_i & "00000000") +
+						unsigned("0" & audio_psg_i & "0000000") +
 						unsigned(audio_scc_i + 16384)
 	);
 
