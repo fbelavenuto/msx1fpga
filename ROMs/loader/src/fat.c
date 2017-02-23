@@ -1,226 +1,341 @@
 /*
-Copyright 2005, 2006, 2007 Dennis van Weeren
-Copyright 2008, 2009 Jakub Bednarski
 
-This file is part of Minimig
+Original source code: https://github.com/ben0109/Papilio-Master-System
+All credits go to Ben.
+Ben's Blog: http://fpga-hacks.blogspot.com.es/
 
-Minimig is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 3 of the License, or
-(at your option) any later version.
+11/2016 - Modified by Fabio Belavenuto to MSX1FPGA project.
 
-Minimig is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-This is a simple FAT16 handler. It works on a sector basis to allow fastest acces on disk
-images.
-
-11-12-2005 - first version, ported from FAT1618.C
-
-JB:
-2008-10-11  - added SeekFile() and cluster_mask
-            - limited file create and write support added
-2009-05-01  - modified LoadDirectory() and GetDirEntry() to support sub-directories (with limitation of 511 files/subdirs per directory)
-            - added GetFATLink() function
-            - code cleanup
-2009-05-03  - modified sorting algorithm in LoadDirectory() to display sub-directories above files
-2009-08-23  - modified ScanDirectory() to support page scrolling and parent dir selection
-2009-11-22  - modified FileSeek()
-            - added FileReadEx()
-2009-12-15  - all entries are now sorted by name with extension
-            - directory short names are displayed with extensions
-
-2012-07-24  - Major changes to fit the MiniSOC project - AMR
-
-2016-09		- Minor changes to adapt the project
 */
 
-#include <stdio.h>
 #include "fat.h"
 #include "mmc.h"
 
-// internal global variables
-unsigned long fat_start;                // start LBA of first FAT table
-unsigned long data_start;               // start LBA of data field
-unsigned long root_directory_start;     // start LBA of directory table
-unsigned long root_directory_size;      // size of directory region in sectors
-unsigned int fat_number;               // number of FAT tables
-unsigned long cluster_size;             // size of a cluster in sectors
-unsigned long cluster_mask;             // binary mask of cluster number
-unsigned long dir_entries;             // number of entry's in directory table
-unsigned long fat_size;                 // size of fat
+typedef struct {
+#if USE_FAT32 == 1
+	unsigned char fat32;
+#endif
+	unsigned char sectors_per_cluster;
+	unsigned long first_fat_sector;
+	unsigned long first_data_sector;
+	unsigned long current_data_sector;
+	unsigned long current_fat_sector;
+	unsigned long root_directory_cluster;
+	unsigned long root_directory_sector;
+	unsigned short root_directory_size;
+	unsigned long current_directory_cluster;
+	unsigned long current_directory_sector;
+} fat_t;
 
-unsigned char sector_buffer[512];       // sector buffer
+fat_t          fat;
+unsigned char  fat_buffer[512];
+unsigned char  data_buffer[512];
 
-int partitioncount;
 
-#define fat_buffer (*(FATBUFFER*)&sector_buffer) // Don't need a separate buffer for this.
-unsigned long buffered_fat_index;       // index of buffered FAT sector
-
-/*******************************************************************************/
-static unsigned long GetCluster(unsigned long cluster)
+/******************************************************************************/
+static unsigned long load_dword(unsigned char *ptr)
 {
-	unsigned long i;
-	unsigned long sb;
-	sb = cluster >> 8; // calculate sector number containing FAT-link
-	i = cluster & 0xFF; // calculate link offsset within sector
+	unsigned long *p = (unsigned long *)ptr;
+	return *p;
+}
 
-	// read sector of FAT if not already in the buffer
-	if (sb != buffered_fat_index) {
-		if (!MMC_Read(fat_start + sb, (unsigned char*)&fat_buffer)) {
-			return 0;
-		}
-		// remember current buffer index
-		buffered_fat_index = sb;
-	}
-	i = fat_buffer.fat16[i];
-	return i;
+/******************************************************************************/
+static unsigned short load_word(unsigned char *ptr)
+{
+	unsigned short *p = (unsigned short *)ptr;
+	return *p;
 }
 
 /*******************************************************************************/
-int compare(const char *s1, const char *s2, int b) {
+static int compare(const char *s1, const char *s2, int b) {
 	int i;
 
 	for(i = 0; i < b; ++i) {
 		if(*s1++ != *s2++)
-			return 1;
+			return FALSE;
 	}
-	return 0;
+	return TRUE;
 }
 
-/*******************************************************************************/
-// FindDrive() checks if a card is present and contains FAT formatted primary partition
-unsigned char FindDrive(void)
+/******************************************************************************/
+static int load_fat_sector(unsigned long sector)
 {
-	unsigned long boot_sector;              // partition boot sector
-    buffered_fat_index = 0xFFFFFFFF;
-
-    if (!MMC_Read(0, sector_buffer)) // read MBR
-        return(0);
-
-	boot_sector=0;
-	partitioncount=1;
-
-	// If we can identify a filesystem on block 0 we don't look for partitions
-    if (compare((const char*)&sector_buffer[0x36], "FAT16   ",8)==0) // check for FAT16
-		partitioncount=0;
-
-	if(partitioncount) {
-		// We have at least one partition, parse the MBR.
-		struct MasterBootRecord *mbr=(struct MasterBootRecord *)sector_buffer;
-
-		boot_sector = mbr->Partition[0].startlba;
-		if(mbr->Signature == 0x55aa)
-				boot_sector = mbr->Partition[0].startlba;
-		else if(mbr->Signature != 0xaa55) {
-				return(0);							// No partition signature found
-		}
-		if (!MMC_Read(boot_sector, sector_buffer)) // read discriptor
-		    return(0);
-		//Read boot sector from first partition
+	sector += fat.first_fat_sector;
+	if (fat.current_fat_sector == sector) {
+		return TRUE;
 	}
 
-	if (compare(sector_buffer+0x36, "FAT16   ",8) != 0) {		// check for FAT16
-		// Unsupported partition type!
-		return(0);
+	if (MMC_Read(sector, fat_buffer)) {
+		fat.current_fat_sector = sector;
+		return TRUE;
 	}
-
-	if (sector_buffer[510] != 0x55 || sector_buffer[511] != 0xaa) {		// check signature
-		return(0);
-	}
-
-	// check for near-jump or short-jump opcode
-	if (sector_buffer[0] != 0xe9 && sector_buffer[0] != 0xeb)
-		return(0);
-
-	// check if blocksize is really 512 bytes
-	if (sector_buffer[11] != 0x00 || sector_buffer[12] != 0x02)
-		return(0);
-
-	// get cluster_size
-	cluster_size = sector_buffer[13];
-
-	// calculate cluster mask
-	cluster_mask = cluster_size - 1;
-
-	fat_start = boot_sector + sector_buffer[0x0E] + (sector_buffer[0x0F] << 8); // reserved sector count before FAT table (usually 32 for FAT32)
-	fat_number = sector_buffer[0x10];
-
-	// calculate drive's parameters from bootsector, first up is size of directory
-	dir_entries = sector_buffer[17] + (sector_buffer[18] << 8);
-	root_directory_size = ((dir_entries << 5) + 511) >> 9;
-
-	// calculate start of FAT,size of FAT and number of FAT's
-	fat_size = sector_buffer[22] + (sector_buffer[23] << 8);
-
-	// calculate start of directory
-	root_directory_start = fat_start + (fat_number * fat_size);
-
-	// calculate start of data
-	data_start = root_directory_start + root_directory_size;
-
-	return(1);
+	return FALSE;
 }
 
-/*******************************************************************************/
-unsigned char FileOpen(fileTYPE *file, const char *name)
+/******************************************************************************/
+static unsigned long first_sector_of_cluster(unsigned long cluster)
 {
-	unsigned long  iDirectory = 0;       // only root directory is supported
-	DIRENTRY       *pEntry = 0;          // pointer to current entry in sector buffer
-	unsigned long  iDirectorySector;     // current sector of directory entries table
-	unsigned long  iEntry;               // entry index in directory cluster or FAT16 root directory
-	unsigned long  nEntries;             // number of entries per cluster or FAT16 root directory size
-
-	buffered_fat_index = 0xFFFFFFFF;
-
-	iDirectorySector = root_directory_start;
-	nEntries = root_directory_size << 4;												// 16 entries per sector
-
-	for (iEntry = 0; iEntry < nEntries; iEntry++) {
-		if ((iEntry & 0x0F) == 0) {														// first entry in sector, load the sector
-			MMC_Read(iDirectorySector++, sector_buffer);								// root directory is linear
-			pEntry = (DIRENTRY*)sector_buffer;
-		} else {
-			pEntry++;
-		}
-		if (pEntry->Name[0] != SLOT_EMPTY && pEntry->Name[0] != SLOT_DELETED) {			// valid entry??
-			if (!(pEntry->Attributes & (ATTR_VOLUME | ATTR_DIRECTORY))) {				// not a volume nor directory
-				if (compare((const char*)pEntry->Name, name, 11) == 0) {
-					file->size = pEntry->FileSize;
-					file->cluster = pEntry->StartCluster;
-					file->sector = 0;
-					return(1);															// File found
-				}
-			}
-		}
-	}
-	return(0);
+	return fat.first_data_sector + (cluster-2)*fat.sectors_per_cluster;
 }
 
-/*******************************************************************************/
-unsigned char FileRead(fileTYPE *file, unsigned char *pBuffer)
+/******************************************************************************/
+static unsigned long fat_next_cluster(unsigned long current)
 {
-	unsigned long sb;
+	unsigned long fat_sector;
 
-	sb = data_start;							// start of data in partition
-	sb += cluster_size * (file->cluster-2);		// cluster offset
-	sb += file->sector & cluster_mask;			// sector offset in cluster
-
-	if (!MMC_Read(sb, pBuffer)) {				// read sector from drive
+#if USE_FAT32 == 1
+	fat_sector = (fat.fat32) ? (current >> 7) : (current >> 8);
+#else
+	fat_sector = (current >> 8);
+#endif
+	if (!load_fat_sector(fat_sector)) {
 		return 0;
-	} else {
-		// increment sector index
-		file->sector++;
+	}
 
-		// cluster's boundary crossed?
-		if ((file->sector & cluster_mask) == 0) {
-			file->cluster = GetCluster(file->cluster);
+#if USE_FAT32 == 1
+	if (fat.fat32) {
+		return load_dword(&fat_buffer[(current & 0x7F) << 2]);
+	} else {
+		return load_word(&fat_buffer[(current & 0xFF) << 1]);
+	}
+#else
+	return load_word(&fat_buffer[(current & 0xFF) << 1]);
+#endif
+}
+
+/******************************************************************************/
+static int fat_is_last_cluster(unsigned long cluster)
+{
+#if USE_FAT32 == 1
+	if (fat.fat32) {
+		return ((cluster & 0xFFFFFFF8) == 0xFFFFFFF8);
+	} else {
+		return ((cluster & 0xFFF8) == 0xFFF8);
+	}
+#else
+	return ((cluster & 0xFFF8) == 0xFFF8);
+#endif
+}
+
+#if USE_FAT32 == 1
+/******************************************************************************/
+static void fat_init32()
+{
+	unsigned char nb_fats;
+	unsigned long fat_size;
+
+	nb_fats  = data_buffer[0x10];
+	fat_size = load_dword(&data_buffer[0x24]);
+
+	fat.first_data_sector = fat.first_fat_sector;
+	for (; nb_fats > 0; --nb_fats) {
+		fat.first_data_sector += fat_size;
+	}
+	fat.root_directory_cluster = load_dword(&data_buffer[0x2C]);
+	fat.root_directory_sector  = first_sector_of_cluster(fat.root_directory_cluster);
+	fat.root_directory_size = 8;
+	fat.current_directory_cluster = fat.root_directory_cluster;
+	fat.current_directory_sector  = fat.root_directory_sector;
+}
+#endif
+
+/******************************************************************************/
+static void fat_init16()
+{
+	unsigned char nb_fats;
+	unsigned short fat_size;
+
+	// root directory first sector
+	nb_fats = data_buffer[0x10];
+	fat_size = load_word(&data_buffer[0x16]);
+	fat.root_directory_cluster = 0;
+	fat.root_directory_sector  = fat.first_fat_sector;
+	for (; nb_fats > 0; --nb_fats) {
+		fat.root_directory_sector += fat_size;
+	}
+
+	// root directory size (in sectors)
+	fat.root_directory_size = load_word(&data_buffer[0x11])>>4;
+
+	// first data sector = first sector after root directory
+	fat.first_data_sector = fat.root_directory_sector + fat.root_directory_size;
+	fat.current_directory_cluster = 0;
+	fat.current_directory_sector  = fat.root_directory_sector;
+}
+
+/******************************************************************************/
+int fat_init()
+{
+	unsigned long sector;
+	unsigned char hasMBR;
+
+	sector = 0;
+	if (!MMC_Read(sector, data_buffer)) {
+		return FALSE;
+	}
+	if ((data_buffer[0x1FE] != 0x55) || (data_buffer[0x1FF] != 0xAA)) {
+		return FALSE;
+	}
+	switch (data_buffer[0x1C2]) {
+	case 0x06:
+	case 0x04:
+#if USE_FAT32 == 1
+		fat.fat32 = FALSE;
+#endif
+		hasMBR = TRUE;
+		break;
+#if USE_FAT32 == 1
+	case 0x0B:
+	case 0x0C:	
+		fat.fat32 = TRUE;
+		hasMBR = TRUE;
+		break;
+#endif
+	default:
+#if USE_FAT32 == 1
+		if (data_buffer[0x55] == 0x33) {		//check possible FAT type when NO MBR found (32)
+			fat.fat32 = TRUE;
+			hasMBR = FALSE;
+		} else
+#endif
+		if (data_buffer[0x39] == 0x31) {	//check possible FAT type when NO MBR found (16)
+#if USE_FAT32 == 1
+			fat.fat32 = FALSE;
+#endif
+			hasMBR = FALSE;
+		} else {
+			return FALSE;
 		}
 	}
-	return 1;
+	if (hasMBR) {
+		sector = load_dword(&data_buffer[0x1C6]); 
+	} else {
+		sector = 0; 
+	}
+
+	if (!MMC_Read(sector, data_buffer)) {
+		return FALSE;
+	}
+
+	if ((data_buffer[0x1FE] != 0x55) || (data_buffer[0x1FF] != 0xAA)) {
+		return FALSE;
+	}
+
+	if ((data_buffer[0x0B] != 0) || (data_buffer[0x0C] != 2)) {
+		return FALSE;
+	}
+
+	fat.sectors_per_cluster = data_buffer[0x0D];
+
+	// reserved sectors
+	fat.first_fat_sector = sector + load_word(&data_buffer[0x0E]);
+
+#if USE_FAT32 == 1
+	if (fat.fat32) {
+		fat_init32();
+	} else {
+		fat_init16();
+	}
+#else
+	fat_init16();
+#endif
+
+	return TRUE;
+}
+
+/******************************************************************************/
+static int fat_findentry(file_t *file, const char *name)
+{
+	unsigned long sector;
+	unsigned long cluster;
+	unsigned char i, n;
+	unsigned char* buffer_ptr;
+
+	cluster = fat.current_directory_cluster;
+	sector  = fat.current_directory_sector;
+#if USE_FAT32 == 1
+	while(1) {
+#endif
+		for(i = fat.root_directory_size; i > 0; --i) {
+			if (!MMC_Read(sector, data_buffer)) {
+				return 0;
+			}
+			buffer_ptr = data_buffer;
+			for(n = 0; n < 16; n++) {
+				if (buffer_ptr[0] != 0xE5 && buffer_ptr[0] != 0x00) {
+					if (compare((const char*)buffer_ptr, name, 11)) {
+						file->type = buffer_ptr[0x0B];
+						file->size = load_dword(&buffer_ptr[0x1C]);
+						file->cluster = load_word(&buffer_ptr[0x1A]);
+#if USE_FAT32 == 1
+						if (fat.fat32) {
+							file->cluster |= ((unsigned long)load_word(&buffer_ptr[0x15])) << 16;
+						}
+#endif
+						return TRUE;
+					}
+				}
+				buffer_ptr += 32;
+			}
+			sector++;
+		}
+#if USE_FAT32 == 1
+		if (fat.fat32) {
+			cluster = fat_next_cluster(cluster);
+			if (cluster == 0) {
+				return FALSE;
+			}
+			if (fat_is_last_cluster(cluster)) {
+				break;
+			}
+			sector = first_sector_of_cluster(cluster);
+		} else {
+			break;
+		}
+	};
+#endif
+	return FALSE;
+}
+
+/******************************************************************************/
+int fat_fopen(file_t *file, const char *name)
+{
+	if (fat_findentry(file, name) == FALSE) {
+		return FALSE;
+	}
+	if ((file->type & 0x18) != 0) {				// If Vol or Dir, return error
+		return FALSE;
+	}
+	file->sector = first_sector_of_cluster(file->cluster);
+	return TRUE;
+}
+
+/******************************************************************************/
+int fat_bread(file_t *file, unsigned char *buffer)
+{
+	if (file->sector == first_sector_of_cluster(file->cluster + 1)) {
+		file->cluster = fat_next_cluster(file->cluster);
+		if (fat_is_last_cluster(file->cluster)) {
+			return FAT_EOF;
+		} else {
+			file->sector = first_sector_of_cluster(file->cluster);
+		}
+	}
+	return MMC_Read(file->sector++, buffer);
+}
+
+/******************************************************************************/
+int fat_chdir(const char *name)
+{
+	file_t f;
+
+	if (fat_findentry(&f, name) == FALSE) {
+		return FALSE;
+	}
+	if ((f.type & 0x10) == 0) {				// If not Dir, return error
+		return FALSE;
+	}
+	fat.current_directory_cluster = f.cluster;
+	fat.current_directory_sector  = first_sector_of_cluster(f.cluster);
+	return TRUE;
 }

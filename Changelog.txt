@@ -2,7 +2,7 @@
 
 1.1:
 	- Implemented VDP99x8 Palette system: Register 16 and port #2 (0x9A in MSX)
-	- Implemented in Switched I/O ports new makers: 0x08 (Panasoic) turbo register, 0xD4 (OCM) some smart commands
+	- Implemented in Switched I/O ports new makers: 0x08 (Panasonic) turbo register, 0xD4 (OCM) some smart commands
 	- ESCCI (Megaram SCC from OCM) is now allocated in slot 2 (Partial support to MGLCOM.COM software)
 	- Fixed M1 Wait generator
 	- Fixed color index 2 in palette
@@ -13,3 +13,4 @@
 	- Implemented Scandoubler (VGA mode) (Print Screen key toggle)
 	- Added configuration system: All files should now be in MSX1FPGA directory
 	- Added 7MHz turbo (F12 key toggle)
+	- Fixed French keymap

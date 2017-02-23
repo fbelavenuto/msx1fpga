@@ -26,9 +26,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "vdp.h"
 #include "font.h"
 
-// __xdata __at (0x7ffe) unsigned int chksum;
+/* Constants */
+/*
+Control Registers:
 
-uint8 cx, cy, fg, bg;
+Reg/Bit  7     6     5     4     3     2     1     0
+0        -     -     -     -     -     -     M2    EXTVID
+1        4/16K BL    GINT  M1    M3    -     SI    MAG
+2        -     -     -     -     PN13  PN12  PN11  PN10		L=0x0300(768)		S=0x0800(2048)	E=0x0AFF(2815)
+3        CT13  CT12  CT11  CT10  CT9   CT8   CT7   CT6		L=0x0020(32)		S=0x0B00(2816)	E=0x0B20(2836)
+4        -     -     -     -     -     PG13  PG12  PG11		L=0x0800(2048)		S=0x0000(000)	E=0x07FF(2047)
+5        -     SA13  SA12  SA11  SA10  SA9   SA8   SA7
+6        -     -     -     -     -     SG13  SG12  SG11
+7        TC3   TC2   TC1   TC0   BD3   BD2   BD1   BD0
+
+	PG = Pattern Gen 	S=0x0000 L=0x0800
+	PN = Pattern Name	S=0x0800 L=0x0300
+	CT = Color Table	S=0x0B00 L=0x0020
+*/
+static const uint8 init[8] = {0x00, 0xC0, 0x02, 0x2C, 0x00, 0x00, 0x00, 0xF7};
+
+/* Variables */
+static uint8 cx, cy, fg, bg;
 
 //------------------------------------------------------------------------------
 void vdp_writereg(uint8 reg, uint8 val)
@@ -71,37 +90,18 @@ static void vdp_cursorinc()
 	}
 }
 
-/*
-Control Registers:
-
-Reg/Bit	7	6	5	4	3	2	1	0
-0	-	-	-	-	-	-	M2	EXTVID
-1	4/16K	BL	GINT	M1	M3	-	SI	MAG
-2	-	-	-	-	PN13	PN12	PN11	PN10			L=0x0300(768)		S=0x0800(2048)	E=0x0AFF(2815)
-3	CT13	CT12	CT11	CT10	CT9	CT8	CT7	CT6			L=0x0020(32)		S=0x0B00(2816)	E=0x0B20(2836)
-4	-	-	-	-	-	PG13	PG12	PG11				L=0x0800(2048)		S=0x0000(000)	E=0x07FF(2047)
-5	-	SA13	SA12	SA11	SA10	SA9	SA8	SA7
-6	-	-	-	-	-	SG13	SG12	SG11
-7	TC3	TC2	TC1	TC0	BD3	BD2	BD1	BD0
-*/
-/*
-	PG = Pattern Gen 	S=0x0000 L=0x0800
-	PN = Pattern Name	S=0x0800 L=0x0300
-	CT = Color Table	S=0x0B00 L=0x0020
-*/
 //------------------------------------------------------------------------------
 void vdp_init()
 {
 	uint8 i;
 	uint16 c;
-	const uint8 init[8] = {0x00, 0xC0, 0x02, 0x2C, 0x00, 0x00, 0x00, 0xF7};
 
 	for (i=0; i < 8; i++) {
 		vdp_writereg(i, init[i]);
 	}
 	vdp_setaddr(0, 1);
 	for (c=0; c < 256; c++)
-		VDP_DATA = 0;
+		VDP_DATA = 0;					// 00-31
 	vdp_writedata(font, 256, 768);		// 32-7F
 	vdp_setaddr(1024, 1);
 	for (c=0; c < 1024; c++)

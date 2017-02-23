@@ -31,12 +31,16 @@ __sfr __at 0x49 SWIOP_REGVAL;
 static const unsigned char mymkid = 40;
 
 // Register numbers
-#define REG_HWID	0
-#define REG_HWTXT	1
-#define REG_HWVER	2
-#define REG_NEXTOR	0x10
-#define REG_MAPPER	0x11
-#define REG_TURBO	0x12
+#define REG_HWID		0x00
+#define REG_HWTXT		0x01
+#define REG_HWVER		0x02
+#define REG_RESET		0x0A
+#define REG_KMLOWADDR	0x0D
+#define REG_KMHIGHADDR	0x0E
+#define REG_KMBYTE		0x0F
+#define REG_OPTIONS		0x10
+#define REG_MAPPER		0x11
+#define REG_TURBO		0x12
 
 // VDP
 __sfr __at 0x98 VDP_DATA;
