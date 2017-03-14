@@ -235,7 +235,7 @@ begin
 		clock_cpu_i		=> clock_cpu_s,
 		clock_psg_en_i	=> clock_psg_en_s,
 		-- Turbo
-		turbo_on_k_i	=> extra_keys_s(3),	-- F12
+		turbo_on_k_i	=> extra_keys_s(3),	-- F11
 		turbo_on_o		=> turbo_on_s,
 		-- Resets
 		reset_i			=> reset_s,
@@ -322,6 +322,7 @@ begin
 		vsync_n_o		=> rgb_vsync_n_s,
 		ntsc_pal_o		=> open,
 		vga_on_k_i		=> '0',
+		scanline_on_k_i=> '0',
 		vga_en_o			=> open,
 		-- SPI/SD
 		flspi_cs_n_o	=> open,
