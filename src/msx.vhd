@@ -143,6 +143,7 @@ entity msx is
 		vsync_n_o		: out std_logic;
 		ntsc_pal_o		: out std_logic;
 		vga_on_k_i		: in  std_logic;
+		scanline_on_k_i: in  std_logic;
 		vga_en_o			: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
@@ -227,6 +228,7 @@ architecture Behavior of msx is
 	signal vdp_rd_n_s			: std_logic;
 	signal vdp_wr_n_s			: std_logic;
 	signal vga_en_s			: std_logic;
+	signal scanline_en_s		: std_logic;
 
 	-- PSG
 	signal psg_cs_s			: std_logic;
@@ -336,6 +338,7 @@ begin
 		vram_d_o			=> vram_data_o,
 		vram_d_i			=> vram_data_i,
 		vga_en_i			=> vga_en_s,
+		scanline_en_i	=> scanline_en_s,
 		cnt_hor_o		=> cnt_hor_o,
 		cnt_ver_o		=> cnt_ver_o,
 		rgb_r_o			=> rgb_r_o,
@@ -429,12 +432,14 @@ begin
 		vga_on_i			=> opt_vga_on_i,
 		turbo_on_k_i	=> turbo_on_k_i,
 		vga_on_k_i		=> vga_on_k_i,
+		scanline_on_k_i=> scanline_on_k_i,
 		--
 		nextor_en_o		=> nextor_en_s,
 		mr_type_o		=> mr_type_s,
 		turbo_on_o		=> turbo_on_s,
 		softreset_o		=> softreset_s,
 		vga_en_o			=> vga_en_s,
+		scanline_en_o	=> scanline_en_s,
 		keymap_addr_o	=> keymap_addr_o,
 		keymap_data_o	=> keymap_data_o,
 		keymap_we_o		=> keymap_we_o

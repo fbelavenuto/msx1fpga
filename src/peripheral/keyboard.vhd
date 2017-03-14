@@ -62,7 +62,7 @@ entity keyboard is
 		reset_o			: out   std_logic								:= '0';
 		por_o				: out   std_logic								:= '0';
 		reload_core_o	: out   std_logic								:= '0';
-		extra_keys_o	: out   std_logic_vector(3 downto 0)	-- F12, Print Screen, Pause/Break, Scroll Lock
+		extra_keys_o	: out   std_logic_vector(3 downto 0)	-- F11, Print Screen, Scroll Lock, Pause/Break
 	);
 end entity;
 
@@ -191,8 +191,9 @@ begin
 						if alt_v = '1' and ctrl_v = '1' and break_v = '0' then
 							reset_o <= '1';
 						end if;
-					elsif keyb_data_s = X"07" and extended_v = "00" then									-- F12
+					elsif keyb_data_s = X"78" and extended_v = "00" then									-- F11
 						extra_keys_s(3) <= not break_v;
+					elsif keyb_data_s = X"07" and extended_v = "00" then									-- F12
 						if alt_v = '1' and ctrl_v = '1' and break_v = '0' then
 							por_o <= '1';
 						end if;
@@ -201,9 +202,10 @@ begin
 							reload_core_o <= '1';
 						end if;
 					elsif keyb_data_s = X"7E" and extended_v = "00" then									-- Scroll-lock 7E   F0 7E
-						if break_v = '0' then
-							extra_keys_s(1) <= not extra_keys_s(1);
-						end if;
+						extra_keys_s(1) <= not break_v;
+--						if break_v = '0' then
+--							extra_keys_s(1) <= not extra_keys_s(1);
+--						end if;
 					end if;
 					break_s			<= break_v;
 					extended_s		<= extended_v;

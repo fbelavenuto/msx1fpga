@@ -73,6 +73,8 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 use work.vdp18_pack.opmode_t;
 use work.vdp18_pack.hv_t;
 use work.vdp18_pack.access_t;
@@ -106,6 +108,7 @@ entity vdp18_core is
 		vram_d_i			: in  std_logic_vector(0 to  7);
 		-- Video Interface --------------------------------------------------------
 		vga_en_i			: in  std_logic;
+		scanline_en_i	: in  std_logic;
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
 		cnt_ver_o		: out std_logic_vector( 7 downto 0);
 		rgb_r_o			: out std_logic_vector(0 to 3);
@@ -188,6 +191,7 @@ architecture struct of vdp18_core is
 	signal palette_wr_s		: std_logic;
 	signal ntsc_pal_i_s		: std_logic;
 	signal ntsc_pal_e_s		: std_logic;
+	signal oddline_s			: std_logic;
 
 begin
 
@@ -427,12 +431,29 @@ begin
 				rgb_r_o   <= (others => '0');
 				rgb_g_o   <= (others => '0');
 				rgb_b_o   <= (others => '0');
-
 			elsif rising_edge(clock_i) then
 				if clk_en_10m7_s then
-					rgb_r_o <= rgb_s( 0 to 3);
-					rgb_g_o <= rgb_s(12 to 15);
-					rgb_b_o <= rgb_s( 4 to 7);
+					if scanline_en_i = '1' and vga_en_i = '1' then
+						if rgb_s( 0 to 3) > 1 and oddline_s = '1' then
+							rgb_r_o <= rgb_s( 0 to 3) - 2;
+						else
+							rgb_r_o <= rgb_s( 0 to 3);
+						end if;
+						if rgb_s(12 to 15) > 1 and oddline_s = '1' then
+							rgb_g_o <= rgb_s(12 to 15) - 2;
+						else
+							rgb_g_o <= rgb_s(12 to 15);
+						end if;
+						if rgb_s( 4 to 7) > 1 and oddline_s = '1' then
+							rgb_b_o <= rgb_s( 4 to 7) - 2;
+						else
+							rgb_b_o <= rgb_s( 4 to 7);
+						end if;
+					else
+						rgb_r_o <= rgb_s( 0 to 3);
+						rgb_g_o <= rgb_s(12 to 15);
+						rgb_b_o <= rgb_s( 4 to 7);
+					end if;
 				end if;
 			end if;
 		end process rgb_reg;
@@ -472,7 +493,7 @@ begin
 			clk_en_12m_i	=> to_std_logic_f(clk_en_10m7_s),
 			col_i				=> col_rgb_s,
 			col_o				=> col_vga_s,
-			oddline_o		=> open,
+			oddline_o		=> oddline_s,
 			hsync_n_i		=> rgb_hsync_n_s,
 			vsync_n_i		=> rgb_vsync_n_s,
 			hsync_n_o		=> vga_hsync_n_s,

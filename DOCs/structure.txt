@@ -37,6 +37,7 @@ Registers:
 ( W)	0E => High address of Keymap (bits 1-0)
 ( W)	0F => Write a byte to keymap (address auto-increment)
 (RW)	10 =>
+			bit 2 = Scanlines (1 = enabled)
 			bit 1 = Scandoubler-VGA (1 = enabled)
 			bit 0 = Nextor SD interface enable (slot 3.2) (1 = enabled)
 (RW)	11 =>

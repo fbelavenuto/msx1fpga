@@ -73,7 +73,7 @@ void main()
 	unsigned char *ppl      = (unsigned char *)0xFF00;
 	unsigned char c, i, page;
 	unsigned int  k;
-	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor, cfgturbo;
+	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor, cfgturbo, cfgsln;
 	char *kmpfile = NULL;
 	file_t        file;
 
@@ -134,7 +134,7 @@ void main()
 		//     12345678901234567890123456789012
 		error("Config file not found!");
 	}
-	if (file.size < 3) {
+	if (file.size < 6) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Config file error!");
@@ -154,12 +154,13 @@ void main()
 	}
 	cfgcor   = (buffer[3] == 'P') ? 2 : 0;
 	cfgturbo = (buffer[4] == '1') ? 1 : 0;
+	cfgsln   = (buffer[5] == '1') ? 4 : 0;
 
 	VDP_CMD = cfgcor;
 	VDP_CMD = 0x89;
 	
 	SWIOP_REGNUM = REG_OPTIONS;
-	SWIOP_REGVAL = cfgvga | cfgnxt;
+	SWIOP_REGVAL = cfgsln | cfgvga | cfgnxt;
 
 	vdp_putstring("OK\n\nZeroing RAM: ");
 
