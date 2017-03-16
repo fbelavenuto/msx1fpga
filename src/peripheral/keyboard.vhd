@@ -149,7 +149,7 @@ begin
 			has_keycode_s		<= '0';
 			data_load_s			<= '0';
 
-			if keyb_valid_s = '1' then
+			if keyb_valid_s = '1' and keymap_seq_s = KM_IDLE then
 
 				if    keyb_data_s = X"AA" then
 					-- BAT code (basic assurance test)
@@ -216,7 +216,7 @@ begin
 
 				end if; -- if keyb_data_s...
 
-			else -- keyb_valid_edge = 01
+			else -- keyb_valid = 1
 
 				if batcode_v = '1' then
 					batcode_v 	:= '0';
