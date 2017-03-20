@@ -68,6 +68,8 @@ end entity;
 
 architecture Behavior of Keyboard is
 
+	signal clock_km_s		: std_logic;
+
 	-- Matrix
 	type key_matrix_t is array (15 downto 0) of std_logic_vector(7 downto 0);
 	signal matrix_s			: key_matrix_t;
@@ -79,12 +81,13 @@ architecture Behavior of Keyboard is
 	signal break_s				: std_logic;
 	signal extended_s			: std_logic_vector(1 downto 0);
 	signal shift_s				: std_logic;
+	signal virt_shift_s		: std_logic;
 	signal has_keycode_s		: std_logic;
 	signal keymap_addr_s		: std_logic_vector(9 downto 0);
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
 	signal extra_keys_s		: std_logic_vector(3 downto 0);
 
-	type keymap_seq_t is (KM_IDLE, KM_SET, KM_WAIT, KM_READ, KM_END);
+	type keymap_seq_t is (KM_IDLE, KM_CLEAN, KM_WRITE, KM_READ, KM_END);
 	signal keymap_seq_s		: keymap_seq_t;
 
 begin
@@ -103,10 +106,12 @@ begin
 		data_o			=> keyb_data_s
 	);
 
+	clock_km_s <= not clock_i;
+
 	-- The keymap
 	keymap: entity work.keymap
 	port map (
-		clock_i		=> clock_i,
+		clock_i		=> clock_km_s,
 		we_i			=> keymap_we_i,
 		addr_wr_i	=> keymap_addr_i,
 		data_i		=> keymap_data_i,
@@ -149,7 +154,7 @@ begin
 			has_keycode_s		<= '0';
 			data_load_s			<= '0';
 
-			if keyb_valid_s = '1' and keymap_seq_s = KM_IDLE then
+			if keyb_valid_s = '1' then
 
 				if    keyb_data_s = X"AA" then
 					-- BAT code (basic assurance test)
@@ -240,43 +245,49 @@ begin
 	process (reset_i, clock_i)
 		variable row_v			: std_logic_vector(3 downto 0);
 		variable col_v			: std_logic_vector(2 downto 0);
-		variable mod_shift_v	: std_logic;
 	begin
 		if reset_i = '1' then
 			matrix_s			<= (others => (others => '0'));
 			keymap_addr_s	<= (others => '0');
 			keymap_seq_s	<= KM_IDLE;
+			virt_shift_s	<= '0';
 			cols_o			<= (others => '1');
 		elsif rising_edge(clock_i) then
 			case keymap_seq_s is
 				when KM_IDLE =>
 					if has_keycode_s = '1' then 
 						cols_o			<= (others => '1');
-						keymap_seq_s	<= KM_SET;
+						keymap_addr_s	<= not shift_s & extended_s(0) & keyb_data_s;
+						keymap_seq_s	<= KM_CLEAN;
 					else
 						cols_o			<= not matrix_s(conv_integer(rows_coded_i));
+						if rows_coded_i = 6 then
+							cols_o(0) <= not virt_shift_s;
+						end if;
 					end if;
 
-				when KM_SET =>
-					keymap_addr_s	<= shift_s & extended_s(0) & keyb_data_s;
-					keymap_seq_s	<= KM_WAIT;
+				when KM_CLEAN =>
+					row_v				:= keymap_data_s(3 downto 0);
+					col_v				:= keymap_data_s(6 downto 4);
+					keymap_seq_s	<= KM_WRITE;
 
-				when KM_WAIT =>
+				when KM_WRITE =>
+					matrix_s(conv_integer(row_v))(conv_integer(col_v)) <= '0';
+					keymap_addr_s	<= shift_s & extended_s(0) & keyb_data_s;
 					keymap_seq_s	<= KM_READ;
-				
+
 				when KM_READ =>
 					row_v				:= keymap_data_s(3 downto 0);
 					col_v				:= keymap_data_s(6 downto 4);
-					mod_shift_v		:= keymap_data_s(7);
+					if break_s = '0' then
+						virt_shift_s <= keymap_data_s(7);
+					else
+						virt_shift_s <= shift_s;
+					end if;
 					keymap_seq_s	<= KM_END;
 
 				when KM_END =>
 					matrix_s(conv_integer(row_v))(conv_integer(col_v)) <= not break_s;
-					if break_s = '0' then
-						matrix_s(6)(0) <= mod_shift_v;
-					else
-						matrix_s(6)(0) <= shift_s;
-					end if;
 					keymap_seq_s	<= KM_IDLE;
 
 			end case;

@@ -20,9 +20,6 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity ps2_iobase is
-	generic(
-		clkfreq_g		: integer										-- This is the system clock value in kHz
-	);
 	port(
 		enable_i			: in    std_logic;							-- Enable
 		clock_i			: in    std_logic;							-- system clock (same frequency as defined in 'clkfreq' generic)
@@ -39,6 +36,22 @@ end;
 
 architecture rtl of ps2_iobase is
 
+	procedure keyp (
+		scancode_i			: in  std_logic_vector(7 downto 0);
+		signal data_o		: out std_logic_vector(7 downto 0);
+		signal data_rdy_o	: out std_logic
+	) is
+	begin
+		data_o		<= scancode_i;
+		data_rdy_o	<= '1';
+		wait until( rising_edge(clock_i) );
+		data_rdy_o	<= '0';
+		--
+		for i in 0 to 10 loop
+			wait until( rising_edge(clock_i) );
+		end loop;
+	end procedure;
+
 begin
 
 	process
@@ -49,60 +62,24 @@ begin
 		for i in 0 to 10 loop
 			wait until( rising_edge(clock_i) );
 		end loop;
-		data_o		<= X"12";					-- SHIFT
-		data_rdy_o	<= '1';
-		wait until( rising_edge(clock_i) );
-		wait until( rising_edge(clock_i) );
-		data_rdy_o	<= '0';
-		--
-		for i in 0 to 10 loop
-			wait until( rising_edge(clock_i) );
-		end loop;
-		data_o		<= X"1C";					-- A
-		data_rdy_o	<= '1';
-		wait until( rising_edge(clock_i) );
-		wait until( rising_edge(clock_i) );
-		data_rdy_o	<= '0';
-		--
-		for i in 0 to 10 loop
-			wait until( rising_edge(clock_i) );
-		end loop;
-		data_o		<= X"F0";					-- BREAK
-		data_rdy_o	<= '1';
-		wait until( rising_edge(clock_i) );
-		wait until( rising_edge(clock_i) );
-		data_rdy_o	<= '0';
-		--
-		for i in 0 to 10 loop
-			wait until( rising_edge(clock_i) );
-		end loop;
-		data_o		<= X"1C";					-- A
-		data_rdy_o	<= '1';
-		wait until( rising_edge(clock_i) );
-		wait until( rising_edge(clock_i) );
-		data_rdy_o	<= '0';
-		--
-		for i in 0 to 10 loop
-			wait until( rising_edge(clock_i) );
-		end loop;
-		data_o		<= X"F0";					-- BREAK
-		data_rdy_o	<= '1';
-		wait until( rising_edge(clock_i) );
-		wait until( rising_edge(clock_i) );
-		data_rdy_o	<= '0';
-		--
-		for i in 0 to 10 loop
-			wait until( rising_edge(clock_i) );
-		end loop;
-		data_o		<= X"12";					-- SHIFT
-		data_rdy_o	<= '1';
-		wait until( rising_edge(clock_i) );
-		wait until( rising_edge(clock_i) );
-		data_rdy_o	<= '0';
-		--
-		for i in 0 to 10 loop
-			wait until( rising_edge(clock_i) );
-		end loop;
+
+		keyp(X"16", data_o, data_rdy_o);		-- ! 1
+		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
+		keyp(X"16", data_o, data_rdy_o);		-- ! 1
+		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
+		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
+		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+
+		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
+		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
+		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+		wait;
 
 	end process;
 

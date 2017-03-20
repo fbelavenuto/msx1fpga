@@ -46,23 +46,25 @@ architecture testbench of tb is
 
 	-- test target
 	component keyboard
-	generic (
-		clkfreq_g			: integer									-- This is the system clock value in kHz
-	);
 	port(
 		clock_i			: in    std_logic;
 		reset_i			: in    std_logic;
 		-- MSX
 		rows_coded_i	: in    std_logic_vector(3 downto 0);
 		cols_o			: out   std_logic_vector(7 downto 0);
+		keymap_addr_i	: in    std_logic_vector(9 downto 0);
+		keymap_data_i	: in    std_logic_vector(7 downto 0);
+		keymap_we_i		: in    std_logic;
 		-- LEDs
 		led_caps_i		: in    std_logic;
 		-- PS/2 interface
 		ps2_clk_io		: inout std_logic;
 		ps2_data_io		: inout std_logic;
 		--
-		reload_core_o	: out   std_logic;
-		extra_keys_o	: out   std_logic_vector(2 downto 0)	-- Print Screen, Pause/Break, Scroll Lock
+		reset_o			: out   std_logic								:= '0';
+		por_o				: out   std_logic								:= '0';
+		reload_core_o	: out   std_logic								:= '0';
+		extra_keys_o	: out   std_logic_vector(3 downto 0)	-- F11, Print Screen, Scroll Lock, Pause/Break
 	);
 	end component;
 
@@ -79,21 +81,23 @@ begin
 
 	--  instance
 	u_target: keyboard
-	generic map (
-		clkfreq_g			=> 21477
-	)
 	port map(
 		clock_i			=> clock_s,
-		reset_i		=> reset_s,
+		reset_i			=> reset_s,
 		-- MSX
 		rows_coded_i	=> rows_coded_s,
 		cols_o			=> cols_s,
+		keymap_addr_i	=> (others => '0'),
+		keymap_data_i	=> (others => '0'),
+		keymap_we_i		=> '0',
 		-- LEDs
 		led_caps_i		=> led_caps_s,
 		-- PS/2 interface
 		ps2_clk_io		=> ps2_clk_s,
 		ps2_data_io		=> ps2_data_s,
 		--
+		reset_o			=> open,
+		por_o			=> open,
 		reload_core_o	=> open,
 		extra_keys_o	=> open
 	);
@@ -107,9 +111,9 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for 23.280418648974914278006471677019 ns;		-- 21 MHz
+		wait for 250 ns;		-- 2 MHz
 		clock_s <= '1';
-		wait for 23.280418648974914278006471677019 ns;
+		wait for 250 ns;
 	end process;
 
 	-- ----------------------------------------------------- --
@@ -132,10 +136,10 @@ begin
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 
-		wait for 6 us;
-		led_caps_s <= '1';
+		wait for 20 us;
+--		led_caps_s <= '1';
 
-		wait for 6 us;
+		wait for 120 us;
 
 		-- wait
 		tb_end <= '1';
