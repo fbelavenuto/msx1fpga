@@ -1024,7 +1024,10 @@ begin
             if IntCycle = '1' or NMICycle = '1' then
                 Halt_FF <= '0';
             end if;
-            if MCycle = "001" and TState = 2 and Wait_n = '1' then
+            if MCycle = "001" and TState = 2 and Wait_n = '1' and IntCycle = '0' then				-- by Fabio: Fix IM2 timing
+                M1_n <= '1';
+            end if;
+            if MCycle = "001" and TState = 3 and Wait_n = '1' and IntCycle = '1' then				-- by Fabio: Fix IM2 timing
                 M1_n <= '1';
             end if;
             if BusReq_s = '1' and BusAck = '1' then

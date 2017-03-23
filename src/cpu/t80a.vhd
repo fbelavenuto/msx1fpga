@@ -1,7 +1,7 @@
 --
 -- Z80 compatible microprocessor core, asynchronous top level
 --
--- Version : 0247a (+k01)
+-- Version : 0247a
 --
 -- Copyright (c) 2001-2002 Daniel Wallner (jesus@opencores.org)
 --
@@ -62,7 +62,6 @@
 --         Fixed IORQ_n, RD_n, WR_n bus timing
 --
 -------------------------------------------------------------------------------
---  +k01 : 2010.10.25  by KdL
 --
 --  2016.08 by Fabio Belavenuto: Refactoring signal names
 --
@@ -133,7 +132,8 @@ begin
 
 	busak_n_o	<= busak_n_s;
 	mreq_n_o		<= mreq_n_s								when busak_n_s = '1' else 'Z';
-	iorq_n_o		<= iorq_n_s or ireq_inhibit_n_s	when busak_n_s = '1' else 'Z';	-- 0247a
+--	iorq_n_o		<= iorq_n_s or ireq_inhibit_n_s	when busak_n_s = '1' else 'Z';	-- 0247a
+	iorq_n_o		<= iorq_n_s 	when busak_n_s = '1' else 'Z';	-- 0247a
 	rd_n_o		<= rd_n_s								when busak_n_s = '1' else 'Z';
 	wr_n_o		<= wr_n_j_s								when busak_n_s = '1' else 'Z';	-- 0247a
 	refresh_n_o	<= rfsh_n_s								when busak_n_s = '1' else 'Z';
