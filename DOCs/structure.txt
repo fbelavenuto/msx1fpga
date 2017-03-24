@@ -12,10 +12,11 @@ Hardware IDs:
 
 1  = DE-1 Board
 2  = DE-2 Board
-5  = WXEDA Board
-6  = Multicore Board
-8  = ZX-Uno Board
-9  = WXEDAX Board
+3  = WXEDA Board
+4  = WXEDAX Board
+5  = Multicore Board
+6  = ZX-Uno Board
+7  = ZX-Uno Board VGA2M
 
 Switched I/O ports:
 

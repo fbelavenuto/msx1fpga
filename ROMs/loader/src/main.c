@@ -84,7 +84,7 @@ void main()
 	// Read Hardware ID
 	SWIOP_MKID = mymkid;
 	SWIOP_REGNUM = REG_TURBO;
-	SWIOP_REGVAL = 1;
+	SWIOP_REGVAL = 1;					// Turbo ON
 	SWIOP_REGNUM = REG_HWID;
 	hwid = SWIOP_REGVAL;
 	SWIOP_REGNUM = REG_HWTXT;

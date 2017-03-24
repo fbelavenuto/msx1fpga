@@ -3,7 +3,7 @@ NET "clock_50_i"        LOC="P55"  | IOSTANDARD = LVCMOS33;
 
 # Keys
 NET "key_nmi_n_i"       LOC="P15"  | IOSTANDARD = LVCMOS33 | PULLUP;
-#NET "key_service_n_i"   LOC="P56"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "key_service_n_i"   LOC="P56"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Video output
 NET "vga_r_o<2>"        LOC="P81"  | IOSTANDARD = LVCMOS33;

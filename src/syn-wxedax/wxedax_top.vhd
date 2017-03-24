@@ -223,7 +223,7 @@ begin
 	-- The MSX1
 	the_msx: entity work.msx
 	generic map (
-		hw_id_g			=> 9,
+		hw_id_g			=> 4,
 		hw_txt_g			=> "WXEDAX Board",
 		hw_version_g	=> X"11",				-- Version 1.1
 		video_opt_g		=> 1						-- dblscan configurable

@@ -221,9 +221,9 @@ begin
 	);
 
 	-- The MSX1
-	the_msx: entity work.msx
+	the_msx: entity '
 	generic map (
-		hw_id_g			=> 6,
+		hw_id_g			=> 5,
 		hw_txt_g			=> "Multicore Board",
 		hw_version_g	=> X"11",					-- Version 1.1
 		video_opt_g		=> 3							-- No dblscan and external palette (Color in rgb_r_o)

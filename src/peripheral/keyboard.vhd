@@ -243,6 +243,7 @@ begin
 
 	-- State machine
 	process (reset_i, clock_i)
+		variable keyid_v		: std_logic_vector(8 downto 0);
 		variable row_v			: std_logic_vector(3 downto 0);
 		variable col_v			: std_logic_vector(2 downto 0);
 	begin
@@ -257,7 +258,8 @@ begin
 				when KM_IDLE =>
 					if has_keycode_s = '1' then 
 						cols_o			<= (others => '1');
-						keymap_addr_s	<= not shift_s & extended_s(0) & keyb_data_s;
+						keyid_v			:= extended_s(0) & keyb_data_s;
+						keymap_addr_s	<= not shift_s & keyid_v;
 						keymap_seq_s	<= KM_CLEAN;
 					else
 						cols_o			<= not matrix_s(conv_integer(rows_coded_i));
@@ -273,7 +275,7 @@ begin
 
 				when KM_WRITE =>
 					matrix_s(conv_integer(row_v))(conv_integer(col_v)) <= '0';
-					keymap_addr_s	<= shift_s & extended_s(0) & keyb_data_s;
+					keymap_addr_s	<= shift_s & keyid_v;
 					keymap_seq_s	<= KM_READ;
 
 				when KM_READ =>

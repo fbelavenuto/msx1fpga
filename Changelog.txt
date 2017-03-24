@@ -12,5 +12,6 @@
 	- Implemented V99x8 NTSC/PAL register #9 bit 1
 	- Implemented Scandoubler (VGA mode) (Print Screen key toggle)
 	- Added configuration system: All files should now be in MSX1FPGA directory
-	- Added 7MHz turbo (F12 key toggle)
+	- Added 7MHz turbo (F11 key toggle)
 	- Fixed French keymap
+	- Implemented Scanlines: In CONFIG.TXT and 'Scroll-lock' key toggles.

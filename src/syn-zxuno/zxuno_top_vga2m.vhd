@@ -209,8 +209,8 @@ begin
 	-- The MSX1
 	the_msx: entity work.msx
 	generic map (
-		hw_id_g			=> 8,
-		hw_txt_g			=> "ZX-Uno Board",
+		hw_id_g			=> 7,
+		hw_txt_g			=> "ZX-Uno Board 2M",
 		hw_version_g	=> X"11",				-- Version 1.1
 		video_opt_g		=> 1						-- 1 = dblscan configurable
 	)
@@ -320,8 +320,6 @@ begin
 		D_slots_o		=> open
 	);
 
-	sd_cs_n_o	<= sd_cs_n_s;
-
 	-- ROM
 	rom: entity work.mainrom
 	port map (
@@ -415,6 +413,9 @@ begin
 		end if;
 	end process;
 
+	-- SD
+	sd_cs_n_o	<= sd_cs_n_s;
+
 	-- Audio
 	dac_l_o		<= dac_s;
 	dac_r_o		<= dac_s;
@@ -430,8 +431,8 @@ begin
 	vga_r_o			<= rgb_r_s(3 downto 1);
 	vga_g_o			<= rgb_g_s(3 downto 1);
 	vga_b_o			<= rgb_b_s(3 downto 1);
-	vga_csync_n_o	<= rgb_hsync_n_s	when vga_en_s = '1'	else (rgb_hsync_n_s and rgb_vsync_n_s);
-	vga_vsync_n_o	<= rgb_vsync_n_s	when vga_en_s = '1'	else '1';
+	vga_csync_n_o	<= rgb_hsync_n_s;
+	vga_vsync_n_o	<= rgb_vsync_n_s;
 
 	-- DEBUG
 	led_o		<= not sd_cs_n_s;

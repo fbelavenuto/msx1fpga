@@ -21,16 +21,16 @@ use ieee.numeric_std.all;
 
 entity ps2_iobase is
 	port(
-		enable_i			: in    std_logic;							-- Enable
-		clock_i			: in    std_logic;							-- system clock (same frequency as defined in 'clkfreq' generic)
-		reset_i			: in    std_logic;							-- Reset when '1'
-		ps2_data_io		: inout std_logic;							-- PS2 data pin
-		ps2_clk_io		: inout std_logic;							-- PS2 clock pin
-		data_rdy_i		: in    std_logic;							-- Rise this to signal data is ready to be sent to device
-		data_i			: in    std_logic_vector(7 downto 0);	-- Data to be sent to device
-		send_rdy_o		: out   std_logic;							-- '1' if data can be sent to device (wait for this before rising 'iData_rdy'
-		data_rdy_o		: out   std_logic;							-- '1' when data from device has arrived
-		data_o			: out   std_logic_vector(7 downto 0)	-- Data from device
+		enable_i		: in    std_logic;
+		clock_i			: in    std_logic;
+		reset_i			: in    std_logic;
+		ps2_data_io		: inout std_logic;
+		ps2_clk_io		: inout std_logic;
+		data_rdy_i		: in    std_logic;
+		data_i			: in    std_logic_vector(7 downto 0);
+		send_rdy_o		: out   std_logic;
+		data_rdy_o		: out   std_logic;
+		data_o			: out   std_logic_vector(7 downto 0)
 	);
 end;
 
@@ -64,21 +64,30 @@ begin
 		end loop;
 
 		keyp(X"16", data_o, data_rdy_o);		-- ! 1
+
 		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
 		keyp(X"16", data_o, data_rdy_o);		-- ! 1
+
 		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+
 		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+
 		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
 		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+
 		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
 		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
 
 		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+
 		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+
 		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
 		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
+
 		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
 		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
+
 		wait;
 
 	end process;
