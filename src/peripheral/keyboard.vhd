@@ -263,7 +263,7 @@ begin
 						keymap_seq_s	<= KM_CLEAN;
 					else
 						cols_o			<= not matrix_s(conv_integer(rows_coded_i));
-						if rows_coded_i = 6 then
+						if rows_coded_i = X"6" then
 							cols_o(0) <= not virt_shift_s;
 						end if;
 					end if;

@@ -32,6 +32,10 @@ Some keys and their functions:
  - F11: Toggle Turbo mode;
  - CTRL+ALT+DEL = Soft Reset;
  - CTRL+ALT+F12 = Hard Reset;
- - CTRL+ALT+BACKSPACE = For ZX-Uno based boards only: reload FPGA
+ - CTRL+ALT+BACKSPACE = For ZX-Uno based boards only: reload FPGA;
+ - Page Down = MSX CODE key;
+ - Page Up = MSX SELECT key;
+ - ALT = MSX GRAPH key;
+ - END = MSX STOP key.
 
 Uses the ROMLOAD utility for ROM loading and executing (simple, megaroms or SCC).
