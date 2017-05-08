@@ -63,11 +63,6 @@ begin
 			wait until( rising_edge(clock_i) );
 		end loop;
 
-		keyp(X"16", data_o, data_rdy_o);		-- ! 1
-
-		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
-		keyp(X"16", data_o, data_rdy_o);		-- ! 1
-
 		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
 
 		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
@@ -77,16 +72,6 @@ begin
 
 		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
 		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
-
-		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
-
-		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
-
-		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
-		keyp(X"12", data_o, data_rdy_o);		-- SHIFT
-
-		keyp(X"F0", data_o, data_rdy_o);		-- BREAK
-		keyp(X"52", data_o, data_rdy_o);		-- ^ ~
 
 		wait;
 

@@ -97,8 +97,8 @@ entity wxedax_top is
 		sd_miso_i				: in    std_logic;
 		sd_cs_n_o				: out   std_logic									:= '1';
 		-- Joystick SNES
-		pad_clk_o				: out   std_logic								:= '0';
-		pad_latch_o				: out   std_logic								:= '0';
+		pad_clk_o				: out   std_logic									:= '0';
+		pad_latch_o				: out   std_logic									:= '0';
 		pad_data_i				: in    std_logic
 		-- Others
 --		irda_o					: out   std_logic									:= '0';
