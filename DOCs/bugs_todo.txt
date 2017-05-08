@@ -1,11 +1,15 @@
 TODO:
-Adicionar SOFARUN
+NÃO Adicionar SOFARUN (não roda bem em MSX1)
 OK Adicionar sistema de troca de paleta
 OK Adicionar turbo de 7MHz
+OK Adicionar scanlines
+ Adicionar saída HDMI para ZX-Uno (aparentemente não cabe)
 
 Bugs:
 OK Jevilon e jsj tendo problemas com boot do Nextor!
-OK fran_matsusaka reclamou que sprites do nemesis 2 e 3 pisca muito
+OK fran_matsusaka reclamou que sprites do nemesis 2 e 3 piscam muito
 OK Vanfanel reclamou que o chefe do penguim adventure nao aparece as bolas de fogo!
 OK	https://youtu.be/05kTZArlAtI?t=5m46s
 OK	https://www.youtube.com/watch?v=EoDIlTr_Y5w&feature=youtu.be
+Vanfanel reportou que há bugs relacionados com o teclado, em teclas com SHIFT
+Bug com Hard-reset: Loader não é executado para reconfigurar parâmetros.

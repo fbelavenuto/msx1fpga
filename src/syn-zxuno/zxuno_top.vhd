@@ -41,7 +41,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.vdp18_paletas_3bit_pack.all;
+use ieee.std_logic_unsigned.all;
+--use work.vdp18_paletas_3bit_pack.all;
 
 entity zxuno_top is
 	port (
@@ -96,9 +97,11 @@ entity zxuno_top is
 		vga_ntsc_o			: out   std_logic								:= '0';
 		vga_pal_o			: out   std_logic								:= '1';
 
+		-- HDMI
+--		hdmi_p_o				: out   std_logic_vector(3 downto 0);
+--		hdmi_n_o				: out   std_logic_vector(3 downto 0);
+
 		-- GPIO
---		hdmi_out_p			: out   std_logic_vector(3 downto 0);
---		hdmi_out_n			: out   std_logic_vector(3 downto 0);
 --		gpio_io				: inout std_logic_vector(35 downto 6)	:= (others => 'Z');
 
 		-- Debug
@@ -125,6 +128,8 @@ architecture behavior of zxuno_top is
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
 	signal turbo_on_s			: std_logic;
+	signal clock_vga_s		: std_logic;
+	signal clock_hdmi_s		: std_logic;
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
@@ -151,17 +156,56 @@ architecture behavior of zxuno_top is
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
+	signal audio_s				: std_logic_vector(15 downto 0);
 	signal beep_s				: std_logic;
 	signal dac_s				: std_logic;
 
 	-- Video
+	signal rgb_col_s			: std_logic_vector( 3 downto 0);
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
 	signal rgb_g_s				: std_logic_vector( 3 downto 0);
 	signal rgb_b_s				: std_logic_vector( 3 downto 0);
+	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
+	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
 	signal ntsc_pal_s			: std_logic;
 	signal vga_en_s			: std_logic;
+	signal vga_hsync_n_s		: std_logic;
+	signal vga_vsync_n_s		: std_logic;
+	signal vga_blank_s		: std_logic;
+	signal vga_col_s			: std_logic_vector( 3 downto 0);
+	signal vga_r_s				: std_logic_vector( 3 downto 0);
+	signal vga_g_s				: std_logic_vector( 3 downto 0);
+	signal vga_b_s				: std_logic_vector( 3 downto 0);
+	signal scanlines_en_s	: std_logic;
+	signal odd_line_s			: std_logic;
+	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
+	signal tdms_r_s			: std_logic_vector( 9 downto 0);
+	signal tdms_g_s			: std_logic_vector( 9 downto 0);
+	signal tdms_b_s			: std_logic_vector( 9 downto 0);
+	signal tdms_p_s			: std_logic_vector( 3 downto 0);
+	signal tdms_n_s			: std_logic_vector( 3 downto 0);
+	type ram_t is array (natural range 0 to 15) of std_logic_vector(15 downto 0);
+	constant rgb_c : ram_t := (
+			--      RB0G
+			0  => X"0000",
+			1  => X"0000",
+			2  => X"240C",
+			3  => X"570D",
+			4  => X"5E05",
+			5  => X"7F07",
+			6  => X"D405",
+			7  => X"4F0E",
+			8  => X"F505",
+			9  => X"F707",
+			10 => X"D50C",
+			11 => X"E80C",
+			12 => X"230B",
+			13 => X"CB09",
+			14 => X"CC0C",
+			15 => X"FF0F"
+	);
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector(3 downto 0);
@@ -185,7 +229,9 @@ begin
 	pll_1: entity work.pll1
 	port map (
 		CLK_IN1	=> clock_50_i,
-		CLK_OUT1	=> clock_master_s			-- 21.512 MHz (6x NTSC)
+		CLK_OUT1	=> clock_master_s,		-- 21.47727 (21.249) MHz (6x NTSC)
+		CLK_OUT2 => clock_vga_s,			-- 25.20000 (25.000) MHz
+		CLK_OUT3 => clock_hdmi_s			-- 126.0000 (125.00) MHz
 	);
 
 	-- Clocks
@@ -207,7 +253,7 @@ begin
 		hw_id_g			=> 6,
 		hw_txt_g			=> "ZX-Uno Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 1						-- 1 = dblscan configurable
+		video_opt_g		=> 3						-- No dblscan and external palette (Color in rgb_r_o)
 	)
 	port map (
 		-- Clocks
@@ -294,17 +340,18 @@ begin
 		joy2_btn2_o		=> open,
 		joy2_out_o		=> open,
 		-- Video
-		cnt_hor_o		=> open,
-		cnt_ver_o		=> open,
-		rgb_r_o			=> rgb_r_s,
-		rgb_g_o			=> rgb_g_s,
-		rgb_b_o			=> rgb_b_s,
+		cnt_hor_o		=> cnt_hor_s,
+		cnt_ver_o		=> cnt_ver_s,
+		rgb_r_o			=> rgb_col_s,
+		rgb_g_o			=> open,
+		rgb_b_o			=> open,
 		hsync_n_o		=> rgb_hsync_n_s,
 		vsync_n_o		=> rgb_vsync_n_s,
 		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
-		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
 		vga_en_o			=> vga_en_s,
+		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
+		scanline_en_o	=> scanlines_en_s,
 		-- SPI/SD
 		flspi_cs_n_o	=> open,
 		spi_cs_n_o		=> sd_cs_n_s,
@@ -357,6 +404,7 @@ begin
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
+		audio_mix_o		=> audio_s,
 		dac_out_o		=> dac_s
 	);
 
@@ -421,12 +469,132 @@ begin
 	ram_data_from_s	<= sram_data_io;
 	sram_we_n_o			<= not ram_we_s;
 
-	-- VGA Output
-	vga_r_o			<= rgb_r_s(3 downto 1);
-	vga_g_o			<= rgb_g_s(3 downto 1);
-	vga_b_o			<= rgb_b_s(3 downto 1);
-	vga_csync_n_o	<= rgb_hsync_n_s	when vga_en_s = '1'	else (rgb_hsync_n_s and rgb_vsync_n_s);
-	vga_vsync_n_o	<= rgb_vsync_n_s	when vga_en_s = '1'	else '1';
+	-- VGA framebuffer
+--	vga: entity work.vga
+--	port map (
+--		I_CLK			=> clock_master_s,
+--		I_CLK_VGA	=> clock_vga_s,
+--		I_COLOR		=> rgb_col_s,
+--		I_HCNT		=> cnt_hor_s,
+--		I_VCNT		=> cnt_ver_s,
+--		O_HSYNC		=> vga_hsync_n_s,
+--		O_VSYNC		=> vga_vsync_n_s,
+--		O_COLOR		=> vga_col_s,
+--		O_HCNT		=> open,
+--		O_VCNT		=> open,
+--		O_H			=> open,
+--		O_BLANK		=> vga_blank_s
+--	);
+
+	-- Scanlines
+	process(vga_hsync_n_s, vga_vsync_n_s)
+	begin
+		if vga_vsync_n_s = '0' then
+			odd_line_s <= '0';
+		elsif rising_edge(vga_hsync_n_s) then
+			odd_line_s <= not odd_line_s;
+		end if;
+	end process;
+
+	-- Index => RGB
+	process (clock_vdp_s)
+		variable rgb_col_v	: integer range 0 to 15;
+		variable rgb_rgb_v	: std_logic_vector(15 downto 0);
+		variable rgb_r_v		: std_logic_vector( 3 downto 0);
+		variable rgb_g_v		: std_logic_vector( 3 downto 0);
+		variable rgb_b_v		: std_logic_vector( 3 downto 0);
+	begin
+		if rising_edge(clock_vdp_s) then
+			rgb_col_v := to_integer(unsigned(rgb_col_s));
+			rgb_rgb_v := rgb_c(rgb_col_v);
+			rgb_r_s <= rgb_rgb_v(15 downto 12);
+			rgb_b_s <= rgb_rgb_v(11 downto  8);
+			rgb_g_s <= rgb_rgb_v( 3 downto  0);
+		end if;
+	end process;
+
+--	process (clock_vga_s)
+--		variable vga_col_v	: integer range 0 to 15;
+--		variable vga_rgb_v	: std_logic_vector(15 downto 0);
+--		variable vga_r_v		: std_logic_vector( 3 downto 0);
+--		variable vga_g_v		: std_logic_vector( 3 downto 0);
+--		variable vga_b_v		: std_logic_vector( 3 downto 0);
+--	begin
+--		if rising_edge(clock_vga_s) then
+--			vga_col_v := to_integer(unsigned(vga_col_s));
+--			vga_rgb_v := rgb_c(vga_col_v);
+--			if scanlines_en_s = '1' then
+--				--
+--				if vga_rgb_v(15 downto 12) > 1 and odd_line_s = '1' then
+--					vga_r_s <= vga_rgb_v(15 downto 12) - 2;
+--				else
+--					vga_r_s <= vga_rgb_v(15 downto 12);
+--				end if;
+--				--
+--				if vga_rgb_v(11 downto 8) > 1 and odd_line_s = '1' then
+--					vga_b_s <= vga_rgb_v(11 downto 8) - 2;
+--				else
+--					vga_b_s <= vga_rgb_v(11 downto 8);
+--				end if;
+--				--
+--				if vga_rgb_v(3 downto 0) > 1 and odd_line_s = '1' then
+--					vga_g_s <= vga_rgb_v(3 downto 0) - 2;
+--				else
+--					vga_g_s <= vga_rgb_v(3 downto 0);
+--				end if;
+--			else
+--				vga_r_s <= vga_rgb_v(15 downto 12);
+--				vga_b_s <= vga_rgb_v(11 downto  8);
+--				vga_g_s <= vga_rgb_v( 3 downto  0);
+--			end if;
+--		end if;
+--	end process;
+
+	-- HDMI
+--	sound_hdmi_s <= '0' & audio_s(15 downto 1);
+
+--	hdmi: entity work.hdmi
+--	generic map (
+--		FREQ	=> 25200000,	-- pixel clock frequency 
+--		FS		=> 48000,		-- audio sample rate - should be 32000, 41000 or 48000 = 48KHz
+--		CTS	=> 25200,		-- CTS = Freq(pixclk) * N / (128 * Fs)
+--		N		=> 6144			-- N = 128 * Fs /1000,  128 * Fs /1500 <= N <= 128 * Fs /300 (Check HDMI spec 7.2 for details)
+--	)
+--	port map (
+--		I_CLK_PIXEL		=> clock_vga_s,
+--		I_R				=> vga_r_s & vga_r_s,
+--		I_G				=> vga_g_s & vga_g_s,
+--		I_B				=> vga_b_s & vga_b_s,
+--		I_BLANK			=> vga_blank_s,
+--		I_HSYNC			=> vga_hsync_n_s,
+--		I_VSYNC			=> vga_vsync_n_s,
+--		-- PCM audio
+--		I_AUDIO_ENABLE	=> '1',
+--		I_AUDIO_PCM_L 	=> sound_hdmi_s,
+--		I_AUDIO_PCM_R	=> sound_hdmi_s,
+--		-- TMDS parallel pixel synchronous outputs (serialize LSB first)
+--		O_RED				=> tdms_r_s,
+--		O_GREEN			=> tdms_g_s,
+--		O_BLUE			=> tdms_b_s
+--	);
+--
+--	hdmio: entity work.hdmi_out_xilinx
+--	port map (
+--		clock_pixel_i		=> clock_vga_s,
+--		clock_tdms_i		=> clock_hdmi_s,
+--		red_i					=> tdms_r_s,
+--		green_i				=> tdms_g_s,
+--		blue_i				=> tdms_b_s,
+--		tmds_out_p			=> hdmi_p_o,
+--		tmds_out_n			=> hdmi_n_o
+--	);
+
+	-- RGB/VGA Output
+	vga_r_o			<= vga_r_s(3 downto 1)	when vga_en_s = '1'	else rgb_r_s(3 downto 1);
+	vga_g_o			<= vga_g_s(3 downto 1)	when vga_en_s = '1'	else rgb_g_s(3 downto 1);
+	vga_b_o			<= vga_b_s(3 downto 1)	when vga_en_s = '1'	else rgb_b_s(3 downto 1);
+	vga_csync_n_o	<= vga_hsync_n_s			when vga_en_s = '1'	else (rgb_hsync_n_s and rgb_vsync_n_s);
+	vga_vsync_n_o	<= vga_vsync_n_s			when vga_en_s = '1'	else '1';
 --	vga_ntsc_o		<= not ntsc_pal_s;
 --	vga_pal_o		<= ntsc_pal_s;
 	vga_ntsc_o		<= '1';

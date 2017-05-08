@@ -143,8 +143,9 @@ entity msx is
 		vsync_n_o		: out std_logic;
 		ntsc_pal_o		: out std_logic;
 		vga_on_k_i		: in  std_logic;
-		scanline_on_k_i: in  std_logic;
 		vga_en_o			: out std_logic;
+		scanline_on_k_i: in  std_logic;
+		scanline_en_o	: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
 		spi_cs_n_o		: out std_logic;
@@ -732,6 +733,7 @@ begin
 	int_n_s			<= bus_int_n_i and vdp_int_n_s;
 
 	vga_en_o			<= vga_en_s;
+	scanline_en_o	<= scanline_en_s;
 
 	-- Debug
 	D_slots_o		<= pio_port_a_s;

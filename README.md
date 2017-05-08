@@ -14,6 +14,7 @@ Specifications:
 - Multiple boards;
 - 15/31KHz configurable.
 - Scanlines configurable.
+- HDMI output in some boards.
 
 In the project there is a loader to boot and load ROMs and configuration from SD card.
 
