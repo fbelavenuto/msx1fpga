@@ -43,7 +43,15 @@ static char *km_files[4] = {
 
 //                             11111111112222222222333
 //                    12345678901234567890123456789012
-const char TITLE[] = "        MSX1 FPGA LOADER        ";
+const char TITLE[] = "        MSX1FPGA LOADER         ";
+
+unsigned char *prampageH = (unsigned char *)0x3FFE;
+unsigned char *prampageL = (unsigned char *)0x3FFF;
+unsigned char *pramrom;
+unsigned char i;
+unsigned int  page;
+file_t        file;
+
 
 /*******************************************************************************/
 void printCenter(unsigned char y, unsigned char *msg)
@@ -65,26 +73,69 @@ void error(unsigned char *error)
 }
 
 /*******************************************************************************/
+void zeroram(unsigned int pi, unsigned int pe)
+{
+	for (page = pi; page < pe; page++) {
+		*prampageH = ((page & 0x100) == 0x100) ? 1 : 0;
+		*prampageL = page & 0xFF;
+		__asm__("push hl");
+		__asm__("push de");
+		__asm__("push bc");
+		__asm__("ld hl, #0x8000");
+		__asm__("ld de, #0x8001");
+		__asm__("ld bc, #0x3FFF");
+		__asm__("ld a, #0");
+		__asm__("ld (hl), a");
+		__asm__("ldir");
+		__asm__("pop bc");
+		__asm__("pop de");
+		__asm__("pop hl");
+	}
+}
+
+/*******************************************************************************/
+void loadrom(unsigned int pi, unsigned int pe)
+{
+	for (page = pi; page < pe; page++) {
+		*prampageH = ((page & 0x100) == 0x100) ? 1 : 0;
+		*prampageL = page & 0xFF;
+		pramrom  = (unsigned char *)0x8000;
+		for (i = 0; i < 32; i++) {
+			if (!fat_bread(&file, pramrom)) {
+				//              11111111112222222222333
+				//     12345678901234567890123456789012
+				error("Error reading file!");
+			}
+			pramrom += 512;
+		}
+		vdp_putchar('.');
+	}
+}
+
+/*******************************************************************************/
 void main()
 {
-	unsigned char hwid, hwversion, hwtxt[20], buffer[512];
-	unsigned char *prampage = (unsigned char *)0x3FFF;
-	unsigned char *pramrom  = (unsigned char *)0x8000;
-	unsigned char *ppl      = (unsigned char *)0xFF00;
-	unsigned char c, i, page;
+	unsigned char hwid, hwversion, hwtxt[20], hwmemcfg;
+	unsigned int pn_ram_start = 0, pn_ram_end = 0, pn_ram_ipl = 0;
+	unsigned int pn_mr2_start = 0, pn_mr2_end = 0;
+	unsigned int pn_rom = 0, pn_nextor = 0;
+	unsigned char buffer[512];
+	unsigned char *ppl       = (unsigned char *)0xFF00;
+	unsigned char c;
 	unsigned int  k;
 	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor, cfgturbo, cfgsln;
 	char *kmpfile = NULL;
-	file_t        file;
 
+	// Init SWIO
+	SWIOP_MKID = mymkid;
+	SWIOP_REGNUM = REG_TURBO;
+	SWIOP_REGVAL = TURBO_ON;			// Turbo ON
+	
 	vdp_init();
 	vdp_setcolor(COLOR_BLUE, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring(TITLE);
 
 	// Read Hardware ID
-	SWIOP_MKID = mymkid;
-	SWIOP_REGNUM = REG_TURBO;
-	SWIOP_REGVAL = 1;					// Turbo ON
 	SWIOP_REGNUM = REG_HWID;
 	hwid = SWIOP_REGVAL;
 	SWIOP_REGNUM = REG_HWTXT;
@@ -96,6 +147,8 @@ void main()
 	}
 	SWIOP_REGNUM = REG_HWVER;
 	hwversion = SWIOP_REGVAL;
+	SWIOP_REGNUM = REG_HWMEMCFG;
+	hwmemcfg = SWIOP_REGVAL;
 
 	vdp_gotoxy(0, 3);
 	vdp_putstring("HW ID = ");
@@ -134,27 +187,29 @@ void main()
 		//     12345678901234567890123456789012
 		error("Config file not found!");
 	}
+/*
 	if (file.size < 6) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Config file error!");
 	}
+*/
 	if (!fat_bread(&file, buffer)) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Error reading Config file!");
 	}
-	cfgnxt = (buffer[0] == '1') ? 1 : 0;
-	cfgvga = (buffer[1] == '1') ? 2 : 0;
+	cfgnxt = (buffer[0] == '1') ? CFG_NEXTOR		: 0;
+	cfgvga = (buffer[1] == '1') ? CFG_SCANDBL		: 0;
 	cfgkm  = buffer[2];
 	if (cfgkm != 'E' && cfgkm != 'B' && cfgkm != 'F' && cfgkm != 'S') {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Invalid keymap!");
 	}
-	cfgcor   = (buffer[3] == 'P') ? 2 : 0;
-	cfgturbo = (buffer[4] == '1') ? 1 : 0;
-	cfgsln   = (buffer[5] == '1') ? 4 : 0;
+	cfgcor   = (buffer[3] == 'P') ? VDP_PAL 		: VDP_NTSC;
+	cfgturbo = (buffer[4] == '1') ? TURBO_ON		: 0;
+	cfgsln   = (buffer[5] == '1') ? CFG_SCANLINES	: 0;
 
 	VDP_CMD = cfgcor;
 	VDP_CMD = 0x89;
@@ -162,30 +217,48 @@ void main()
 	SWIOP_REGNUM = REG_OPTIONS;
 	SWIOP_REGVAL = cfgsln | cfgvga | cfgnxt;
 
+	// IPL pages config
+	if ((hwmemcfg & 0x07) == 0) {
+		pn_ram_start = 8;
+		pn_ram_end   = 14;
+		pn_ram_ipl   = 15;
+		pn_rom       = 30;
+//		pn_nextor    = 0;
+		pn_mr2_start = 16;
+		pn_mr2_end   = 28;
+	} else if ((hwmemcfg & 0x07) == 2) {
+		pn_ram_start = 64;
+		pn_ram_end   = 96;
+		pn_ram_ipl   = 127;
+		pn_rom       = 0;
+		pn_nextor    = 8;
+		pn_mr2_start = 32;
+		pn_mr2_end   = 64;
+	} else if ((hwmemcfg & 0x07) == 4) {
+		pn_ram_start = 256;
+		pn_ram_end   = 287;
+		pn_ram_ipl   = 511;
+//		pn_rom       = 0;
+		pn_nextor    = 8;
+		pn_mr2_start = 64;
+		pn_mr2_end   = 96;
+	} else {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Memory size error!");
+	}
+
 	vdp_putstring("OK\n\nZeroing RAM: ");
 
-	for (page = 0; page < 29; page++) {
-		if (page == 15) {
-			continue;
-		}
-		*prampage = page;
-		__asm__("push hl");
-		__asm__("push de");
-		__asm__("push bc");
-		__asm__("ld hl, #0x8000");
-		__asm__("ld de, #0x8001");
-		__asm__("ld bc, #0x3FFF");
-		__asm__("ld a, #0");
-		__asm__("ld (hl), a");
-		__asm__("ldir");
-		__asm__("pop bc");
-		__asm__("pop de");
-		__asm__("pop hl");
+	if (cfgnxt != CFG_NEXTOR) {
+		zeroram(pn_nextor, pn_nextor+8);
 	}
+	zeroram(pn_ram_start, pn_ram_end);
+	zeroram(pn_mr2_start, pn_mr2_end);
 	vdp_putstring(" OK\n");
 
-	if (hwid == 5 || hwid == 6) {
-		vdp_putstring("\nLoading MSX1BIOS.ROM ");
+	if ((hwmemcfg & 0x80) == 0x80) {
+		vdp_putstring("\nLoading MSX1BIOS.ROM: ");
 		if (!fat_fopen(&file, biosfile)) {
 			//              11111111112222222222333
 			//     12345678901234567890123456789012
@@ -196,24 +269,12 @@ void main()
 			//     12345678901234567890123456789012
 			error("MSXBIOS file size must be 32768!");
 		}
-		for (page = 30; page < 32; page++) {
-			*prampage = page;
-			pramrom  = (unsigned char *)0x8000;
-			for (i = 0; i < 32; i++) {
-				if (!fat_bread(&file, pramrom)) {
-					//              11111111112222222222333
-					//     12345678901234567890123456789012
-					error("Error reading BIOS file!");
-				}
-				pramrom += 512;
-			}
-			vdp_putchar('.');
-		}
+		loadrom(pn_rom, pn_rom+2);
 		vdp_putstring(" OK\n");
 	}
 
-	if (cfgnxt == 1) {
-		vdp_putstring("\nLoading NEXTOR.ROM ");
+	if (cfgnxt == CFG_NEXTOR) {
+		vdp_putstring("\nLoading NEXTOR.ROM: ");
 		if (!fat_fopen(&file, nxtfile)) {
 			//              11111111112222222222333
 			//     12345678901234567890123456789012
@@ -224,19 +285,7 @@ void main()
 			//     12345678901234567890123456789012
 			error("NEXTOR file size must be 131072!");
 		}
-		for (page = 0; page < 8; page++) {
-			*prampage = page;
-			pramrom  = (unsigned char *)0x8000;
-			for (i = 0; i < 32; i++) {
-				if (!fat_bread(&file, pramrom)) {
-					//              11111111112222222222333
-					//     12345678901234567890123456789012
-					error("Error reading NEXTOR file!");
-				}
-				pramrom += 512;
-			}
-			vdp_putchar('.');
-		}
+		loadrom(pn_nextor, pn_nextor+8);
 		vdp_putstring(" OK\n");
 	}
 
@@ -285,11 +334,13 @@ void main()
 
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
-	if (cfgturbo == 0) {
-		SWIOP_REGNUM = REG_TURBO;
-		SWIOP_REGVAL = 0;
-	}
-	*prampage = 15;	// Main RAM
+
+	SWIOP_REGNUM = REG_TURBO;
+	SWIOP_REGVAL = cfgturbo;
+
+	*prampageH = ((pn_ram_ipl & 0x100) == 0x100) ? 1 : 0;	// Main RAM
+	*prampageL = pn_ram_ipl & 0xFF;
+
 	// start ROM
 	*ppl++=0x3E;		// LD A, $F0
 	*ppl++=0xF0;

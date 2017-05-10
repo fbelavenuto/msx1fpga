@@ -59,6 +59,7 @@ entity swioports is
 		hw_id_i			: in  std_logic_vector(7 downto 0);
 		hw_txt_i			: in  string;
 		hw_version_i	: in  std_logic_vector(7 downto 0);
+		hw_memsize_i	: in  std_logic_vector(7 downto 0);
 		nextor_en_i		: in  std_logic;
 		mr_type_i		: in  std_logic_vector(1 downto 0);
 		vga_on_i			: in  std_logic;
@@ -79,6 +80,10 @@ entity swioports is
 end entity;
 
 architecture Behavior of swioports is
+
+	constant MYMKID_C			: std_logic_vector(7 downto 0) := X"28";
+	constant PANAMKID_C		: std_logic_vector(7 downto 0) := X"08";
+	constant OCMMKID_C		: std_logic_vector(7 downto 0) := X"D4";
 
 	signal maker_id_s			: std_logic_vector(7 downto 0);
 	signal has_data_mkid_s	: std_logic;
@@ -104,7 +109,7 @@ begin
 			maker_id_s <= (others => '0');
 		elsif falling_edge(clock_i) then
 			if cs_i = '1' and wr_i = '1' and addr_i = X"40" then
-				if data_i = X"08" or data_i = X"28" or data_i = X"D4" then
+				if data_i = PANAMKID_C or data_i = MYMKID_C or data_i = OCMMKID_C then
 					maker_id_s <= data_i;
 				else
 					maker_id_s <= X"00";
@@ -131,7 +136,7 @@ begin
 		if reset_i = '1' then
 			reg_addr_q <= (others => '0');
 		elsif falling_edge(clock_i) then
-			if cs_i = '1' and wr_i = '1' and maker_id_s = X"28" and addr_i = X"48" then
+			if cs_i = '1' and wr_i = '1' and maker_id_s = MYMKID_C and addr_i = X"48" then
 				reg_addr_q <= data_i;
 			end if;
 		end if;
@@ -169,12 +174,12 @@ begin
 			keymap_we_s	<= '0';		-- default
 
 			-- Panasonic
-			if    cs_i = '1' and wr_i = '1' and maker_id_s = X"08" then
+			if    cs_i = '1' and wr_i = '1' and maker_id_s = PANAMKID_C then
 				if addr_i = X"41" then
 					turbo_on_q <= not data_i(0);
 				end if;
 			-- MSX1FPGA ID
-			elsif cs_i = '1' and wr_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
+			elsif cs_i = '1' and wr_i = '1' and maker_id_s = MYMKID_C and addr_i = X"49" then
 				case reg_addr_q is
 					when X"0A" =>
 						softreset_q		<= data_i(0);
@@ -197,7 +202,7 @@ begin
 						null;
 				end case;
 			-- KdL ID (only for MGLOCM)
-			elsif cs_i = '1' and wr_i = '1' and maker_id_s = X"D4" then
+			elsif cs_i = '1' and wr_i = '1' and maker_id_s = OCMMKID_C then
 				if    addr_i = X"41" then
 					-- Smart Command
 					if    data_i = X"03" then
@@ -241,13 +246,13 @@ begin
 			has_data_regv_s	<= '0';
 			reg_data_s			<= (others => '0');
 			-- Panasonic
-			if    cs_i = '1' and rd_i = '1' and maker_id_s = X"08" then
+			if    cs_i = '1' and rd_i = '1' and maker_id_s = PANAMKID_C then
 				if addr_i = X"41" then
 					reg_data_s			<= "0000000" & not turbo_on_q;
 					has_data_regv_s	<= '1';
 				end if;
 			-- MSX1FPGA ID
-			elsif cs_i = '1' and rd_i = '1' and maker_id_s = X"28" and addr_i = X"49" then
+			elsif cs_i = '1' and rd_i = '1' and maker_id_s = MYMKID_C and addr_i = X"49" then
 				case reg_addr_q is
 					when X"00" =>
 						reg_data_s			<= hw_id_i;
@@ -265,6 +270,9 @@ begin
 					when X"02" =>
 						reg_data_s			<= hw_version_i;
 						has_data_regv_s	<= '1';
+					when X"03" =>
+						reg_data_s			<= hw_memsize_i;
+						has_data_regv_s	<= '1';
 					when X"10" =>
 						reg_data_s			<= "000000" & vga_en_q & nextor_en_q;
 						has_data_regv_s	<= '1';
@@ -278,7 +286,7 @@ begin
 						null;
 				end case;
 			-- KdL ID
-			elsif cs_i = '1' and rd_i = '1' and maker_id_s = X"D4" then
+			elsif cs_i = '1' and rd_i = '1' and maker_id_s = OCMMKID_C then
 				if    addr_i = X"42" then
 					reg_data_s			<= nextor_en_q & "0" & mapper_q & "0000";
 					has_data_regv_s	<= '1';

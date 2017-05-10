@@ -52,9 +52,9 @@ entity zxuno_top_vga2m is
 		key_nmi_n_i			: in    std_logic;
 		key_service_n_i	: in    std_logic;
 
-		-- SRAM (AS7C34096)
-		sram_addr_o			: out   std_logic_vector(18 downto 0)	:= (others => '0');
-		sram_data_io		: inout std_logic_vector(7 downto 0)	:= (others => 'Z');
+		-- SRAM
+		sram_addr_o			: out   std_logic_vector(20 downto 0)	:= (others => '0');
+		sram_data_io		: inout std_logic_vector( 7 downto 0)	:= (others => 'Z');
 		sram_we_n_o			: out   std_logic								:= '1';
 		sram_ceoe_n_o		: out   std_logic								:= '1';
 
@@ -132,18 +132,12 @@ architecture behavior of zxuno_top_vga2m is
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector(7 downto 0);
 	signal ram_data_to_s		: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
-
-	-- ROM
-	signal rom_addr_s			: std_logic_vector(14 downto 0);		-- 32K
-	signal rom_data_s			: std_logic_vector(7 downto 0);
-	signal rom_ce_s			: std_logic;
-	signal rom_oe_s			: std_logic;
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
@@ -212,7 +206,8 @@ begin
 		hw_id_g			=> 7,
 		hw_txt_g			=> "ZX-Uno Board 2M",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 1						-- 1 = dblscan configurable
+		video_opt_g		=> 1,						-- 1 = dblscan configurable
+		ramsize_g		=> 2048
 	)
 	port map (
 		-- Clocks
@@ -239,10 +234,10 @@ begin
 		ram_we_o			=> ram_we_s,
 		ram_oe_o			=> ram_oe_s,
 		-- ROM
-		rom_addr_o		=> rom_addr_s,
-		rom_data_i		=> rom_data_s,
-		rom_ce_o			=> rom_ce_s,
-		rom_oe_o			=> rom_oe_s,
+		rom_addr_o		=> open,
+		rom_data_i		=> ram_data_from_s,
+		rom_ce_o			=> open,
+		rom_oe_o			=> open,
 		-- External bus
 		bus_addr_o		=> open,
 		bus_data_i		=> (others => '1'),
@@ -320,14 +315,6 @@ begin
 		D_slots_o		=> open
 	);
 
-	-- ROM
-	rom: entity work.mainrom
-	port map (
-		clk		=> clock_master_s,
-		addr		=> rom_addr_s,
-		data		=> rom_data_s
-	);
-	
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
@@ -421,7 +408,7 @@ begin
 	dac_r_o		<= dac_s;
 
 	-- RAM
-	sram_addr_o			<= ram_addr_s;
+	sram_addr_o			<= ram_addr_s(20 downto 0);
 	sram_data_io		<= ram_data_to_s	when ram_we_s = '1'	else (others => 'Z');
 	ram_data_from_s	<= sram_data_io;
 	sram_we_n_o			<= not ram_we_s;

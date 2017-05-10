@@ -120,15 +120,12 @@ architecture behavior of wxeda_top is
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
 	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
-
-	-- SDRAM
-	signal sdram_addr_s		: std_logic_vector(22 downto 0);		-- 8MB
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
@@ -174,7 +171,7 @@ begin
 		inclk0	=> clock_48M_i,
 		c0			=> clock_master_s,		-- 21.46667 MHz (6x NTSC)
 		c1			=> clock_sdram_s,			-- 85.86667 MHz (4x master)
-		c2			=> sdram_clock_o,
+		c2			=> sdram_clock_o,			-- 85.86667 MHz -45º
 		locked	=> pll_locked_s
 	);
 
@@ -197,7 +194,8 @@ begin
 		hw_id_g			=> 3,
 		hw_txt_g			=> "WXEDA Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 1						-- dblscan configurable
+		video_opt_g		=> 1,						-- dblscan configurable
+		ramsize_g		=> 512
 	)
 	port map (
 		-- Clocks
@@ -305,18 +303,16 @@ begin
 	);
 
 	-- RAM
-	sdram_addr_s	<= "0000" & ram_addr_s;
-
 	ram: entity work.ssdram
 	generic map (
-		freq_g		=> 85
+		freq_g		=> 86
 	)
 	port map (
 		clock_i		=> clock_sdram_s,
 		reset_i		=> reset_s,
 		refresh_i	=> '1',
 		-- Static RAM bus
-		addr_i		=> sdram_addr_s,
+		addr_i		=> ram_addr_s,
 		data_i		=> ram_data_to_s,
 		data_o		=> ram_data_from_s,
 		cs_i			=> ram_ce_s,

@@ -214,7 +214,7 @@ architecture behavior of de2_top is
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
 	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
 	signal ram_ce_s			: std_logic;
@@ -322,7 +322,8 @@ begin
 		hw_id_g			=> 2,
 		hw_txt_g			=> "DE-2 Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 1						-- dblscan configurable
+		video_opt_g		=> 1,						-- dblscan configurable
+		ramsize_g		=> 8192
 	)
 	port map (
 		clock_i			=> clock_master_s,
@@ -348,10 +349,10 @@ begin
 		ram_we_o			=> ram_we_s,
 		ram_oe_o			=> ram_oe_s,
 		-- ROM
-		rom_addr_o		=> rom_addr_s,
-		rom_data_i		=> rom_data_s,
-		rom_ce_o			=> rom_ce_s,
-		rom_oe_o			=> rom_oe_s,
+		rom_addr_o		=> open,
+		rom_data_i		=> ram_data_from_s,
+		rom_ce_o			=> open,
+		rom_oe_o			=> open,
 		-- External bus
 		bus_addr_o		=> D_cpu_addr_s,
 		bus_data_i		=> (others => '1'),
@@ -487,14 +488,14 @@ begin
 
 	ram: entity work.ssdram
 	generic map (
-		freq_g		=> 85
+		freq_g		=> 86
 	)
 	port map (
 		clock_i		=> clock_sdram_s,
 		reset_i		=> reset_s,
 		refresh_i	=> '1',
 		-- Static RAM bus
-		addr_i		=> "0000" & ram_addr_s,
+		addr_i		=> ram_addr_s,
 		data_i		=> ram_data_to_s,
 		data_o		=> ram_data_from_s,
 		cs_i			=> ram_ce_s,

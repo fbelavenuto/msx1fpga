@@ -32,6 +32,10 @@ Registers:
 (R )	00 => Machine ID number
 (R )	01 => Machine name (text), read to receive a null character.
 (R )	02 => Version (Nibble most significant = Major, Nibble less significant = Minor)
+(R )	03 => memory configuration
+			bit 7 = use ROM in RAM
+			bits 6-3 = reserved, always 0
+			bits 2-0 = 0=>512K, 2=>2MB, 4=>8MB
 ( W)	0A =>
 			bit 0 = Soft reset
 ( W)	0D => Lower address of Keymap

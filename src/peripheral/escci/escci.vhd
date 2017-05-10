@@ -53,7 +53,7 @@ entity escci is
 		rd_i			: in  std_logic;
 		wr_i			: in  std_logic;
 		--
-		ram_addr_o	: out std_logic_vector(18 downto 0);	-- 512KB
+		ram_addr_o	: out std_logic_vector(19 downto 0);	-- 1MB
 		ram_data_i	: in  std_logic_vector( 7 downto 0);
 		ram_ce_o		: out std_logic;
 		ram_oe_o		: out std_logic;
@@ -138,10 +138,10 @@ begin
 	ram_oe_o <= rd_i;
 	ram_we_o	<= wr_i;
 
-	ram_addr_o	<=	SccBank0(5 downto 0) & addr_i(12 downto 0) when addr_i(14 downto 13) = "10" else
-						SccBank1(5 downto 0) & addr_i(12 downto 0) when addr_i(14 downto 13) = "11" else
-						SccBank2(5 downto 0) & addr_i(12 downto 0) when addr_i(14 downto 13) = "00" else
-						SccBank3(5 downto 0) & addr_i(12 downto 0);
+	ram_addr_o	<=	SccBank0(6 downto 0) & addr_i(12 downto 0) when addr_i(14 downto 13) = "10" else
+						SccBank1(6 downto 0) & addr_i(12 downto 0) when addr_i(14 downto 13) = "11" else
+						SccBank2(6 downto 0) & addr_i(12 downto 0) when addr_i(14 downto 13) = "00" else
+						SccBank3(6 downto 0) & addr_i(12 downto 0);
 
 	-- Mapped I/O port access on 9800-98FFh / B800-B8FFh ... Wave memory
 	wav_cs_s <= '1'	when cs_s = '1' and cs_dly_s = '0' and SccSel_s(1) = '1'	else

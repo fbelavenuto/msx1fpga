@@ -4,6 +4,8 @@ OK Adicionar sistema de troca de paleta
 OK Adicionar turbo de 7MHz
 OK Adicionar scanlines
  Adicionar saída HDMI para ZX-Uno (aparentemente não cabe)
+ Adicionar controlador de memória para usar toda a memória de cada placa
+ Fazer atualizador para o FPGA
 
 Bugs:
 OK Jevilon e jsj tendo problemas com boot do Nextor!
@@ -12,4 +14,4 @@ OK Vanfanel reclamou que o chefe do penguim adventure nao aparece as bolas de fo
 OK	https://youtu.be/05kTZArlAtI?t=5m46s
 OK	https://www.youtube.com/watch?v=EoDIlTr_Y5w&feature=youtu.be
 Vanfanel reportou que há bugs relacionados com o teclado, em teclas com SHIFT
-Bug com Hard-reset: Loader não é executado para reconfigurar parâmetros.
+OK Bug com Hard-reset: Loader não é executado para reconfigurar parâmetros.

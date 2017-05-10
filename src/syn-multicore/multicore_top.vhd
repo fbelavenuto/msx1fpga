@@ -137,7 +137,7 @@ architecture behavior of multicore_top is
 	signal clock_dvi_s		: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector(7 downto 0);
 	signal ram_data_to_s		: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
@@ -221,12 +221,13 @@ begin
 	);
 
 	-- The MSX1
-	the_msx: entity '
+	the_msx: entity work.msx
 	generic map (
 		hw_id_g			=> 5,
 		hw_txt_g			=> "Multicore Board",
 		hw_version_g	=> X"11",					-- Version 1.1
-		video_opt_g		=> 3							-- No dblscan and external palette (Color in rgb_r_o)
+		video_opt_g		=> 3,							-- No dblscan and external palette (Color in rgb_r_o)
+		ramsize_g		=> 512
 	)
 	port map (
 		-- Clocks
@@ -384,7 +385,7 @@ begin
 		porta0_data_i	=> vram_di_s,
 		porta0_data_o	=> vram_do_s,
 		-- Port 1
-		porta1_addr_i	=> ram_addr_s,
+		porta1_addr_i	=> ram_addr_s(18 downto 0),
 		porta1_ce_i		=> ram_ce_s,
 		porta1_oe_i		=> ram_oe_s,
 		porta1_we_i		=> ram_we_s,

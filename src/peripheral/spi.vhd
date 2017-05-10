@@ -59,7 +59,7 @@ entity spi is
 		data_o			: out   std_logic_vector(7 downto 0);
 		has_data_o		: out   std_logic;
 		-- SD card interface
-		spi_cs_n_o		: out   std_logic_vector(1 downto 0)	:= "11";
+		spi_cs_n_o		: out   std_logic_vector(2 downto 0)	:= "111";
 		spi_sclk_o		: out   std_logic;
 		spi_mosi_o		: out   std_logic;
 		spi_miso_i		: in    std_logic
@@ -98,10 +98,11 @@ begin
 	process(clock_i, reset_i)
 	begin
 		if reset_i = '1' then
-			spi_cs_n_o <= "11";
+			spi_cs_n_o <= "111";
 		elsif rising_edge(clock_i) then
 			if enable_s = '1' and addr_i = '0' and wr_i = '1'  then
 				spi_cs_n_o(1)	<= data_i(7);
+				spi_cs_n_o(1)	<= data_i(1);
 				spi_cs_n_o(0)	<= data_i(0);
 			end if;
 		end if;

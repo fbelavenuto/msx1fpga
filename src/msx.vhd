@@ -47,7 +47,8 @@ entity msx is
 		hw_id_g			: integer								:= 0;
 		hw_txt_g			: string 								:= "NONE";
 		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
-		video_opt_g		: integer								:= 0		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		video_opt_g		: integer								:= 0;		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		ramsize_g		: integer								:= 512	-- 512, 2048 or 8192
 	);
 	port (
 		-- Clocks
@@ -67,7 +68,7 @@ entity msx is
 		opt_mr_type_i	: in  std_logic_vector(1 downto 0);
 		opt_vga_on_i	: in  std_logic							:= '0';
 		-- RAM
-		ram_addr_o		: out std_logic_vector(18 downto 0);	-- 512K
+		ram_addr_o		: out std_logic_vector(22 downto 0);	-- 8MB
 		ram_data_i		: in  std_logic_vector( 7 downto 0);
 		ram_data_o		: out std_logic_vector( 7 downto 0);
 		ram_ce_o			: out std_logic;
@@ -204,23 +205,27 @@ architecture Behavior of msx is
 	signal exp_has_data_s	: std_logic;
 	signal brom_cs_s			: std_logic;
 	signal ram_cs_s			: std_logic;
-	signal ram_page_s			: std_logic_vector( 4 downto 0);
 	signal use_rom_in_ram_s	: std_logic;
+	signal hw_memsize_s		: std_logic_vector( 7 downto 0);
 
 	-- IPL
 	signal ipl_en_s			: std_logic;
 	signal iplrom_addr_s		: std_logic_vector(12 downto 0);
 	signal d_from_iplrom_s	: std_logic_vector( 7 downto 0);
+	signal ipl_cs_s			: std_logic;
 	signal iplrom_cs_s		: std_logic;
 	signal iplram_cs_s		: std_logic;
 	signal iplram_bw_s		: std_logic;
+	signal ipl_rampage_s		: std_logic_vector( 8 downto 0);
 
 	-- Mapper
-	signal mp_page_s			: std_logic_vector( 2 downto 0);
-	signal mp_bank0_s			: std_logic_vector( 2 downto 0);
-	signal mp_bank1_s			: std_logic_vector( 2 downto 0);
-	signal mp_bank2_s			: std_logic_vector( 2 downto 0);
-	signal mp_bank3_s			: std_logic_vector( 2 downto 0);
+	signal mp_mask_s			: std_logic_vector( 7 downto 0);
+	signal mp_invmask_s		: std_logic_vector( 7 downto 0);
+	signal mp_page_s			: std_logic_vector( 7 downto 0);
+	signal mp_bank0_s			: std_logic_vector( 7 downto 0);
+	signal mp_bank1_s			: std_logic_vector( 7 downto 0);
+	signal mp_bank2_s			: std_logic_vector( 7 downto 0);
+	signal mp_bank3_s			: std_logic_vector( 7 downto 0);
 	signal mp_cs_s				: std_logic;
 	signal d_from_mp_s		: std_logic_vector( 7 downto 0);
 
@@ -274,7 +279,7 @@ architecture Behavior of msx is
 	signal mram_cs_s			: std_logic;
 	signal d_from_mram_s		: std_logic_vector( 7 downto 0);
 	signal mr_type_s			: std_logic_vector( 1 downto 0);
-	signal mr_ram_addr_s		: std_logic_vector(18 downto 0);
+	signal mr_ram_addr_s		: std_logic_vector(19 downto 0);
 	signal mr_ram_ce_s		: std_logic;
 	signal mr_audio_s			: signed(14 downto 0);
 	signal mr_audio_std_s	: std_logic_vector(14 downto 0);
@@ -411,6 +416,13 @@ begin
 		expsltsl_n_o	=> slot3_exp_n_s
 	);
 
+	-- Memory configuration
+	hw_memsize_s(7)				<= use_rom_in_ram_s;
+	hw_memsize_s(6 downto 3)	<= "0000";
+	hw_memsize_s(2 downto 0)	<= "000" when ramsize_g = 512		else
+										   "010" when ramsize_g = 2048	else
+										   "100";
+
 	-- Switched I/O ports
 	swiop: entity work.swioports
 	port map (
@@ -428,6 +440,7 @@ begin
 		hw_id_i			=> std_logic_vector(to_unsigned(hw_id_g, 8)),
 		hw_txt_i			=> hw_txt_g,
 		hw_version_i	=> hw_version_g,
+		hw_memsize_i	=> hw_memsize_s,
 		nextor_en_i 	=> opt_nextor_i,
 		mr_type_i		=> opt_mr_type_i,
 		vga_on_i			=> opt_vga_on_i,
@@ -459,7 +472,8 @@ begin
 		data_o			=> d_from_spi_s,
 		has_data_o		=> spi_hd_s,
 		-- SD card interface
-		spi_cs_n_o(1)	=> flspi_cs_n_o,
+		spi_cs_n_o(2)	=> flspi_cs_n_o,
+		spi_cs_n_o(1)	=> open,
 		spi_cs_n_o(0)	=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,
@@ -607,6 +621,9 @@ begin
 	prim_slot_n_s(2)	<= '0' when mreq_n_s = '0' and rfsh_n_s = '1' and pslot_s = "10"		else '1';
 	prim_slot_n_s(3)	<= '0' when mreq_n_s = '0' and rfsh_n_s = '1' and pslot_s = "11"		else '1';
 
+	-- IPL
+	ipl_cs_s			<= '1'	when slot3_exp_n_s(3) = '0'	else '0';
+
 	-- ROMs
 	iplrom_cs_s		<= '1'	when slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 13) = "000"	else '0';
 	iplrom_addr_s	<= cpu_addr_s(12 downto 0);
@@ -616,33 +633,35 @@ begin
 	process(reset_i, clock_cpu_i)
 	begin
 		if reset_i = '1' then
-			mp_bank0_s	<= "011";
-			mp_bank1_s	<= "010";
-			mp_bank2_s	<= "001";
-			mp_bank3_s	<= "000";
+			mp_bank0_s	<= "00000011";
+			mp_bank1_s	<= "00000010";
+			mp_bank2_s	<= "00000001";
+			mp_bank3_s	<= "00000000";
 		elsif falling_edge(clock_cpu_i) then
 			if mp_cs_s = '1' and wr_n_s = '0' then
 				case cpu_addr_s(1 downto 0) is
-					when "00"   => mp_bank0_s <= d_from_cpu_s(2 downto 0);
-					when "01"   => mp_bank1_s <= d_from_cpu_s(2 downto 0);
-					when "10"   => mp_bank2_s <= d_from_cpu_s(2 downto 0);
-					when others => mp_bank3_s <= d_from_cpu_s(2 downto 0);
+					when "00"   => mp_bank0_s <= d_from_cpu_s;
+					when "01"   => mp_bank1_s <= d_from_cpu_s;
+					when "10"   => mp_bank2_s <= d_from_cpu_s;
+					when others => mp_bank3_s <= d_from_cpu_s;
 				end case;
 			end if;
 		end if;
 	end process;
 
+	mp_invmask_s	<= not mp_mask_s;
+
 	-- Mapper read
-	d_from_mp_s <= "11111" & mp_bank0_s when cpu_addr_s(1 downto 0) = "00" else
-						"11111" & mp_bank1_s when cpu_addr_s(1 downto 0) = "01" else
-						"11111" & mp_bank2_s when cpu_addr_s(1 downto 0) = "10" else
-						"11111" & mp_bank3_s;
+	d_from_mp_s <= mp_bank0_s or mp_invmask_s when cpu_addr_s(1 downto 0) = "00" else
+						mp_bank1_s or mp_invmask_s when cpu_addr_s(1 downto 0) = "01" else
+						mp_bank2_s or mp_invmask_s when cpu_addr_s(1 downto 0) = "10" else
+						mp_bank3_s or mp_invmask_s;
 
 	-- Mapper page
-	mp_page_s	<= mp_bank0_s when cpu_addr_s(15 downto 14) = "00" else
-						mp_bank1_s when cpu_addr_s(15 downto 14) = "01" else
-						mp_bank2_s when cpu_addr_s(15 downto 14) = "10" else
-						mp_bank3_s;
+	mp_page_s	<= mp_bank0_s and mp_mask_s when cpu_addr_s(15 downto 14) = "00" else
+						mp_bank1_s and mp_mask_s when cpu_addr_s(15 downto 14) = "01" else
+						mp_bank2_s and mp_mask_s when cpu_addr_s(15 downto 14) = "10" else
+						mp_bank3_s and mp_mask_s;
 
 	-- RAM
 	ram_data_o	<= d_from_cpu_s;
@@ -666,49 +685,45 @@ begin
 		end if;
 	end process;
 
-	use_rom_in_ram_s <= '1'	when hw_id_g = 5 or hw_id_g = 6	else '0';
+	use_rom_in_ram_s <= '1'	when hw_id_g = 5 or hw_id_g = 6 or ramsize_g /= 512	else '0';
 
-	-- RAM map
-	-- 00000-1FFFF = NEXTOR			(128K)	00xxx		(IPL pages 0-7)
-	-- 20000-3FFFF = Mapper RAM	(128K)	01xxx		(IPL pages 8-15)
-	-- 40000-7FFFF = SCC/Megaram	(256K)	1xxxx		(IPL pages 16-31)
-	--	OR
-	--	40000-5FFFF = SCC/Megaram	(128K)	10xxx		(IPL pages 16-23)
-	-- 78000-7FFFF = ROM          (32K)    1111x		(IPL pages 30-31)
-	process (nxt_rom_cs_s, slot3_exp_n_s, cpu_addr_s, nxt_rom_page_s,
-				ram_page_s, mp_page_s, ram_cs_s, mr_ram_addr_s,
-				use_rom_in_ram_s, mr_ram_ce_s, brom_cs_s)
-	begin
-		ram_addr_o <= (others => '0');
-		if nxt_rom_cs_s = '1' then																-- Nextor (slot 3.2)
-			ram_addr_o	<= "00" & nxt_rom_page_s & cpu_addr_s(13 downto 0);
-		elsif slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 14) = "01" then	-- RAM 16K (IPL) (3.3 $4000-$7FFF)
-			ram_addr_o	<= "01111" & cpu_addr_s(13 downto 0);
-		elsif slot3_exp_n_s(3) = '0' and cpu_addr_s(15) = '1' then					-- All RAM (IPL) (3.3 $8000-$FFFF)
-			ram_addr_o	<= ram_page_s & cpu_addr_s(13 downto 0);
-		elsif mr_ram_ce_s = '1' then															-- SCC/Megaram (slot 1)
-			if use_rom_in_ram_s = '1' then
-				ram_addr_o <= "10" & mr_ram_addr_s(16 downto 0);						
-			else
-				ram_addr_o	<= "1" & mr_ram_addr_s(17 downto 0);
-			end if;
-		elsif brom_cs_s = '1' and use_rom_in_ram_s = '1' then							-- ROM
-			ram_addr_o <= "1111" & cpu_addr_s(14 downto 0);
-		elsif ram_cs_s = '1' then																-- Mapper (3.1)
-			ram_addr_o	<= "01" & mp_page_s  & cpu_addr_s(13 downto 0);
-		else
-			null;
-		end if;
-	end process;
+	memctl: entity work.memoryctl
+	generic map (
+		ramsize_g				=> ramsize_g
+	)
+	port map (
+		cpu_addr_i				=> cpu_addr_s,
+		use_rom_in_ram_i		=> use_rom_in_ram_s,
+		--
+		rom_cs_i					=> brom_cs_s,
+		nxt_rom_cs_i			=> nxt_rom_cs_s,
+		nxt_rom_page_i			=> nxt_rom_page_s,
+		ipl_cs_i					=> ipl_cs_s,
+		ipl_rampage_i			=> ipl_rampage_s,
+		mr_ram_cs_i				=> mr_ram_ce_s,
+		mr_ram_addr_i			=> mr_ram_addr_s,
+		ram_cs_i					=> ram_cs_s,
+		ram_page_i				=> mp_page_s,
+		--
+		ram_addr_o				=> ram_addr_o,
+		mapper_mask_o			=> mp_mask_s
+	);
 
-	-- RAM page write
+	-- IPL rampage write
 	process (reset_i, clock_cpu_i)
 	begin
 		if reset_i = '1' then
-			ram_page_s <= (others => '1');
+			ipl_rampage_s <= (others => '1');
 		elsif falling_edge(clock_cpu_i) then
-			if mreq_n_s = '0' and wr_n_s = '0' and slot3_exp_n_s(3) = '0' and cpu_addr_s = X"3FFF" then
-				ram_page_s <= d_from_cpu_s(4 downto 0);
+			if mreq_n_s = '0' and wr_n_s = '0' and slot3_exp_n_s(3) = '0' and 
+			 (cpu_addr_s = X"3FFE" or cpu_addr_s = X"3FFF") then
+
+				if cpu_addr_s(0) = '0' then
+					ipl_rampage_s(8)				<= d_from_cpu_s(0);
+				else
+					ipl_rampage_s(7 downto 0)	<= d_from_cpu_s;
+				end if;
+
 			end if;
 		end if;
 	end process;

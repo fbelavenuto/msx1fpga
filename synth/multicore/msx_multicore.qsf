@@ -209,6 +209,7 @@ set_global_assignment -name VHDL_FILE ../../src/hdmi2/encoder.vhd
 set_global_assignment -name VERILOG_FILE ../../src/hdmi2/hdmidataencoder.v
 set_global_assignment -name VHDL_FILE ../../src/hdmi2/hdmi_out_altera.vhd
 set_global_assignment -name QIP_FILE ../../src/hdmi2/altddio_out1.qip
+set_global_assignment -name VHDL_FILE ../../src/peripheral/memoryctl.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keymap.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/ps2_iobase.vhd

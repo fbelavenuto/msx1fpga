@@ -34,6 +34,7 @@ static const unsigned char mymkid = 40;
 #define REG_HWID		0x00
 #define REG_HWTXT		0x01
 #define REG_HWVER		0x02
+#define REG_HWMEMCFG	0x03
 #define REG_RESET		0x0A
 #define REG_KMLOWADDR	0x0D
 #define REG_KMHIGHADDR	0x0E
@@ -42,9 +43,20 @@ static const unsigned char mymkid = 40;
 #define REG_MAPPER		0x11
 #define REG_TURBO		0x12
 
+// Reg config
+#define CFG_NEXTOR		0x01
+#define CFG_SCANDBL		0x02
+#define CFG_SCANLINES	0x04
+
+// Reg turbo
+#define TURBO_ON		0x01
+
 // VDP
 __sfr __at 0x98 VDP_DATA;
 __sfr __at 0x99 VDP_CMD;
+
+#define VDP_NTSC		0x00
+#define VDP_PAL			0x02
 
 
 #endif

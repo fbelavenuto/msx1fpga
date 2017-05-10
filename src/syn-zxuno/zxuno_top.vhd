@@ -132,7 +132,7 @@ architecture behavior of zxuno_top is
 	signal clock_hdmi_s		: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector(7 downto 0);
 	signal ram_data_to_s		: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
@@ -253,7 +253,8 @@ begin
 		hw_id_g			=> 6,
 		hw_txt_g			=> "ZX-Uno Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 3						-- No dblscan and external palette (Color in rgb_r_o)
+		video_opt_g		=> 3,						-- No dblscan and external palette (Color in rgb_r_o)
+		ramsize_g		=> 512
 	)
 	port map (
 		-- Clocks
@@ -464,7 +465,7 @@ begin
 	dac_r_o		<= dac_s;
 
 	-- RAM
-	sram_addr_o			<= ram_addr_s;
+	sram_addr_o			<= ram_addr_s(18 downto 0);
 	sram_data_io		<= ram_data_to_s	when ram_we_s = '1'	else (others => 'Z');
 	ram_data_from_s	<= sram_data_io;
 	sram_we_n_o			<= not ram_we_s;

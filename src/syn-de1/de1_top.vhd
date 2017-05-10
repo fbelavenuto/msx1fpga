@@ -154,7 +154,7 @@ architecture behavior of de1_top is
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
---	signal clock_sdram_s		: std_logic;
+	signal clock_sdram_s		: std_logic;
 	signal clock_vdp_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
@@ -162,18 +162,12 @@ architecture behavior of de1_top is
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector(7 downto 0);
 	signal ram_data_to_s		: std_logic_vector(7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
-
-	-- ROM
-	signal rom_addr_s			: std_logic_vector(14 downto 0);		-- 32K
-	signal rom_data_s			: std_logic_vector(7 downto 0);
-	signal rom_ce_s			: std_logic;
-	signal rom_oe_s			: std_logic;
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
@@ -234,8 +228,8 @@ begin
 	port map (
 		inclk0	=> CLOCK_50,
 		c0			=> clock_master_s,		-- 21.428571 MHz (6x NTSC)
---		c1			=> clock_sdram_s,			-- 85.714286
---		c2			=> DRAM_CLK,				-- 85.714286 90°
+		c1			=> clock_sdram_s,			-- 85.714286
+		c2			=> DRAM_CLK,				-- 85.714286 -45°
 		locked	=> pll_locked_s
 	);
 
@@ -258,7 +252,8 @@ begin
 		hw_id_g			=> 1,
 		hw_txt_g			=> "DE-1 Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 0						-- No dblscan
+		video_opt_g		=> 0,						-- No dblscan
+		ramsize_g		=> 8192
 	)
 	port map (
 		-- Clocks
@@ -285,10 +280,10 @@ begin
 		ram_we_o			=> ram_we_s,
 		ram_oe_o			=> ram_oe_s,
 		-- ROM
-		rom_addr_o		=> rom_addr_s,
-		rom_data_i		=> rom_data_s,
-		rom_ce_o			=> rom_ce_s,
-		rom_oe_o			=> rom_oe_s,
+		rom_addr_o		=> open,
+		rom_data_i		=> ram_data_from_s,
+		rom_ce_o			=> open,
+		rom_oe_o			=> open,
 		-- External bus
 		bus_addr_o		=> D_cpu_addr_s,
 		bus_data_i		=> (others => '1'),
@@ -423,34 +418,34 @@ begin
 		data_o	=> vram_data_from_s
 	);
 
---	vram: entity work.ssdram
---	generic map (
---		freq_g		=> 100
---	)
---	port map (
---		clock_i		=> clock_sdram_s,
---		reset_i		=> reset_s,
---		refresh_i	=> '1',
---		-- Static RAM bus
---		addr_i		=> "000000000" & vram_addr_s,
---		data_i		=> vram_data_to_s,
---		data_o		=> vram_data_from_s,
---		cs_i			=> vram_ce_s,
---		oe_i			=> vram_oe_s,
---		we_i			=> vram_we_s,
---		-- SD-RAM ports
---		mem_cke_o	=> DRAM_CKE,
---		mem_cs_n_o	=> DRAM_CS_N,
---		mem_ras_n_o	=> DRAM_RAS_N,
---		mem_cas_n_o	=> DRAM_CAS_N,
---		mem_we_n_o	=> DRAM_WE_N,
---		mem_udq_o	=> DRAM_UDQM,
---		mem_ldq_o	=> DRAM_LDQM,
---		mem_ba_o(0)	=> DRAM_BA_0,
---		mem_ba_o(1)	=> DRAM_BA_1,
---		mem_addr_o	=> DRAM_ADDR,
---		mem_data_io	=> DRAM_DQ
---	);
+	ram: entity work.ssdram
+	generic map (
+		freq_g		=> 86
+	)
+	port map (
+		clock_i		=> clock_sdram_s,
+		reset_i		=> reset_s,
+		refresh_i	=> '1',
+		-- Static RAM bus
+		addr_i		=> ram_addr_s,
+		data_i		=> ram_data_to_s,
+		data_o		=> ram_data_from_s,
+		cs_i			=> ram_ce_s,
+		oe_i			=> ram_oe_s,
+		we_i			=> ram_we_s,
+		-- SD-RAM ports
+		mem_cke_o	=> DRAM_CKE,
+		mem_cs_n_o	=> DRAM_CS_N,
+		mem_ras_n_o	=> DRAM_RAS_N,
+		mem_cas_n_o	=> DRAM_CAS_N,
+		mem_we_n_o	=> DRAM_WE_N,
+		mem_udq_o	=> DRAM_UDQM,
+		mem_ldq_o	=> DRAM_LDQM,
+		mem_ba_o(0)	=> DRAM_BA_0,
+		mem_ba_o(1)	=> DRAM_BA_1,
+		mem_addr_o	=> DRAM_ADDR,
+		mem_data_io	=> DRAM_DQ
+	);
 
 	-- Glue logic
 	
@@ -469,29 +464,6 @@ begin
 		end if;
 	end process;
 
-	-- RAM
-	SRAM_ADDR	<= ram_addr_s(18 downto 1);
-	SRAM_DQ		<= "ZZZZZZZZ" & ram_data_to_s	when ram_we_s = '1' and ram_addr_s(0) = '0' 	else
-						ram_data_to_s & "ZZZZZZZZ"	when ram_we_s = '1' and ram_addr_s(0) = '1' 	else
-						(others => 'Z');
-	ram_data_from_s	<= SRAM_DQ( 7 downto 0)	when ram_oe_s = '1' and ram_addr_s(0) = '0' 	else
-								SRAM_DQ(15 downto 8)	when ram_oe_s = '1' and ram_addr_s(0) = '1' 	else
-								(others => '1');
-	SRAM_UB_N			<= not ram_addr_s(0);
-	SRAM_LB_N			<= ram_addr_s(0);
-	SRAM_CE_N			<= not ram_ce_s;
-	SRAM_OE_N			<= not ram_oe_s;
-	SRAM_WE_N			<= not ram_we_s;
-
-	-- ROM
-	FL_ADDR				<= "0000000" & rom_addr_s;
-	FL_DQ					<= (others => 'Z');
-	rom_data_s			<= FL_DQ;
-	FL_CE_N				<= not rom_ce_s;
-	FL_OE_N				<= not rom_oe_s;
-	FL_RST_N				<= '1';
-	FL_WE_N				<= '1';
-	
 	-- VGA Output
 	VGA_R		<= rgb_r_s;
 	VGA_G		<= rgb_g_s;

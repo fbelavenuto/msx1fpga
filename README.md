@@ -5,18 +5,18 @@ This project is an MSX1 cloned in FPGA, with some parts of the OCM project.
 
 Specifications:
 
+- Multiple boards;
 - MSX1 50Hz or 60Hz;
-- 128K RAM Mapper;
+- RAM Mapper size configurable, depends on the board;
 - 128K Nextor (MSX-DOS2 evolution) ROM with SD driver;
-- 256K of RAM to Megaram SCC/SCC+ from OCM project;
+- Megaram SCC/SCC+ from OCM project (size configurable, depends on the board);
 - Keyboard map reconfigurable;
 - Simple switched I/O ports (no software yet);
-- Multiple boards;
 - 15/31KHz configurable.
 - Scanlines configurable.
-- HDMI output in some boards.
+- HDMI output on some boards.
 
-In the project there is a loader to boot and load ROMs and configuration from SD card.
+In the project there is a loader (IPL) to boot and load ROMs and configuration from SD card.
 
 The "CONFIG.TXT" configuration file is self-explanatory.
 

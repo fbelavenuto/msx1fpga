@@ -129,21 +129,12 @@ architecture behavior of wxedax_top is
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
-	signal ram_addr_s			: std_logic_vector(18 downto 0);		-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
 	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
 	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
-
-	-- ROM
-	signal rom_addr_s			: std_logic_vector(14 downto 0);		-- 32K
-	signal rom_data_s			: std_logic_vector(7 downto 0);
-	signal rom_ce_s			: std_logic;
-	signal rom_oe_s			: std_logic;
-
-	-- SDRAM
-	signal sdram_addr_s		: std_logic_vector(22 downto 0);		-- 8MB
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
@@ -179,8 +170,12 @@ architecture behavior of wxedax_top is
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
 	
-	-- SD
-	signal sd_cs_n_s			: std_logic;
+	-- SPI
+	signal spi_mosi_s			: std_logic;
+	signal spi_miso_s			: std_logic;
+	signal spi_sclk_s			: std_logic;
+	signal sdspi_cs_n_s		: std_logic;
+	signal flspi_cs_n_s		: std_logic;
 
 	-- SNES
 	signal but_a_s				: std_logic;
@@ -202,9 +197,9 @@ begin
 	pll_1: entity work.pll1
 	port map (
 		CLK_IN1	=> clock_48M_i,
-		CLK_OUT1	=> clock_master_s,		-- 21.46667 MHz (6x NTSC)
-		CLK_OUT2	=> clock_sdram_s,			-- 85.86667 MHz (4x master)
-		CLK_OUT3	=> sdram_clock_o			-- clock sdram -45 degrees
+		CLK_OUT1	=> clock_master_s,		-- 21.429 MHz (6x NTSC)
+		CLK_OUT2	=> clock_sdram_s,			-- 85.716 MHz (4x master)
+		CLK_OUT3	=> sdram_clock_o			-- 85.716 MHz -45°
 	);
 
 	-- Clocks
@@ -226,7 +221,8 @@ begin
 		hw_id_g			=> 4,
 		hw_txt_g			=> "WXEDAX Board",
 		hw_version_g	=> X"11",				-- Version 1.1
-		video_opt_g		=> 1						-- dblscan configurable
+		video_opt_g		=> 1,						-- dblscan configurable
+		ramsize_g		=> 8192
 	)
 	port map (
 		-- Clocks
@@ -253,10 +249,10 @@ begin
 		ram_we_o			=> ram_we_s,
 		ram_oe_o			=> ram_oe_s,
 		-- ROM
-		rom_addr_o		=> rom_addr_s,
-		rom_data_i		=> rom_data_s,
-		rom_ce_o			=> rom_ce_s,
-		rom_oe_o			=> rom_oe_s,
+		rom_addr_o		=> open,
+		rom_data_i		=> ram_data_from_s,
+		rom_ce_o			=> open,
+		rom_oe_o			=> open,
 		-- External bus
 		bus_addr_o		=> open,
 		bus_data_i		=> (others => '1'),
@@ -323,37 +319,27 @@ begin
 		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
-		flspi_cs_n_o	=> open,
-		spi_cs_n_o		=> sd_cs_n_s,
-		spi_sclk_o		=> sd_sclk_o,
-		spi_mosi_o		=> sd_mosi_o,
-		spi_miso_i		=> sd_miso_i,
+		flspi_cs_n_o	=> flspi_cs_n_s,
+		spi_cs_n_o		=> sdspi_cs_n_s,
+		spi_sclk_o		=> spi_sclk_s,
+		spi_mosi_o		=> spi_mosi_s,
+		spi_miso_i		=> spi_miso_s,
 		-- DEBUG
 		D_wait_o			=> open,
 		D_slots_o		=> open
 	);
 
-	-- ROM
-	rom: entity work.mainrom
-	port map (
-		clk		=> clock_master_s,
-		addr		=> rom_addr_s,
-		data		=> rom_data_s
-	);
-
 	-- RAM
-	sdram_addr_s	<= "0000" & ram_addr_s;
-
 	ram: entity work.ssdram
 	generic map (
-		freq_g		=> 85
+		freq_g		=> 86
 	)
 	port map (
 		clock_i		=> clock_sdram_s,
 		reset_i		=> reset_s,
 		refresh_i	=> '1',
 		-- Static RAM bus
-		addr_i		=> sdram_addr_s,
+		addr_i		=> ram_addr_s,
 		data_i		=> ram_data_to_s,
 		data_o		=> ram_data_from_s,
 		cs_i			=> ram_ce_s,
@@ -519,12 +505,18 @@ begin
 	vga_hs_o	<= rgb_hsync_n_s;
 	vga_vs_o	<= rgb_vsync_n_s;
 
-	-- SD
-	sd_cs_n_o <= sd_cs_n_s;
+	-- SD and Flash
+	spi_miso_s		<= sd_miso_i when sdspi_cs_n_s = '0' else flashf_data_i;
+	sd_mosi_o 		<= spi_mosi_s;
+	sd_sclk_o 		<= spi_sclk_s;
+	sd_cs_n_o 		<= sdspi_cs_n_s;
+	flashf_data_o	<= spi_mosi_s;
+	flashf_clk_o	<= spi_sclk_s;
+	flashf_cs_n_o	<= flspi_cs_n_s;
 
 	-- DEBUG
-	leds_n_o(0) <= sd_cs_n_s;
-	leds_n_o(1) <= not ntsc_pal_s;
+	leds_n_o(0) <= sdspi_cs_n_s;
+	leds_n_o(1) <= flspi_cs_n_s;
 	leds_n_o(2) <= not vga_en_s;
 	leds_n_o(3) <= not turbo_on_s;
 

@@ -406,6 +406,7 @@ set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_clk_gen.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_addr_mux.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_palette.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/dblscan.vhd
+set_global_assignment -name VHDL_FILE ../../src/peripheral/memoryctl.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/ps2_iobase.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keymap.vhd
