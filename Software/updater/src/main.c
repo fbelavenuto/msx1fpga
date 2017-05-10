@@ -136,6 +136,7 @@ int main(char** argv, int argc)
 		dsize += 256;
 	}
 	puts("OK\r\n");
+	SPI_sendcmd(cmd_write_disable);
 
 	puts("Flash updated, turn power off and on.\r\n");
 
