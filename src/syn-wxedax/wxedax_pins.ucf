@@ -79,10 +79,10 @@ NET "vga_vs_o"          LOC="P27"  | IOSTANDARD = LVCMOS33;
 #NET "uart_rx_i"         LOC="P12"  | IOSTANDARD = LVCMOS33;
 
 # Keys
-NET "keys_n_i<0>"       LOC="P17"  | IOSTANDARD = LVCMOS33;
-NET "keys_n_i<1>"       LOC="P21"  | IOSTANDARD = LVCMOS33;
-NET "keys_n_i<2>"       LOC="P15"  | IOSTANDARD = LVCMOS33;
-NET "keys_n_i<3>"       LOC="P16"  | IOSTANDARD = LVCMOS33;
+NET "keys_n_i<1>"       LOC="P15"  | IOSTANDARD = LVCMOS33;
+NET "keys_n_i<2>"       LOC="P21"  | IOSTANDARD = LVCMOS33;
+NET "keys_n_i<3>"       LOC="P17"  | IOSTANDARD = LVCMOS33;
+NET "keys_n_i<4>"       LOC="P16"  | IOSTANDARD = LVCMOS33;
 
 # Leds
 NET "leds_n_o<0>"       LOC="P95"  | IOSTANDARD = LVCMOS33;

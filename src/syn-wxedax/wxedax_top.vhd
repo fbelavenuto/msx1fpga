@@ -78,7 +78,7 @@ entity wxedax_top is
 --		uart_tx_o				: out   std_logic									:= '1';
 --		uart_rx_i				: in    std_logic;
 		-- Keys and Leds
-		keys_n_i					: in    std_logic_vector(3 downto 0);
+		keys_n_i					: in    std_logic_vector(4 downto 1);
 		leds_n_o					: out   std_logic_vector(3 downto 0)		:= (others => '1');
 		-- PS/2 Keyboard
 		ps2_clk_io				: inout std_logic									:= 'Z';
@@ -220,7 +220,7 @@ begin
 	generic map (
 		hw_id_g			=> 4,
 		hw_txt_g			=> "WXEDAX Board",
-		hw_version_g	=> X"11",				-- Version 1.1
+		hw_version_g	=> X"12",				-- Version 1.1
 		video_opt_g		=> 1,						-- dblscan configurable
 		ramsize_g		=> 8192
 	)
@@ -326,7 +326,8 @@ begin
 		spi_miso_i		=> spi_miso_s,
 		-- DEBUG
 		D_wait_o			=> open,
-		D_slots_o		=> open
+		D_slots_o		=> open,
+		D_ipl_en_o		=> leds_n_o(2)
 	);
 
 	-- RAM
@@ -465,8 +466,8 @@ begin
 	end process;
 
 	por_clock_s	<= '1'	when por_cnt_s /= 0																else '0';
-	por_s			<= '1'	when por_cnt_s /= 0  or soft_por_s = '1'   or keys_n_i(3) = '0'	else '0';
-	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1' or keys_n_i(0) = '0'	else '0';
+	por_s			<= '1'	when por_cnt_s /= 0  or soft_por_s = '1'   or keys_n_i(4) = '0'	else '0';
+	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1' or keys_n_i(1) = '0'	else '0';
 
 	process(clock_master_s)
 	begin
@@ -517,7 +518,7 @@ begin
 	-- DEBUG
 	leds_n_o(0) <= sdspi_cs_n_s;
 	leds_n_o(1) <= flspi_cs_n_s;
-	leds_n_o(2) <= not vga_en_s;
+--	leds_n_o(2) <= not vga_en_s;
 	leds_n_o(3) <= not turbo_on_s;
 
 end architecture;
