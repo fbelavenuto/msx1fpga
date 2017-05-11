@@ -194,7 +194,7 @@ void vdp_putstring(char *s)
 //------------------------------------------------------------------------------
 void puthex(uint8 nibbles, uint16 v)
 {
-	uint8 i = nibbles - 1;
+	int8 i = nibbles - 1;
 	while (i >= 0) {
 		uint16 aux = (v >> (i << 2)) & 0x000F;
 		uint8 n = aux & 0x000F;

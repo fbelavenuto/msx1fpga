@@ -45,8 +45,7 @@ static char *km_files[4] = {
 //                    12345678901234567890123456789012
 const char TITLE[] = "        MSX1FPGA LOADER         ";
 
-unsigned char *prampageH = (unsigned char *)0x3FFE;
-unsigned char *prampageL = (unsigned char *)0x3FFF;
+unsigned int  *prampage = (unsigned int *)0x3FFE;
 unsigned char *pramrom;
 unsigned char i;
 unsigned int  page;
@@ -73,11 +72,10 @@ void error(unsigned char *error)
 }
 
 /*******************************************************************************/
-void zeroram(unsigned int pi, unsigned int pe)
+void zeroram(unsigned int ps, unsigned int pe)
 {
-	for (page = pi; page < pe; page++) {
-		*prampageH = ((page & 0x100) == 0x100) ? 1 : 0;
-		*prampageL = page & 0xFF;
+	for (page = ps; page < pe; page++) {
+		*prampage = page;
 		__asm__("push hl");
 		__asm__("push de");
 		__asm__("push bc");
@@ -94,11 +92,10 @@ void zeroram(unsigned int pi, unsigned int pe)
 }
 
 /*******************************************************************************/
-void loadrom(unsigned int pi, unsigned int pe)
+void loadrom(unsigned int ps, unsigned int pe)
 {
-	for (page = pi; page < pe; page++) {
-		*prampageH = ((page & 0x100) == 0x100) ? 1 : 0;
-		*prampageL = page & 0xFF;
+	for (page = ps; page < pe; page++) {
+		*prampage = page;
 		pramrom  = (unsigned char *)0x8000;
 		for (i = 0; i < 32; i++) {
 			if (!fat_bread(&file, pramrom)) {
@@ -121,7 +118,7 @@ void main()
 	unsigned int pn_rom = 0, pn_nextor = 0;
 	unsigned char buffer[512];
 	unsigned char *ppl       = (unsigned char *)0xFF00;
-	unsigned char c;
+//	unsigned char c;
 	unsigned int  k;
 	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor, cfgturbo, cfgsln;
 	char *kmpfile = NULL;
@@ -130,7 +127,7 @@ void main()
 	SWIOP_MKID = mymkid;
 	SWIOP_REGNUM = REG_TURBO;
 	SWIOP_REGVAL = TURBO_ON;			// Turbo ON
-	
+
 	vdp_init();
 	vdp_setcolor(COLOR_BLUE, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring(TITLE);
@@ -210,7 +207,7 @@ void main()
 
 	VDP_CMD = cfgcor;
 	VDP_CMD = 0x89;
-	
+
 	SWIOP_REGNUM = REG_OPTIONS;
 	SWIOP_REGVAL = cfgsln | cfgvga | cfgnxt;
 
@@ -227,7 +224,7 @@ void main()
 		pn_ram_start = 64;
 		pn_ram_end   = 96;
 		pn_ram_ipl   = 127;
-		pn_rom       = 0;
+//		pn_rom       = 0;
 		pn_nextor    = 8;
 		pn_mr2_start = 32;
 		pn_mr2_end   = 64;
@@ -333,8 +330,7 @@ void main()
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
 
-	*prampageH = ((pn_ram_ipl & 0x100) == 0x100) ? 1 : 0;
-	*prampageL = pn_ram_ipl & 0xFF; 
+	*prampage = pn_ram_ipl;
 
 	SWIOP_REGNUM = REG_TURBO;
 	SWIOP_REGVAL = cfgturbo;

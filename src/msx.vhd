@@ -720,9 +720,9 @@ begin
 			 (cpu_addr_s = X"3FFE" or cpu_addr_s = X"3FFF") then
 
 				if cpu_addr_s(0) = '0' then
-					ipl_rampage_s(8)				<= d_from_cpu_s(0);
-				else
 					ipl_rampage_s(7 downto 0)	<= d_from_cpu_s;
+				else
+					ipl_rampage_s(8)				<= d_from_cpu_s(0);
 				end if;
 
 			end if;

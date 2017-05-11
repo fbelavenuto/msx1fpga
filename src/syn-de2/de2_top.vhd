@@ -425,7 +425,9 @@ begin
 		spi_mosi_o		=> SD_MOSI,
 		spi_miso_i		=> SD_MISO,
 		-- DEBUG
-		D_slots_o		=> open
+		D_wait_o			=> open,
+		D_slots_o		=> open,
+		D_ipl_en_o		=> open
 	);
 
 	-- Keyboard PS/2

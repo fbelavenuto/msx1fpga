@@ -24,6 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #define uint8 unsigned char
 #define uint16 unsigned int
+#define int8 char
+#define int16 int
 
 #define peek(A) (*(volatile unsigned int*)(A))
 #define poke(A,V) *(volatile unsigned int*)(A)=(V)

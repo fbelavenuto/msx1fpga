@@ -332,7 +332,10 @@ begin
 		spi_mosi_o		=> sd_mosi_o,
 		spi_miso_i		=> sd_miso_i,
 		-- DEBUG
-		D_slots_o		=> open
+		D_wait_o			=> open,
+		D_slots_o		=> open,
+		D_ipl_en_o		=> open
+
 	);
 
 	joy1_p7_o <= not joy1_out_s;		-- for Sega Genesis joypad
