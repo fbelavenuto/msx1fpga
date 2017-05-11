@@ -155,7 +155,8 @@ entity msx is
 		spi_miso_i		: in  std_logic								:= '0';
 		-- DEBUG
 		D_wait_o			: out std_logic;
-		D_slots_o		: out std_logic_vector( 7 downto 0)
+		D_slots_o		: out std_logic_vector( 7 downto 0);
+		D_ipl_en_o		: out std_logic
 	);
 
 end entity;
@@ -460,7 +461,7 @@ begin
 	);
 
 	-- SPI
-	sd: entity work.spi
+	spi: entity work.spi
 	port map (
 		clock_i			=> clock_cpu_i,
 		reset_i			=> reset_i,
@@ -685,7 +686,7 @@ begin
 		end if;
 	end process;
 
-	use_rom_in_ram_s <= '1'	when hw_id_g = 5 or hw_id_g = 6 or ramsize_g /= 512	else '0';
+	use_rom_in_ram_s <= '1'	when hw_id_g = 4 or hw_id_g = 5 or hw_id_g = 6 or ramsize_g /= 512	else '0';
 
 	memctl: entity work.memoryctl
 	generic map (
@@ -715,7 +716,7 @@ begin
 		if reset_i = '1' then
 			ipl_rampage_s <= (others => '1');
 		elsif falling_edge(clock_cpu_i) then
-			if mreq_n_s = '0' and wr_n_s = '0' and slot3_exp_n_s(3) = '0' and 
+			if mreq_n_s = '0' and wr_n_s = '0' and ipl_cs_s = '1' and 
 			 (cpu_addr_s = X"3FFE" or cpu_addr_s = X"3FFF") then
 
 				if cpu_addr_s(0) = '0' then
@@ -753,5 +754,6 @@ begin
 	-- Debug
 	D_slots_o		<= pio_port_a_s;
 	D_wait_o			<= vdp_wait_s;
+	D_ipl_en_o		<= ipl_en_s;
 
 end architecture;

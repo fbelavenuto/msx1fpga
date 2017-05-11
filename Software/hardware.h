@@ -58,5 +58,9 @@ __sfr __at 0x99 VDP_CMD;
 #define VDP_NTSC		0x00
 #define VDP_PAL			0x02
 
+// SPI
+__sfr __at 0x9E SPI_CTRL;
+__sfr __at 0x9F SPI_DATA;
+
 
 #endif

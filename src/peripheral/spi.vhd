@@ -101,7 +101,7 @@ begin
 			spi_cs_n_o <= "111";
 		elsif rising_edge(clock_i) then
 			if enable_s = '1' and addr_i = '0' and wr_i = '1'  then
-				spi_cs_n_o(1)	<= data_i(7);
+				spi_cs_n_o(2)	<= data_i(7);
 				spi_cs_n_o(1)	<= data_i(1);
 				spi_cs_n_o(0)	<= data_i(0);
 			end if;

@@ -152,16 +152,13 @@ void main()
 
 	vdp_gotoxy(0, 3);
 	vdp_putstring("HW ID = ");
-	c = '0' + hwid;
-	vdp_putchar(c);
+	putdec8(hwid);
 	vdp_putstring(" - ");
 	vdp_putstring(hwtxt);
 	vdp_putstring("\n\nVersion ");
-	c = '0' + (hwversion >> 4);
-	vdp_putchar(c);
+	putdec8(hwversion >> 4);
 	vdp_putchar('.');
-	c = '0' + (hwversion & 0x0F);
-	vdp_putchar(c);
+	putdec8(hwversion & 0x0F);
 	vdp_putstring("\n\n");
 
 	vdp_putstring("Initializing SD Card: ");
@@ -331,15 +328,16 @@ void main()
 		vdp_putchar('.');
 	}
 	vdp_putstring(" OK\n");
+	SPI_CTRL = 0xFF;
 
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
 
+	*prampageH = ((pn_ram_ipl & 0x100) == 0x100) ? 1 : 0;
+	*prampageL = pn_ram_ipl & 0xFF; 
+
 	SWIOP_REGNUM = REG_TURBO;
 	SWIOP_REGVAL = cfgturbo;
-
-	*prampageH = ((pn_ram_ipl & 0x100) == 0x100) ? 1 : 0;	// Main RAM
-	*prampageL = pn_ram_ipl & 0xFF;
 
 	// start ROM
 	*ppl++=0x3E;		// LD A, $F0

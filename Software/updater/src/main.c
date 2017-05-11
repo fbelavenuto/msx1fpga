@@ -93,11 +93,12 @@ int main(char** argv, int argc)
 	// Read flash ID
 	// W25Q32BV = 0x15
 	buffer[0] = cmd_read_id;
-	l = SPI_send4bytes_recv(buffer);
-	if (l != 0x15) {
+	c = SPI_send4bytes_recv(buffer);
+	if (c != 0x15) {
 		puts("Flash not detected, ID received: ");
-		puthex8(l);
+		puthex8(c);
 		puts("!\r\n");
+		goto exit;
 	}
 
 	puts("Erasing flash: ");
@@ -108,14 +109,14 @@ int main(char** argv, int argc)
 		putchar(ce[c]);
 		putchar(8);
 		c = (c + 1) & 0x03;
-		for (i = 0; i < 5000; i++) ;
+		for (i = 0; i < 4000; i++) ;
 	}
 	puts("OK\r\n");
 
 	puts("Writing: ");
 	dsize = 0; // Flash address
 	c = 0;
-	for (i = 0; i < 336; i++) {
+	for (i = 0; i < (344064 / 256); i++) {
 		buffer[0] = cmd_write_bytes;
 		buffer[1] = (dsize >> 16) & 0xFF;
 		buffer[2] = (dsize >> 8) & 0xFF;
@@ -134,6 +135,7 @@ int main(char** argv, int argc)
 		c = (c + 1) & 0x03;
 		while ((SPI_sendcmd_recv(cmd_read_status) & 0x01) == 1) ;
 		dsize += 256;
+//		putchar('.');
 	}
 	puts("OK\r\n");
 	SPI_sendcmd(cmd_write_disable);
