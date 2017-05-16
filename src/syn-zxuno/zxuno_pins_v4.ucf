@@ -53,6 +53,38 @@ NET "sram_data_io<6>"   LOC="P119" | IOSTANDARD = LVCMOS33;
 NET "sram_data_io<7>"   LOC="P126" | IOSTANDARD = LVCMOS33;
 NET "sram_we_n_o"       LOC="P121" | IOSTANDARD = LVCMOS33;
 
+# SRAM EXPANSION
+NET "sram_ext_addr_o<0>"   LOC="P58" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<1>"   LOC="P56" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<2>"   LOC="P57" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<3>"   LOC="P51" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<4>"   LOC="P48" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<5>"   LOC="P40" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<6>"   LOC="P35" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<7>"   LOC="P15" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<8>"   LOC="P12" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<9>"   LOC="P14" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<10>"  LOC="P16" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<11>"  LOC="P21" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<12>"  LOC="P23" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<13>"  LOC="P22" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<14>"  LOC="P24" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<15>"  LOC="P30" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<16>"  LOC="P33" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<17>"  LOC="P34" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<18>"  LOC="P43" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<19>"  LOC="P17" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_addr_o<20>"  LOC="P44" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<0>"  LOC="P50" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<1>"  LOC="P47" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<2>"  LOC="P45" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<3>"  LOC="P46" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<4>"  LOC="P27" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<5>"  LOC="P26" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<6>"  LOC="P29" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_data_io<7>"  LOC="P32" | IOSTANDARD = LVCMOS33;
+NET "sram_ext_we_n_o"      LOC="P41" | IOSTANDARD = LVCMOS33;
+
 # Keyboard
 NET "ps2_clk_io"        LOC="P99"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "ps2_data_io"       LOC="P98"  | IOSTANDARD = LVCMOS33 | PULLUP;

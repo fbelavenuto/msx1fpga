@@ -204,8 +204,8 @@ begin
 	the_msx: entity work.msx
 	generic map (
 		hw_id_g			=> 7,
-		hw_txt_g			=> "ZX-Uno Board 2M",
-		hw_version_g	=> X"11",				-- Version 1.1
+		hw_txt_g			=> "ZX-Uno Board 2MB",
+		hw_version_g	=> X"12",				-- Version 1.2
 		video_opt_g		=> 1,						-- 1 = dblscan configurable
 		ramsize_g		=> 2048
 	)
