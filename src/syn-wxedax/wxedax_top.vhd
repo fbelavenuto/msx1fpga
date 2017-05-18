@@ -199,7 +199,7 @@ begin
 		CLK_IN1	=> clock_48M_i,
 		CLK_OUT1	=> clock_master_s,		-- 21.429 MHz (6x NTSC)
 		CLK_OUT2	=> clock_sdram_s,			-- 85.716 MHz (4x master)
-		CLK_OUT3	=> sdram_clock_o			-- 85.716 MHz -45°
+		CLK_OUT3	=> sdram_clock_o			-- 85.716 MHz -90°
 	);
 
 	-- Clocks
@@ -220,7 +220,7 @@ begin
 	generic map (
 		hw_id_g			=> 4,
 		hw_txt_g			=> "WXEDAX Board",
-		hw_version_g	=> X"12",				-- Version 1.1
+		hw_version_g	=> X"12",				-- Version
 		video_opt_g		=> 1,						-- dblscan configurable
 		ramsize_g		=> 8192
 	)
@@ -294,9 +294,9 @@ begin
 		joy1_down_i		=> but_down_s,
 		joy1_left_i		=> but_left_s,
 		joy1_right_i	=> but_right_s,
-		joy1_btn1_i		=> but_b_s,
+		joy1_btn1_i		=> but_a_s,
 		joy1_btn1_o		=> open,
-		joy1_btn2_i		=> but_a_s,
+		joy1_btn2_i		=> but_b_s,
 		joy1_btn2_o		=> open,
 		joy1_out_o		=> open,
 		joy2_up_i		=> '1',
@@ -333,7 +333,7 @@ begin
 	-- RAM
 	ram: entity work.ssdram
 	generic map (
-		freq_g		=> 86
+		freq_g		=> 85
 	)
 	port map (
 		clock_i		=> clock_sdram_s,
@@ -516,8 +516,8 @@ begin
 	flashf_cs_n_o	<= flspi_cs_n_s;
 
 	-- DEBUG
-	leds_n_o(0) <= sdspi_cs_n_s;
-	leds_n_o(1) <= flspi_cs_n_s;
+	leds_n_o(0) <= '1';--sdspi_cs_n_s;
+	leds_n_o(1) <= '1';--flspi_cs_n_s;
 --	leds_n_o(2) <= not vga_en_s;
 	leds_n_o(3) <= not turbo_on_s;
 

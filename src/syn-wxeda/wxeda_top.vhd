@@ -195,7 +195,7 @@ begin
 		hw_txt_g			=> "WXEDA Board",
 		hw_version_g	=> X"11",				-- Version 1.1
 		video_opt_g		=> 1,						-- dblscan configurable
-		ramsize_g		=> 512
+		ramsize_g		=> 8192
 	)
 	port map (
 		-- Clocks
