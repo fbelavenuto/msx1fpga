@@ -251,7 +251,7 @@ begin
 	generic map (
 		hw_id_g			=> 1,
 		hw_txt_g			=> "DE-1 Board",
-		hw_version_g	=> X"11",				-- Version 1.1
+		hw_version_g	=> X"12",				-- Version 1.2
 		video_opt_g		=> 0,						-- No dblscan
 		ramsize_g		=> 8192
 	)

@@ -686,7 +686,7 @@ begin
 		end if;
 	end process;
 
-	use_rom_in_ram_s <= '1'	when hw_id_g = 4 or hw_id_g = 5 or hw_id_g = 6 or ramsize_g /= 512	else '0';
+	use_rom_in_ram_s <= '1'	when hw_id_g = 4 or hw_id_g = 5 or ramsize_g /= 512	else '0';
 
 	memctl: entity work.memoryctl
 	generic map (
