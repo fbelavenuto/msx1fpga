@@ -37,6 +37,9 @@ add wave -noupdate /tb/u_target/m1_wait_n_s
 add wave -noupdate /tb/clock_3m_s
 add wave -noupdate /tb/turbo_on_k_s
 add wave -noupdate /tb/turbo_on_s
+add wave -noupdate -radix hexadecimal /tb/keymap_addr_s
+add wave -noupdate -radix hexadecimal /tb/keymap_data_s
+add wave -noupdate /tb/keymap_we_s
 add wave -noupdate -radix hexadecimal /tb/u_target/cpu_addr_s
 add wave -noupdate -radix hexadecimal /tb/u_target/d_from_cpu_s
 add wave -noupdate /tb/u_target/rfsh_n_s
@@ -45,9 +48,6 @@ add wave -noupdate /tb/u_target/rd_n_s
 add wave -noupdate /tb/u_target/wr_n_s
 add wave -noupdate /tb/u_target/mreq_n_s
 add wave -noupdate /tb/u_target/wait_n_s
-add wave -noupdate -radix hexadecimal /tb/keymap_addr_s
-add wave -noupdate -radix hexadecimal /tb/keymap_data_s
-add wave -noupdate /tb/keymap_we_s
 add wave -noupdate -divider {New Divider}
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/mode_i
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/access_type_i
@@ -63,7 +63,7 @@ add wave -noupdate -radix unsigned /tb/cnt_hor_s
 add wave -noupdate -radix decimal /tb/u_target/vdp/hor_vert_b/cnt_vert_q
 add wave -noupdate -radix unsigned /tb/cnt_ver_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {79863 ns} 0}
+WaveRestoreCursors {{Cursor 1} {3068315 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 264
 configure wave -valuecolwidth 100
@@ -79,4 +79,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {78524 ns} {85484 ns}
+WaveRestoreZoom {3054395 ns} {3082235 ns}

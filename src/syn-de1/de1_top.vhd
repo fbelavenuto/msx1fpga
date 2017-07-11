@@ -150,7 +150,7 @@ architecture behavior of de1_top is
 	signal soft_por_s			: std_logic;
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
-	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
+	signal soft_rst_cnt_s	: unsigned( 7 downto 0)	:= X"FF";
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
@@ -163,16 +163,16 @@ architecture behavior of de1_top is
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
-	signal ram_data_from_s	: std_logic_vector(7 downto 0);
-	signal ram_data_to_s		: std_logic_vector(7 downto 0);
+	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
+	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
-	signal vram_data_from_s	: std_logic_vector(7 downto 0);
-	signal vram_data_to_s	: std_logic_vector(7 downto 0);
+	signal vram_data_from_s	: std_logic_vector( 7 downto 0);
+	signal vram_data_to_s	: std_logic_vector( 7 downto 0);
 	signal vram_ce_s			: std_logic;
 	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
@@ -193,12 +193,12 @@ architecture behavior of de1_top is
 	signal vga_en_s			: std_logic;
 
 	-- Keyboard
-	signal rows_s				: std_logic_vector(3 downto 0);
-	signal cols_s				: std_logic_vector(7 downto 0);
+	signal rows_s				: std_logic_vector( 3 downto 0);
+	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector(3 downto 0);
-	signal keymap_addr_s		: std_logic_vector(9 downto 0);
-	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal extra_keys_s		: std_logic_vector( 3 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 9 downto 0);
+	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
 
 	-- Joystick (Minimig Standard)
@@ -217,9 +217,25 @@ architecture behavior of de1_top is
 	alias J1_BTN				: std_logic						is GPIO_1(25);
 	alias J1_BTN2				: std_logic						is GPIO_1(21);
 
+	-- Bus
+	signal bus_addr_s			: std_logic_vector(15 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0);
+	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
+	signal bus_rd_n_s			: std_logic;
+	signal bus_wr_n_s			: std_logic;
+	signal bus_m1_n_s			: std_logic;
+	signal bus_iorq_n_s		: std_logic;
+	signal bus_mreq_n_s		: std_logic;
+	signal bus_sltsl1_n_s	: std_logic;
+	signal bus_sltsl2_n_s	: std_logic;
+
+	-- JT51
+	signal jt51_cs_n_s		: std_logic;
+	signal jt51_left_s		: unsigned(15 downto 0);
+	signal jt51_right_s		: unsigned(15 downto 0);
+
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
-	signal D_cpu_addr_s		: std_logic_vector(15 downto 0);
 
 begin
 
@@ -285,16 +301,16 @@ begin
 		rom_ce_o			=> open,
 		rom_oe_o			=> open,
 		-- External bus
-		bus_addr_o		=> D_cpu_addr_s,
-		bus_data_i		=> (others => '1'),
-		bus_data_o		=> open,
-		bus_rd_n_o		=> open,
-		bus_wr_n_o		=> open,
-		bus_m1_n_o		=> open,
-		bus_iorq_n_o	=> open,
-		bus_mreq_n_o	=> open,
-		bus_sltsl1_n_o	=> open,
-		bus_sltsl2_n_o	=> open,
+		bus_addr_o		=> bus_addr_s,
+		bus_data_i		=> bus_data_from_s,
+		bus_data_o		=> bus_data_to_s,
+		bus_rd_n_o		=> bus_rd_n_s,
+		bus_wr_n_o		=> bus_wr_n_s,
+		bus_m1_n_o		=> bus_m1_n_s,
+		bus_iorq_n_o	=> bus_iorq_n_s,
+		bus_mreq_n_o	=> bus_mreq_n_s,
+		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
+		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
 		bus_wait_n_i	=> '1',
 		bus_nmi_n_i		=> '1',
 		bus_int_n_i		=> '1',
@@ -391,6 +407,8 @@ begin
 		reset_i			=> reset_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
+		jt51_left_i		=> jt51_left_s,
+		jt51_right_i	=> jt51_right_s,
 		beep_i			=> beep_s,
 		k7_audio_o		=> k7_ai_s,
 
@@ -406,19 +424,29 @@ begin
 	);
 
 	-- VRAM
-	vram: entity work.spram
-	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
-	)
-	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_data_to_s,
-		data_o	=> vram_data_from_s
-	);
+--	vram: entity work.spram
+--	generic map (
+--		addr_width_g => 14,
+--		data_width_g => 8
+--	)
+--	port map (
+--		clk_i		=> clock_master_s,
+--		we_i		=> vram_we_s,
+--		addr_i	=> vram_addr_s,
+--		data_i	=> vram_data_to_s,
+--		data_o	=> vram_data_from_s
+--	);
+	SRAM_ADDR	<= "0000" & vram_addr_s;
+	SRAM_DQ		<= "ZZZZZZZZ" & vram_data_to_s	when vram_we_s = '1' else
+						(others => 'Z');
+	vram_data_from_s	<= SRAM_DQ( 7 downto 0);
+	SRAM_UB_N			<= '1';
+	SRAM_LB_N			<= '0';
+	SRAM_CE_N			<= not vram_ce_s;
+	SRAM_OE_N			<= not vram_oe_s;
+	SRAM_WE_N			<= not vram_we_s;
 
+	-- RAM
 	ram: entity work.ssdram
 	generic map (
 		freq_g		=> 86
@@ -472,13 +500,40 @@ begin
 	VGA_HS	<= rgb_hsync_n_s;
 	VGA_VS	<= rgb_vsync_n_s;
 
+	-- JT51 tests
+	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0001000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x10 - 0x11
+
+	jt51: entity work.jt51_wrapper
+	port map (
+		clock_i			=> clock_3m_s,
+		reset_i			=> reset_s,
+		addr_i			=> bus_addr_s(0),
+		cs_n_i			=> jt51_cs_n_s,
+		wr_n_i			=> bus_wr_n_s,
+		data_i			=> bus_data_to_s,
+		data_o			=> bus_data_from_s,
+		ct1_o				=> open,
+		ct2_o				=> open,
+		irq_n_o			=> open,
+		p1_o				=> open,
+		-- Low resolution output (same as real chip)
+		sample_o			=> open,
+		left_o			=> open,
+		right_o			=> open,
+		-- Full resolution output
+		xleft_o			=> open,
+		xright_o			=> open,
+		-- unsigned outputs for sigma delta converters, full resolution		
+		dacleft_o		=> jt51_left_s,
+		dacright_o		=> jt51_right_s
+	);
+
 	-- DEBUG
-	D_display_s	<= D_cpu_addr_s;
+	D_display_s	<= bus_addr_s;
 
 	LEDG(0) <= turbo_on_s;
 	LEDG(1) <= vga_en_s;
 	LEDG(2) <= ntsc_pal_s;
-
 
 	ld3: entity work.seg7
 	port map(

@@ -275,6 +275,7 @@ architecture Behavior of msx is
 	signal d_from_spi_s		: std_logic_vector( 7 downto 0);
 	signal nxt_rom_page_s	: std_logic_vector( 2 downto 0);
 	signal nxt_rom_cs_s		: std_logic;
+	signal spi_1cs_n_s		: std_logic;
 
 	-- SCC/Megaram
 	signal mram_cs_s			: std_logic;
@@ -474,7 +475,7 @@ begin
 		has_data_o		=> spi_hd_s,
 		-- SD card interface
 		spi_cs_n_o(2)	=> flspi_cs_n_o,
-		spi_cs_n_o(1)	=> open,
+		spi_cs_n_o(1)	=> spi_1cs_n_s,
 		spi_cs_n_o(0)	=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,

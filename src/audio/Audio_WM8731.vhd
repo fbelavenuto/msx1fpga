@@ -52,6 +52,8 @@ entity Audio_WM8731 is
 		reset_i			: in    std_logic;							-- Reset geral
 		audio_scc_i		: in    signed(14 downto 0);
 		audio_psg_i		: in    unsigned(7 downto 0);
+		jt51_left_i		: in    unsigned(15 downto 0);
+		jt51_right_i	: in    unsigned(15 downto 0);
 		beep_i			: in    std_logic;
 		k7_audio_o		: out   std_logic;
 
@@ -78,7 +80,8 @@ end entity;
 architecture Behavior of Audio_WM8731 is
 
 	signal pcm_lrclk_s		: std_logic;
-	signal pcm_s				: std_logic_vector(15 downto 0);
+	signal pcm_l_s				: std_logic_vector(15 downto 0);
+	signal pcm_r_s				: std_logic_vector(15 downto 0);
 	signal pcm_inl_s			: std_logic_vector(15 downto 0);
 
 	signal ear_r				: std_logic;
@@ -90,6 +93,25 @@ architecture Behavior of Audio_WM8731 is
 
 begin
 
+	--
+	i2c: entity work.i2c_loader
+	generic map (
+		device_address	=> 16#1a#,		-- Address of slave to be loaded
+		num_retries		=> 0,				-- Number of retries to allow before stopping
+		-- Length of clock divider in bits.  Resulting bus frequency is
+		-- CLK/2^(log2_divider + 2)
+		log2_divider	=> 7
+	)
+	port map (
+		clock_i			=> clock_i,
+		reset_i			=> reset_i,
+		i2c_scl_io		=> i2c_scl_io,
+		i2c_sda_io		=> i2c_sda_io,
+		is_done_o		=> open,
+		is_error_o		=> open
+	);
+
+	--
 	i2s: entity work.i2s_intf
 	generic map (
 		mclk_rate	=> 12000000,
@@ -104,8 +126,8 @@ begin
 		-- Parallel IO
 		pcm_inl_o		=> pcm_inl_s,
 		pcm_inr_o		=> open,
-		pcm_outl_i		=> pcm_s,
-		pcm_outr_i		=> pcm_s,
+		pcm_outl_i		=> pcm_l_s,
+		pcm_outr_i		=> pcm_r_s,
 		-- Codec interface (right justified mode)
 		-- MCLK is generated at half of the CLK input
 		i2s_mclk_o		=> i2s_xck_o,
@@ -130,30 +152,20 @@ begin
 	i2s_adclrck_o <= pcm_lrclk_s;
 	i2s_daclrck_o <= pcm_lrclk_s;
 	 
-
-	i2c: entity work.i2c_loader 
-	generic map (
-		device_address	=> 16#1a#,		-- Address of slave to be loaded
-		num_retries		=> 0,				-- Number of retries to allow before stopping
-		-- Length of clock divider in bits.  Resulting bus frequency is
-		-- CLK/2^(log2_divider + 2)
-		log2_divider	=> 7
-	)
-	port map (
-		clock_i			=> clock_i,
-		reset_i			=> reset_i,
-		i2c_scl_io		=> i2c_scl_io,
-		i2c_sda_io		=> i2c_sda_io,
-		is_done_o		=> open,
-		is_error_o		=> open
-	);
-
 	beep_s	<= beep_vol_c when beep_i = '1'		else (others => '0');
 
-	pcm_s <= std_logic_vector(
+	pcm_l_s <= std_logic_vector(
 					unsigned(beep_s) +
 					unsigned("0" & audio_psg_i & "0000000") +
-					unsigned(audio_scc_i & "0")
+					unsigned(audio_scc_i & "0") +
+					jt51_left_i
+				);
+
+	pcm_r_s <= std_logic_vector(
+					unsigned(beep_s) +
+					unsigned("0" & audio_psg_i & "0000000") +
+					unsigned(audio_scc_i & "0") +
+					jt51_right_i
 				);
 
 	k7_audio_o <= ear_r;
