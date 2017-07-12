@@ -289,7 +289,6 @@ architecture behavior of de2_top is
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_data_from_s	: std_logic_vector( 7 downto 0);
 	signal jt51_left_s		: unsigned(15 downto 0)		:= (others => '0');
 	signal jt51_right_s		: unsigned(15 downto 0)		:= (others => '0');
 
@@ -577,8 +576,9 @@ begin
 		addr_i			=> bus_addr_s(0),
 		cs_n_i			=> jt51_cs_n_s,
 		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
 		data_i			=> bus_data_to_s,
-		data_o			=> jt51_data_from_s,
+		data_o			=> bus_data_from_s,
 		ct1_o				=> open,
 		ct2_o				=> open,
 		irq_n_o			=> open,
@@ -594,9 +594,6 @@ begin
 		dacleft_o		=> jt51_left_s,
 		dacright_o		=> jt51_right_s
 	);
-
-	bus_data_from_s	<= jt51_data_from_s when jt51_cs_n_s = '0' and bus_rd_n_s = '0'	else
-								(others => '1');
 
 	-- DEBUG
 	D_display_s	<= bus_addr_s;
