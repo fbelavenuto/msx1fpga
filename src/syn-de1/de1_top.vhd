@@ -501,7 +501,7 @@ begin
 	VGA_VS	<= rgb_vsync_n_s;
 
 	-- JT51 tests
-	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0001000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x10 - 0x11
+	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
 	jt51: entity work.jt51_wrapper
 	port map (

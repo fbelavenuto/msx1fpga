@@ -221,12 +221,6 @@ architecture behavior of de2_top is
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
 
-	-- ROM
-	signal rom_addr_s			: std_logic_vector(14 downto 0);		-- 32K
-	signal rom_data_s			: std_logic_vector( 7 downto 0);
-	signal rom_ce_s			: std_logic;
-	signal rom_oe_s			: std_logic;
-
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
 	signal vram_data_from_s	: std_logic_vector( 7 downto 0);
@@ -295,8 +289,8 @@ architecture behavior of de2_top is
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: unsigned(15 downto 0);
-	signal jt51_right_s		: unsigned(15 downto 0);
+	signal jt51_left_s		: unsigned(15 downto 0)		:= (others => '0');
+	signal jt51_right_s		: unsigned(15 downto 0)		:= (others => '0');
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
@@ -494,27 +488,27 @@ begin
 	);
 
 	-- VRAM
---	vram: entity work.spram
---	generic map (
---		addr_width_g => 14,
---		data_width_g => 8
---	)
---	port map (
---		clk_i		=> clock_master_s,
---		we_i		=> vram_we_s,
---		addr_i	=> vram_addr_s,
---		data_i	=> vram_data_to_s,
---		data_o	=> vram_data_from_s
---	);
-	SRAM_ADDR	<= "0000" & vram_addr_s;
-	SRAM_DQ		<= "ZZZZZZZZ" & vram_data_to_s	when vram_we_s = '1' else
-						(others => 'Z');
-	vram_data_from_s	<= SRAM_DQ( 7 downto 0);
-	SRAM_UB_N			<= '1';
-	SRAM_LB_N			<= '0';
-	SRAM_CE_N			<= not vram_ce_s;
-	SRAM_OE_N			<= not vram_oe_s;
-	SRAM_WE_N			<= not vram_we_s;
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_data_to_s,
+		data_o	=> vram_data_from_s
+	);
+--	SRAM_ADDR	<= "0000" & vram_addr_s;
+--	SRAM_DQ		<= "ZZZZZZZZ" & vram_data_to_s	when vram_we_s = '1' else
+--						(others => 'Z');
+--	vram_data_from_s	<= SRAM_DQ( 7 downto 0);
+--	SRAM_UB_N			<= '1';
+--	SRAM_LB_N			<= '0';
+--	SRAM_CE_N			<= not vram_ce_s;
+--	SRAM_OE_N			<= not vram_oe_s;
+--	SRAM_WE_N			<= not vram_we_s;
 
 	-- RAM
 	ram: entity work.ssdram
@@ -546,14 +540,6 @@ begin
 		mem_data_io	=> DRAM_DQ
 	);
 
-	-- ROM
-	rom: entity work.mainrom_mf
-	port map (
-		clock		=> clock_master_s,
-		address	=> rom_addr_s,
-		q			=> rom_data_s
-	);
-
 	-- Glue logic
 
 	-- Resets
@@ -571,15 +557,6 @@ begin
 		end if;
 	end process;
 
-	-- ROM
---	FL_ADDR				<= "0000000" & rom_addr_s;
---	FL_DQ					<= (others => 'Z');
---	rom_data_s			<= FL_DQ;
---	FL_CE_N				<= not rom_ce_s;
---	FL_OE_N				<= not rom_oe_s;
---	FL_RST_N				<= '1';
---	FL_WE_N				<= '1';
-
 	-- VGA Output
 	VGA_R			<= rgb_r_s & "000000";
 	VGA_G			<= rgb_g_s & "000000";
@@ -590,7 +567,7 @@ begin
 	VGA_CLK		<= clock_master_s;
 
 	-- JT51 tests
-	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0001000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x10 - 0x11
+	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
 	jt51: entity work.jt51_wrapper
 	port map (
@@ -623,7 +600,10 @@ begin
 	LEDG(0) <= turbo_on_s;
 	LEDG(1) <= vga_en_s;
 	LEDG(2) <= ntsc_pal_s;
+	LEDG(7) <= not jt51_cs_n_s;
 --	LEDG(8) <= reset_s;
+
+	LEDR(15 downto 0) <= std_logic_vector(jt51_left_s);
 
 	ld3: entity work.seg7
 	port map(

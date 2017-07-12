@@ -168,7 +168,7 @@ begin
 
 		process (nxt_rom_cs_i, ipl_cs_i, cpu_addr_i, nxt_rom_page_i,
 					ram_page_i, ipl_rampage_i, ram_cs_i, mr_ram_addr_i,
-					use_rom_in_ram_i, mr_ram_cs_i, rom_cs_i)
+					mr_ram_cs_i, rom_cs_i)
 		begin
 			ram_addr_o <= (others => '0');
 
