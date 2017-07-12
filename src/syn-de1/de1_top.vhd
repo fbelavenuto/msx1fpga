@@ -510,6 +510,7 @@ begin
 		addr_i			=> bus_addr_s(0),
 		cs_n_i			=> jt51_cs_n_s,
 		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
 		data_i			=> bus_data_to_s,
 		data_o			=> bus_data_from_s,
 		ct1_o				=> open,

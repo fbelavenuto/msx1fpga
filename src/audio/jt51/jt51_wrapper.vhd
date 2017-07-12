@@ -12,6 +12,7 @@ entity jt51_wrapper is
 		addr_i			: in  std_logic;
 		cs_n_i			: in  std_logic;
 		wr_n_i			: in  std_logic;
+		rd_n_i			: in  std_logic;
 		data_i			: in  std_logic_vector( 7 downto 0);
 		data_o			: out std_logic_vector( 7 downto 0);
 		ct1_o				: out std_logic;
@@ -59,6 +60,8 @@ architecture rtl of jt51_wrapper is
 	);
 	end component;
 
+	signal jt51_data_from_s	: std_logic_vector( 7 downto 0);
+
 begin
 
 	jt51_inst : jt51
@@ -69,7 +72,7 @@ begin
 		cs_n			=> cs_n_i,
 		wr_n			=> wr_n_i,
 		d_in			=> data_i,
-		d_out			=> data_o,
+		d_out			=> jt51_data_from_s,
 		ct1			=> ct1_o,
 		ct2			=> ct2_o,
 		irq_n			=> irq_n_o,
@@ -85,5 +88,9 @@ begin
 		dacleft		=> dacleft_o,
 		dacright		=> dacright_o
 	);
+
+	data_o	<= jt51_data_from_s when cs_n_i = '0' and rd_n_i = '0' and addr_i = '1'	else
+					(others => '1');
+
 
 end architecture;
