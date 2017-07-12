@@ -52,8 +52,8 @@ entity Audio_WM8731 is
 		reset_i			: in    std_logic;							-- Reset geral
 		audio_scc_i		: in    signed(14 downto 0);
 		audio_psg_i		: in    unsigned(7 downto 0);
-		jt51_left_i		: in    unsigned(15 downto 0);
-		jt51_right_i	: in    unsigned(15 downto 0);
+		jt51_left_i		: in    signed(15 downto 0);
+		jt51_right_i	: in    signed(15 downto 0);
 		beep_i			: in    std_logic;
 		k7_audio_o		: out   std_logic;
 
@@ -158,14 +158,14 @@ begin
 					unsigned(beep_s) +
 					unsigned("0" & audio_psg_i & "0000000") +
 					unsigned(audio_scc_i & "0") +
-					jt51_left_i
+					unsigned(jt51_left_i)
 				);
 
 	pcm_r_s <= std_logic_vector(
 					unsigned(beep_s) +
 					unsigned("0" & audio_psg_i & "0000000") +
 					unsigned(audio_scc_i & "0") +
-					jt51_right_i
+					unsigned(jt51_right_i)
 				);
 
 	k7_audio_o <= ear_r;
