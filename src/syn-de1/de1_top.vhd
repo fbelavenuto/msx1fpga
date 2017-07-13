@@ -231,8 +231,8 @@ architecture behavior of de1_top is
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: unsigned(15 downto 0);
-	signal jt51_right_s		: unsigned(15 downto 0);
+	signal jt51_left_s		: signed(15 downto 0);
+	signal jt51_right_s		: signed(15 downto 0);
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
@@ -522,11 +522,11 @@ begin
 		left_o			=> open,
 		right_o			=> open,
 		-- Full resolution output
-		xleft_o			=> open,
-		xright_o			=> open,
+		xleft_o			=> jt51_left_s,
+		xright_o			=> jt51_right_s,
 		-- unsigned outputs for sigma delta converters, full resolution		
-		dacleft_o		=> jt51_left_s,
-		dacright_o		=> jt51_right_s
+		dacleft_o		=> open,
+		dacright_o		=> open
 	);
 
 	-- DEBUG
