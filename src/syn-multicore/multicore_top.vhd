@@ -45,7 +45,7 @@ use ieee.std_logic_unsigned.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= true
+		hdmi_output_g		: boolean	:= false
 	);
 	port (
 		-- Clocks
@@ -155,9 +155,9 @@ architecture behavior of multicore_top is
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
-	signal audio_s				: std_logic_vector(15 downto 0);
+	signal audio_l_s				: std_logic_vector(15 downto 0);
+	signal audio_r_s				: std_logic_vector(15 downto 0);
 	signal beep_s				: std_logic;
-	signal dac_s				: std_logic;
 
 	-- Video
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);
@@ -174,7 +174,8 @@ architecture behavior of multicore_top is
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
 	signal scanlines_en_s	: std_logic;
 	signal odd_line_s			: std_logic;
-	signal sound_hdmi_s		: std_logic_vector(15 downto 0);
+	signal sound_hdmi_l_s		: std_logic_vector(15 downto 0);
+	signal sound_hdmi_r_s		: std_logic_vector(15 downto 0);
 	signal tdms_r_s			: std_logic_vector( 9 downto 0);
 	signal tdms_g_s			: std_logic_vector( 9 downto 0);
 	signal tdms_b_s			: std_logic_vector( 9 downto 0);
@@ -193,6 +194,18 @@ architecture behavior of multicore_top is
 	-- Joystick
 	signal joy1_out_s			: std_logic;
 	signal joy2_out_s			: std_logic;
+
+	-- Bus
+	signal bus_addr_s			: std_logic_vector(15 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0);
+	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
+	signal bus_rd_n_s			: std_logic;
+	signal bus_wr_n_s			: std_logic;
+	signal bus_m1_n_s			: std_logic;
+	signal bus_iorq_n_s		: std_logic;
+	signal bus_mreq_n_s		: std_logic;
+	signal bus_sltsl1_n_s	: std_logic;
+	signal bus_sltsl2_n_s	: std_logic;
 
 begin
 
@@ -259,16 +272,16 @@ begin
 		rom_ce_o			=> open,--rom_ce_s,
 		rom_oe_o			=> open,--rom_oe_s,
 		-- External bus
-		bus_addr_o		=> open,
-		bus_data_i		=> (others => '1'),
-		bus_data_o		=> open,
-		bus_rd_n_o		=> open,
-		bus_wr_n_o		=> open,
-		bus_m1_n_o		=> open,
-		bus_iorq_n_o	=> open,
-		bus_mreq_n_o	=> open,
-		bus_sltsl1_n_o	=> open,
-		bus_sltsl2_n_o	=> open,
+		bus_addr_o		=> bus_addr_s,
+		bus_data_i		=> bus_data_from_s,
+		bus_data_o		=> bus_data_to_s,
+		bus_rd_n_o		=> bus_rd_n_s,
+		bus_wr_n_o		=> bus_wr_n_s,
+		bus_m1_n_o		=> bus_m1_n_s,
+		bus_iorq_n_o	=> bus_iorq_n_s,
+		bus_mreq_n_o	=> bus_mreq_n_s,
+		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
+		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
 		bus_wait_n_i	=> '1',
 		bus_nmi_n_i		=> '1',
 		bus_int_n_i		=> '1',
@@ -372,8 +385,12 @@ begin
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
-		audio_mix_o		=> audio_s,
-		dac_out_o		=> dac_s
+		jt51_left_i		=> "1000000000000000",
+		jt51_right_i	=> "1000000000000000",
+		audio_mix_l_o		=> audio_l_s,
+		audio_mix_r_o		=> audio_r_s,
+		dacout_l_o		=> dac_l_o,
+		dacout_r_o		=> dac_r_o
 	);
 
 	-- RAM and VRAM
@@ -423,10 +440,6 @@ begin
 			end if;
 		end if;
 	end process;
-
-	-- Audio
-	dac_l_o		<= dac_s;
-	dac_r_o		<= dac_s;
 
 	---------------------------------
 	-- scanlines
@@ -536,7 +549,8 @@ begin
 
 	uh: if hdmi_output_g generate
 
-		sound_hdmi_s <= '0' & audio_s(15 downto 1);
+		sound_hdmi_l_s <= '0' & audio_l_s(15 downto 1);
+		sound_hdmi_r_s <= '0' & audio_r_s(15 downto 1);
 
 		-- HDMI
 		hdmi: entity work.hdmi
@@ -556,8 +570,8 @@ begin
 			I_VSYNC			=> vga_vsync_n_s,
 			-- PCM audio
 			I_AUDIO_ENABLE	=> '1',
-			I_AUDIO_PCM_L 	=> sound_hdmi_s,
-			I_AUDIO_PCM_R	=> sound_hdmi_s,
+			I_AUDIO_PCM_L 	=> sound_hdmi_l_s,
+			I_AUDIO_PCM_R	=> sound_hdmi_r_s,
 			-- TMDS parallel pixel synchronous outputs (serialize LSB first)
 			O_RED				=> tdms_r_s,
 			O_GREEN			=> tdms_g_s,

@@ -139,7 +139,6 @@ architecture behavior of wxeda_top is
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
-	signal dac_s				: std_logic;
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -363,7 +362,10 @@ begin
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
-		dac_out_o		=> dac_s
+		jt51_left_i		=> (15 => '1', others =>'0'),
+		jt51_right_i	=> (15 => '1', others =>'0'),
+		dacout_l_o		=> audio_dac_l_o,
+		dacout_r_o		=> audio_dac_r_o
 	);
 
 	-- VRAM
@@ -394,10 +396,6 @@ begin
 			end if;
 		end if;
 	end process;
-
-	-- Audio
-	audio_dac_l_o		<= dac_s;
-	audio_dac_r_o		<= dac_s;
 
 	-- VGA Output
 	vga_r_o	<= rgb_r_s & '0';
