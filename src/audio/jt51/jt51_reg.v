@@ -219,6 +219,14 @@ localparam opreg_w = 42;
 reg  [opreg_w-1:0] reg_op[31:0];
 reg  [opreg_w-1:0] reg_out;
 
+initial
+begin
+	for (integer i=0; i<32; i=i+1)
+	begin
+		reg_op[i] = 42'b111111111111111111111111111111111111111111;
+	end
+end
+
 assign { dt1_II, mul_VI, tl_VII, ks_III, amsen_VII, 
 	dt2_I, d1l_I, arate_II, rate1_II, rate2_II, rrate_II  } = reg_out;
 

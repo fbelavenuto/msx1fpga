@@ -75,8 +75,8 @@ entity wxedax_top is
 		vga_hs_o					: out   std_logic									:= '1';
 		vga_vs_o					: out   std_logic									:= '1';
 --		-- UART
---		uart_tx_o				: out   std_logic									:= '1';
---		uart_rx_i				: in    std_logic;
+		uart_tx_o				: out   std_logic									:= '1';
+		uart_rx_i				: in    std_logic;
 		-- Keys and Leds
 		keys_n_i					: in    std_logic_vector(4 downto 1);
 		leds_n_o					: out   std_logic_vector(3 downto 0)		:= (others => '1');
@@ -164,9 +164,9 @@ architecture behavior of wxedax_top is
 	signal rows_s				: std_logic_vector( 3 downto 0);
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector(3 downto 0);
-	signal keymap_addr_s		: std_logic_vector(9 downto 0);
-	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal extra_keys_s		: std_logic_vector( 3 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 9 downto 0);
+	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
 	
 	-- SPI
@@ -399,7 +399,7 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DAC
+	audio: entity work.Audio_DACs
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,

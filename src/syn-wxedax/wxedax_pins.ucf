@@ -75,8 +75,8 @@ NET "vga_hs_o"          LOC="P26"  | IOSTANDARD = LVCMOS33;
 NET "vga_vs_o"          LOC="P27"  | IOSTANDARD = LVCMOS33;
 
 # Serial
-#NET "uart_tx_o"         LOC="P14"  | IOSTANDARD = LVCMOS33;
-#NET "uart_rx_i"         LOC="P12"  | IOSTANDARD = LVCMOS33;
+NET "uart_tx_o"         LOC="P12"  | IOSTANDARD = LVCMOS33;
+NET "uart_rx_i"         LOC="P14"  | IOSTANDARD = LVCMOS33;
 
 # Keys
 NET "keys_n_i<1>"       LOC="P15"  | IOSTANDARD = LVCMOS33;
@@ -100,8 +100,8 @@ NET "adc_data_i"        LOC="P59"  | IOSTANDARD = LVCMOS33;
 NET "adc_cs_n_o"        LOC="P61"  | IOSTANDARD = LVCMOS33;
 
 # Sound output
-NET "audio_dac_l_o"     LOC="P79"  | IOSTANDARD = LVCMOS33;
-NET "audio_dac_r_o"     LOC="P67"  | IOSTANDARD = LVCMOS33;
+NET "audio_dac_l_o"     LOC="P79"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
+NET "audio_dac_r_o"     LOC="P67"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
 NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
 
 # SD/MMC
@@ -135,8 +135,6 @@ NET "pad_data_i"			LOC="P85"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Clock Constraints
 
-PIN "pll_1/clkout3_buf.O" CLOCK_DEDICATED_ROUTE = FALSE;
-
 NET "clock_48M_i" TNM_NET = clock_48M_i;
 TIMESPEC TS_clock_48M_i = PERIOD "clock_48M_i" 20.833 ns HIGH 50%;
 
@@ -145,6 +143,11 @@ TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.56 ns HIGH 50%;
 
 NET "clock_sdram_s" TNM_NET = clock_sdram_s;
 TIMESPEC TS_clock_sdram_s = PERIOD "clock_sdram_s" 11.645 ns HIGH 50%;
+
+NET "sdram_clock_o" TNM_NET = sdram_clock_o;
+TIMESPEC TS_sdram_clock_o = PERIOD "sdram_clock_o" 11.645 ns HIGH 50% PHASE -90;
+
+PIN "pll_1/clkout3_buf.O" CLOCK_DEDICATED_ROUTE = FALSE;
 
 NET "clks/clock_3m_s" TNM_NET = clks/clock_3m_s;
 TIMESPEC TS_clks_clock_3m_s = PERIOD "clks/clock_3m_s" 279.365 ns HIGH 50%;
