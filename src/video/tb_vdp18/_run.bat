@@ -1,3 +1,5 @@
+goto pula
+
 vlib work
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_pack-p.vhd
@@ -10,6 +12,9 @@ vcom ..\vdp18\vdp18_palette.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_col_mux.vhd
 IF ERRORLEVEL 1 GOTO error
+
+:pula
+
 vcom ..\vdp18\vdp18_cpuio.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\vdp18\vdp18_ctrl.vhd

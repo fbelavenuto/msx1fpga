@@ -121,7 +121,6 @@ architecture rtl of vdp18_cpuio is
 	signal write_tmp_s			: boolean;
 	signal tmp_q					: std_logic_vector(0 to 7);
 	signal write_reg_s			: boolean;
-	signal wait_s				: boolean;
 
 	-- control register bits ----------------------------------------------------
 	type   ctrl_reg_t is array (natural range 7 downto 0) of std_logic_vector(0 to 7);
@@ -145,6 +144,7 @@ architecture rtl of vdp18_cpuio is
 	signal palette_val_s		: std_logic_vector(0 to 15);
 	signal write_pal_s		: boolean;
 	signal wrpal_byte2_s		: boolean;
+	signal wait_s				: std_logic;
 
 begin
 
@@ -373,7 +373,7 @@ begin
 	--   Decodes the CPU I/F FSM state and generates the control signals for the
 	--   register and VRAM logic.
 	--
-	access_ctrl: process (state_q, rd_i, wr_i, mode_i, cd_i, rdvram_q, wrvram_q, wait_s)
+	access_ctrl: process (state_q, rd_i, wr_i, mode_i, cd_i, rdvram_q, wrvram_q)
 		type     transfer_mode_t is (TM_NONE,
 												TM_RD_MODE0, TM_WR_MODE0,
 												TM_RD_MODE1, TM_WR_MODE1,
@@ -391,11 +391,7 @@ begin
 		read_mux_s        <= RDMUX_STATUS;
 		destr_rd_status_s <= false;
 		write_pal_s			<= false;
-
-		-- end of wait
-		if not wrvram_q and wait_s then
-			wait_s <= false;
-		end if;
+		wait_s			<= '0';
 
 		-- determine transfer mode
 		transfer_mode_v     := TM_NONE;
@@ -405,9 +401,9 @@ begin
 					transfer_mode_v := TM_RD_MODE0;
 				end if;
 				if wr_i then
-					if wrvram_q and not wait_s then
-						wait_s <= true;
-					elsif not wait_s then
+					if wrvram_q then
+						wait_s	<= '1';
+					else
 						transfer_mode_v := TM_WR_MODE0;
 					end if;
 				end if;
@@ -416,11 +412,7 @@ begin
 					transfer_mode_v := TM_RD_MODE1;
 				end if;
 				if wr_i then
-					if wrvram_q and not wait_s then
-						wait_s <= true;
-					elsif not wait_s then
-						transfer_mode_v := TM_WR_MODE1;
-					end if;
+					transfer_mode_v := TM_WR_MODE1;
 				end if;
 			when "10" =>
 				if wr_i then
@@ -634,27 +626,7 @@ begin
 	palette_val_o	<= palette_val_s;
 	palette_wr_o	<= to_std_logic_f(incr_palidx_s) when palette_idx_s /= 0 else '0';
 	ntsc_pal_o		<= ntsc_pal_s;
---	wait_o		<= '1' when wait_s	else '0';
 
-	process (reset_i, clock_i)
-		variable cnt_v : integer range 0 to 3 := 0;
-	begin
-		if reset_i then
-			cnt_v		:= 0;
-			wait_o	<= '0';
-		elsif rising_edge(clock_i) then
-			if clk_en_10m7_i then
-				if wait_s or rdvram_q then
-					wait_o	<= '1';
-					cnt_v		:= 3;
-				end if;
-				if cnt_v = 0 then
-					wait_o	<= '0';
-				else
-					cnt_v := cnt_v - 1;
-				end if;
-			end if;
-		end if;
-	end process;
+	wait_o			<= wait_s;
 
 end rtl;

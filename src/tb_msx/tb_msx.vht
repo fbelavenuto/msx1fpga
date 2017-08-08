@@ -55,7 +55,8 @@ architecture testbench of tb is
 		hw_id_g			: integer								:= 0;
 		hw_txt_g			: string 								:= "NONE";
 		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
-		video_opt_g		: integer								:= 0		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		video_opt_g		: integer								:= 0;		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		ramsize_g		: integer								:= 512	-- 512, 2048 or 8192
 	);
 	port(
 		-- clocks
@@ -73,8 +74,9 @@ architecture testbench of tb is
 		-- Options
 		opt_nextor_i		: in  std_logic;
 		opt_mr_type_i		: in  std_logic_vector(1 downto 0);
+		opt_vga_on_i	: in  std_logic							:= '0';
 		-- RAM
-		ram_addr_o			: out std_logic_vector(18 downto 0);	-- 512K
+		ram_addr_o			: out std_logic_vector(22 downto 0);
 		ram_data_i			: in  std_logic_vector( 7 downto 0);
 		ram_data_o			: out std_logic_vector( 7 downto 0);
 		ram_ce_o			: out std_logic;
@@ -126,15 +128,19 @@ architecture testbench of tb is
 		joy1_down_i		: in    std_logic;
 		joy1_left_i		: in    std_logic;
 		joy1_right_i	: in    std_logic;
-		joy1_btn1_io	: inout std_logic;
-		joy1_btn2_io	: inout std_logic;
+		joy1_btn1_i		: in    std_logic;
+		joy1_btn1_o		: out   std_logic;
+		joy1_btn2_i		: in    std_logic;
+		joy1_btn2_o		: out   std_logic;
 		joy1_out_o		: out   std_logic;
 		joy2_up_i		: in    std_logic;
 		joy2_down_i		: in    std_logic;
 		joy2_left_i		: in    std_logic;
 		joy2_right_i	: in    std_logic;
-		joy2_btn1_io	: inout std_logic;
-		joy2_btn2_io	: inout std_logic;
+		joy2_btn1_i		: in    std_logic;
+		joy2_btn1_o		: out   std_logic;
+		joy2_btn2_i		: in    std_logic;
+		joy2_btn2_o		: out   std_logic;
 		joy2_out_o		: out   std_logic;
 		-- Video
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
@@ -147,14 +153,18 @@ architecture testbench of tb is
 		ntsc_pal_o		: out std_logic;
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
+		scanline_on_k_i: in  std_logic;
+		scanline_en_o	: out std_logic;
 		-- SPI/SD
+		flspi_cs_n_o	: out std_logic;
 		spi_cs_n_o			: out std_logic;
 		spi_sclk_o			: out std_logic;
 		spi_mosi_o			: out std_logic;
 		spi_miso_i			: in  std_logic								:= '0';
 		-- DEBUG
 		D_wait_o			: out std_logic;
-		D_slots_o		: out std_logic_vector( 7 downto 0)
+		D_slots_o		: out std_logic_vector( 7 downto 0);
+		D_ipl_en_o		: out std_logic
 	);
 	end component;
 
@@ -183,7 +193,7 @@ architecture testbench of tb is
 	signal softreset_s			: std_logic;
 	signal opt_nextor_s			: std_logic;
 	signal opt_mr_type_s		: std_logic_vector(1 downto 0);
-	signal ram_addr_s			: std_logic_vector(18 downto 0);	-- 512K
+	signal ram_addr_s			: std_logic_vector(22 downto 0);
 	signal ram_data_i_s			: std_logic_vector( 7 downto 0);
 	signal ram_data_o_s			: std_logic_vector( 7 downto 0);
 	signal ram_ce_s				: std_logic;
@@ -224,20 +234,6 @@ architecture testbench of tb is
 	signal k7_motor_s			: std_logic;
 	signal k7_audio_o_s			: std_logic;
 	signal k7_audio_i_s			: std_logic;
-	signal joy1_up_s			: std_logic;
-	signal joy1_down_s			: std_logic;
-	signal joy1_left_s			: std_logic;
-	signal joy1_right_s			: std_logic;
-	signal joy1_btn1_s			: std_logic;
-	signal joy1_btn2_s			: std_logic;
-	signal joy1_out_s			: std_logic;
-	signal joy2_up_s			: std_logic;
-	signal joy2_down_s			: std_logic;
-	signal joy2_left_s			: std_logic;
-	signal joy2_right_s			: std_logic;
-	signal joy2_btn1_s			: std_logic;
-	signal joy2_btn2_s			: std_logic;
-	signal joy2_out_s			: std_logic;
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
 	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -260,7 +256,8 @@ begin
 		hw_id_g			=> 255,
 		hw_txt_g			=> "SIMUL",
 		hw_version_g	=> X"10",
-		video_opt_g		=> 0
+		video_opt_g		=> 0,
+		ramsize_g		=> 512
 	)
 	port map(
 		-- clocks
@@ -278,6 +275,7 @@ begin
 		-- Options
 		opt_nextor_i		=> opt_nextor_s,
 		opt_mr_type_i		=> opt_mr_type_s,
+		opt_vga_on_i		=> '0',
 		-- RAM
 		ram_addr_o			=> ram_addr_s,
 		ram_data_i			=> ram_data_i_s,
@@ -327,20 +325,24 @@ begin
 		k7_audio_o			=> k7_audio_o_s,
 		k7_audio_i			=> k7_audio_i_s,
 		-- Joystick
-		joy1_up_i			=> joy1_up_s,
-		joy1_down_i			=> joy1_down_s,
-		joy1_left_i			=> joy1_left_s,
-		joy1_right_i		=> joy1_right_s,
-		joy1_btn1_io		=> joy1_btn1_s,
-		joy1_btn2_io		=> joy1_btn2_s,
-		joy1_out_o			=> joy1_out_s,
-		joy2_up_i			=> joy2_up_s,
-		joy2_down_i			=> joy2_down_s,
-		joy2_left_i			=> joy2_left_s,
-		joy2_right_i		=> joy2_right_s,
-		joy2_btn1_io		=> joy2_btn1_s,
-		joy2_btn2_io		=> joy2_btn2_s,
-		joy2_out_o			=> joy2_out_s,
+		joy1_up_i			=> '1',
+		joy1_down_i			=> '1',
+		joy1_left_i			=> '1',
+		joy1_right_i		=> '1',
+		joy1_btn1_i			=> '1',
+		joy1_btn1_o			=> open,
+		joy1_btn2_i			=> '1',
+		joy1_btn2_o			=> open,
+		joy1_out_o			=> open,
+		joy2_up_i			=> '1',
+		joy2_down_i			=> '1',
+		joy2_left_i			=> '1',
+		joy2_right_i		=> '1',
+		joy2_btn1_i			=> '1',
+		joy2_btn1_o			=> open,
+		joy2_btn2_i			=> '1',
+		joy2_btn2_o			=> open,
+		joy2_out_o			=> open,
 		-- Video
 		cnt_hor_o			=> cnt_hor_s,
 		cnt_ver_o			=> cnt_ver_s,
@@ -352,14 +354,18 @@ begin
 		ntsc_pal_o			=> open,
 		vga_on_k_i			=> '0',
 		vga_en_o			=> open,
+		scanline_on_k_i		=> '0',
+		scanline_en_o		=> open,
 		-- SPI/SD
+		flspi_cs_n_o		=> open,
 		spi_cs_n_o			=> spi_cs_n_s,
 		spi_sclk_o			=> spi_sclk_s,
 		spi_mosi_o			=> spi_mosi_s,
 		spi_miso_i			=> spi_miso_s,
 		-- DEBUG
 		D_wait_o			=> open,
-		D_slots_o			=> D_slots_s
+		D_slots_o			=> D_slots_s,
+		D_ipl_en_o			=> open
 	);
 
 	u_clocks: clocks
@@ -405,18 +411,6 @@ begin
 		vram_data_i_s		<= (others => '0');
 		cols_s				<= (others => '1');
 		k7_audio_i_s		<= '0';
-		joy1_up_s			<= '1';
-		joy1_down_s			<= '1';
-		joy1_left_s			<= '1';
-		joy1_right_s		<= '1';
-		joy1_btn1_s			<= '1';
-		joy1_btn2_s			<= '1';
-		joy2_up_s			<= '1';
-		joy2_down_s			<= '1';
-		joy2_left_s			<= '1';
-		joy2_right_s		<= '1';
-		joy2_btn1_s			<= '1';
-		joy2_btn2_s			<= '1';
 		spi_miso_s			<= '0';
 
 		-- reset
@@ -431,9 +425,9 @@ begin
 		wait until( rising_edge(clock_s) );
 
 		-- Liga turbo
---		turbo_on_k_s <= '1';
---		wait for 1 us;
---		turbo_on_k_s <= '0';
+		turbo_on_k_s <= '1';
+		wait for 1 us;
+		turbo_on_k_s <= '0';
 
 		wait for 16 ms;
 

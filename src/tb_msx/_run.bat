@@ -1,3 +1,4 @@
+
 vlib work
 IF ERRORLEVEL 1 GOTO error
 vcom ..\clocks.vhd
@@ -63,6 +64,8 @@ vcom ..\video\dblscan.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\video\vdp18\vdp18_core.vhd
 IF ERRORLEVEL 1 GOTO error
+
+:pula
 
 vcom ipl_rom.vhd
 IF ERRORLEVEL 1 GOTO error

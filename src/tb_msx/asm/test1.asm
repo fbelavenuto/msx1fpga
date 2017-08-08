@@ -20,20 +20,13 @@
 	org		0
 	
 	di
-	ld		a, $28
-	out		($40), a
-	ld		a, $0D
-	out		($48), a
 	ld		a, 0
-	out		($49), a
-	ld		a, $0E
-	out		($48), a
-	ld		a, 0
-	out		($49), a
-	ld		a, $0F
-	out		($48), a
-	ld		a, 1
+	out		($99), a
+	ld		a, $40
+	out		($99), a
+	nop
+	ld		a, $00
 loop:
-	out		($49), a
+	out		($98), a
 	inc		a
 	jr		loop

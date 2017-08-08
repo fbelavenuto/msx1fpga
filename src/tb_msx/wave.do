@@ -51,6 +51,8 @@ add wave -noupdate /tb/keymap_we_s
 add wave -noupdate -divider {New Divider}
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/mode_i
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/access_type_i
+add wave -noupdate /tb/u_target/vdp/cpu_io_b/wr_i
+add wave -noupdate /tb/u_target/vdp/cpu_io_b/rd_i
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/state_s
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/state_q
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/buffer_q
@@ -63,7 +65,7 @@ add wave -noupdate -radix unsigned /tb/cnt_hor_s
 add wave -noupdate -radix decimal /tb/u_target/vdp/hor_vert_b/cnt_vert_q
 add wave -noupdate -radix unsigned /tb/cnt_ver_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {79863 ns} 0}
+WaveRestoreCursors {{Cursor 1} {2982755 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 264
 configure wave -valuecolwidth 100
@@ -79,4 +81,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {78524 ns} {85484 ns}
+WaveRestoreZoom {2534849 ns} {3425729 ns}
