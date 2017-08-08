@@ -155,8 +155,8 @@ architecture behavior of multicore_top is
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
-	signal audio_l_s				: std_logic_vector(15 downto 0);
-	signal audio_r_s				: std_logic_vector(15 downto 0);
+	signal audio_l_s			: std_logic_vector(15 downto 0);
+	signal audio_r_s			: std_logic_vector(15 downto 0);
 	signal beep_s				: std_logic;
 
 	-- Video
@@ -174,8 +174,8 @@ architecture behavior of multicore_top is
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
 	signal scanlines_en_s	: std_logic;
 	signal odd_line_s			: std_logic;
-	signal sound_hdmi_l_s		: std_logic_vector(15 downto 0);
-	signal sound_hdmi_r_s		: std_logic_vector(15 downto 0);
+	signal sound_hdmi_l_s	: std_logic_vector(15 downto 0);
+	signal sound_hdmi_r_s	: std_logic_vector(15 downto 0);
 	signal tdms_r_s			: std_logic_vector( 9 downto 0);
 	signal tdms_g_s			: std_logic_vector( 9 downto 0);
 	signal tdms_b_s			: std_logic_vector( 9 downto 0);

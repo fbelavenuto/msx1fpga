@@ -49,146 +49,130 @@ use ieee.numeric_std.all;
 
 -- Generic top-level entity for Altera DE2 board
 entity de2_top is
+	generic (
+		per_jt51_g		: boolean		:= true
+	);
 	port (
 		-- Clocks
-		CLOCK_27       : in    std_logic;
-		CLOCK_50       : in    std_logic;
-		EXT_CLOCK      : in    std_logic;
-
+		clk50_i			: in    std_logic;
+		clk27_i			: in    std_logic;
+		clk_ext_i		: in    std_logic;
 		-- Switches
-		SW             : in    std_logic_vector(17 downto 0);
+		sw_i				: in    std_logic_vector(17 downto 0);
 		-- Buttons
-		KEY            : in    std_logic_vector(3 downto 0);
-
+		key_n_i			: in    std_logic_vector( 3 downto 0);
 		-- 7 segment displays
-		HEX0           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX1           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX2           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX3           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX4           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX5           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX6           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		HEX7           : out   std_logic_vector(6 downto 0)		:= (others => '1');
-		
+		display0_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display1_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display2_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display3_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display4_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display5_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display6_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
+		display7_o		: out   std_logic_vector( 6 downto 0)		:= (others => '1');
 		-- Red LEDs
-		LEDR           : out   std_logic_vector(17 downto 0)		:= (others => '0');
+		ledr_o			: out   std_logic_vector(17 downto 0)		:= (others => '0');
 		-- Green LEDs
-		LEDG           : out   std_logic_vector(8 downto 0)		:= (others => '0');
-
+		ledg_o			: out   std_logic_vector( 8 downto 0)		:= (others => '0');
 		-- Serial
-		UART_RXD       : in    std_logic;
-		UART_TXD       : out   std_logic									:= '1';
-
+		uart_rx_i		: in    std_logic;
+		uart_tx_o		: out   std_logic									:= '0';
 		-- IRDA
-		IRDA_RXD       : in    std_logic;
-		IRDA_TXD       : out   std_logic									:= '0';
-
-		-- SDRAM
-		DRAM_ADDR      : out   std_logic_vector(11 downto 0)		:= (others => '0');
-		DRAM_DQ        : inout std_logic_vector(15 downto 0)		:= (others => 'Z');
-		DRAM_BA_0      : out   std_logic									:= '1';
-		DRAM_BA_1      : out   std_logic									:= '1';
-		DRAM_CAS_N     : out   std_logic									:= '1';
-		DRAM_CKE       : out   std_logic									:= '1';
-		DRAM_CLK       : out   std_logic									:= '1';
-		DRAM_CS_N      : out   std_logic									:= '1';
-		DRAM_LDQM      : out   std_logic									:= '1';
-		DRAM_RAS_N     : out   std_logic									:= '1';
-		DRAM_UDQM      : out   std_logic									:= '1';
-		DRAM_WE_N      : out   std_logic									:= '1';
-
-		-- Flash
-		FL_ADDR        : out   std_logic_vector(21 downto 0)		:= (others => '0');
-		FL_DQ          : inout std_logic_vector(7 downto 0)		:= (others => 'Z');
-		FL_RST_N       : out   std_logic									:= '1';
-		FL_OE_N        : out   std_logic									:= '1';
-		FL_WE_N        : out   std_logic									:= '1';
-		FL_CE_N        : out   std_logic									:= '1';
-
+		irda_rx_i		: in    std_logic;
+		irda_tx_o		: out   std_logic									:= '0';
 		-- SRAM
-		SRAM_ADDR      : out   std_logic_vector(17 downto 0)		:= (others => '0');
-		SRAM_DQ        : inout std_logic_vector(15 downto 0)		:= (others => 'Z');
-		SRAM_CE_N      : out   std_logic									:= '1';
-		SRAM_OE_N      : out   std_logic									:= '1';
-		SRAM_WE_N      : out   std_logic									:= '1';
-		SRAM_UB_N      : out   std_logic									:= '1';
-		SRAM_LB_N      : out   std_logic									:= '1';
-
-		--	ISP1362 Interface	
-		OTG_ADDR       : out   std_logic_vector(1 downto 0)		:= (others => '0');	--	ISP1362 Address 2 Bits
-		OTG_DATA       : inout std_logic_vector(15 downto 0)		:= (others => 'Z');	--	ISP1362 Data bus 16 Bits
-		OTG_CS_N       : out   std_logic									:= '1';					--	ISP1362 Chip Select
-		OTG_RD_N       : out   std_logic									:= '1';					--	ISP1362 Write
-		OTG_WR_N       : out   std_logic									:= '1';					--	ISP1362 Read
-		OTG_RST_N      : out   std_logic									:= '1';					--	ISP1362 Reset
-		OTG_FSPEED     : out   std_logic									:= 'Z';					--	USB Full Speed,	0 = Enable, Z = Disable
-		OTG_LSPEED     : out   std_logic									:= 'Z';					--	USB Low Speed, 	0 = Enable, Z = Disable
-		OTG_INT0       : in    std_logic;															--	ISP1362 Interrupt 0
-		OTG_INT1       : in    std_logic;															--	ISP1362 Interrupt 1
-		OTG_DREQ0      : in    std_logic;															--	ISP1362 DMA Request 0
-		OTG_DREQ1      : in    std_logic;															--	ISP1362 DMA Request 1
-		OTG_DACK0_N    : out   std_logic									:= '1';					--	ISP1362 DMA Acknowledge 0
-		OTG_DACK1_N    : out   std_logic									:= '1';					--	ISP1362 DMA Acknowledge 1
-		
-		--	LCD Module 16X2		
-		LCD_ON         : out   std_logic									:= '0';					--	LCD Power ON/OFF, 0 = Off, 1 = On
-		LCD_BLON       : out   std_logic									:= '0';					--	LCD Back Light ON/OFF, 0 = Off, 1 = On
-		LCD_DATA       : inout std_logic_vector(7 downto 0)		:= (others => '0');	--	LCD Data bus 8 bits
-		LCD_RW         : out   std_logic									:= '1';					--	LCD Read/Write Select, 0 = Write, 1 = Read
-		LCD_EN         : out   std_logic									:= '1';					--	LCD Enable
-		LCD_RS         : out   std_logic									:= '1';					--	LCD Command/Data Select, 0 = Command, 1 = Data
-		
-		--	SD_Card Interface	
-		SD_DAT         : inout std_logic									:= 'Z';					--	SD Card Data (SPI MISO)
-		SD_DAT3        : inout std_logic									:= 'Z';					--	SD Card Data 3 (SPI /CS)
-		SD_CMD         : inout std_logic									:= 'Z';					--	SD Card Command Signal (SPI MOSI)
-		SD_CLK         : out   std_logic									:= '1';					--	SD Card Clock (SPI SCLK)
-		
+		sram_addr_o		: out   std_logic_vector(17 downto 0)		:= (others => '0');
+		sram_data_io	: inout std_logic_vector(15 downto 0)		:= (others => '0');
+		sram_ce_n_o		: out   std_logic									:= '1';
+		sram_oe_n_o		: out   std_logic									:= '1';
+		sram_we_n_o		: out   std_logic									:= '1';
+		sram_ub_n_o		: out   std_logic									:= '1';
+		sram_lb_n_o		: out   std_logic									:= '1';
+		-- SDRAM
+		dram_cke_o		: out   std_logic									:= '1';
+		dram_clk_o		: out   std_logic									:= '1';
+		dram_addr_o		: out   std_logic_vector(11 downto 0)		:= (others => '0');
+		dram_data_io	: inout std_logic_vector(15 downto 0)		:= (others => '0');
+		dram_cas_n_o	: out   std_logic									:= '1';
+		dram_ras_n_o	: out   std_logic									:= '1';
+		dram_cs_n_o		: out   std_logic									:= '1';
+		dram_we_n_o		: out   std_logic									:= '1';
+		dram_ba_o		: out   std_logic_vector( 1 downto 0)		:= "11";
+		dram_ldqm_o		: out   std_logic									:= '1';
+		dram_udqm_o		: out   std_logic									:= '1';
+		-- Flash
+		fl_rst_n_o		: out   std_logic									:= '1';
+		fl_addr_o		: out   std_logic_vector(21 downto 0)		:= (others => '0');
+		fl_data_io		: inout std_logic_vector( 7 downto 0)		:= (others => 'Z');
+		fl_ce_n_o		: out   std_logic									:= '1';
+		fl_oe_n_o		: out   std_logic									:= '1';
+		fl_we_n_o		: out   std_logic									:= '1';
+		--	ISP1362 Interface
+		otg_addr_o		: out   std_logic_vector( 1 downto 0)		:= (others => '0');
+		otg_data_io		: inout std_logic_vector(15 downto 0)		:= (others => 'Z');
+		otg_cs_n_o		: out   std_logic									:= '1';
+		otg_rd_n_o		: out   std_logic									:= '1';
+		otg_wr_n_o		: out   std_logic									:= '1';
+		otg_rst_n_o		: out   std_logic									:= '1';
+		otg_fspeed_o	: out   std_logic									:= 'Z';
+		otg_lspeed_o	: out   std_logic									:= 'Z';
+		otg_int0_i		: in    std_logic;
+		otg_int1_i		: in    std_logic;
+		otg_dreq0_i		: in    std_logic;
+		otg_dreq1_i		: in    std_logic;
+		otg_dack0_n_o	: out   std_logic									:= '1';
+		otg_dack1_n_o	: out   std_logic									:= '1';
+		--	LCD Module 16X2
+		lcd_on_o			: out   std_logic									:= '0';
+		lcd_blon_o		: out   std_logic									:= '0';
+		lcd_data_io		: inout std_logic_vector(7 downto 0)		:= (others => '0');
+		lcd_rw_o			: out   std_logic									:= '1';		-- 0=Write
+		lcd_en_o			: out   std_logic									:= '1';
+		lcd_rs_o			: out   std_logic									:= '1';		-- 0=Command
+		-- SD card (SPI mode)
+		sd_miso_i		: in    std_logic;
+		sd_mosi_o		: out   std_logic									:= '1';
+		sd_cs_n_o		: out   std_logic									:= '1';
+		sd_sclk_o		: out   std_logic									:= '1';
 		-- I2C
-		I2C_SCLK       : inout std_logic									:= 'Z';
-		I2C_SDAT       : inout std_logic									:= 'Z';
-
+		i2c_sclk_io		: inout std_logic									:= '1';
+		i2c_sdat_io		: inout std_logic									:= '1';
 		-- PS/2 Keyboard
-		PS2_CLK        : inout std_logic									:= 'Z';
-		PS2_DAT        : inout std_logic									:= 'Z';
-
+		ps2_clk_io		: inout std_logic									:= '1';
+		ps2_dat_io		: inout std_logic									:= '1';
 		-- VGA
-		VGA_R          : out   std_logic_vector(9 downto 0)		:= (others => '0');
-		VGA_G          : out   std_logic_vector(9 downto 0)		:= (others => '0');
-		VGA_B          : out   std_logic_vector(9 downto 0)		:= (others => '0');
-		VGA_HS         : out   std_logic									:= '0';
-		VGA_VS         : out   std_logic									:= '0';
-		VGA_BLANK		: out   std_logic									:= '1';				
-		VGA_SYNC			: out   std_logic									:= '0';	
-		VGA_CLK		   : out   std_logic									:= '0';	
-		
-		-- Ethernet Interface	
-		ENET_CLK       : out   std_logic									:= '0';					--	DM9000A Clock 25 MHz
-		ENET_DATA      : inout std_logic_vector(15 downto 0)		:= (others => 'Z');	--	DM9000A DATA bus 16Bits
-		ENET_CMD       : out   std_logic									:= '0';					--	DM9000A Command/Data Select, 0 = Command, 1 = Data
-		ENET_CS_N      : out   std_logic									:= '1';					--	DM9000A Chip Select
-		ENET_WR_N      : out   std_logic									:= '1';					--	DM9000A Write
-		ENET_RD_N      : out   std_logic									:= '1';					--	DM9000A Read
-		ENET_RST_N     : out   std_logic									:= '1';					--	DM9000A Reset
-		ENET_INT       : in    std_logic;															--	DM9000A Interrupt
-	               
+		vga_clk_o		: out   std_logic									:= '0';
+		vga_r_o			: out   std_logic_vector( 9 downto 0)		:= (others => '0');
+		vga_g_o			: out   std_logic_vector( 9 downto 0)		:= (others => '0');
+		vga_b_o			: out   std_logic_vector( 9 downto 0)		:= (others => '0');
+		vga_hsync_n_o	: out   std_logic									:= '1';
+		vga_vsync_n_o	: out   std_logic									:= '1';
+		vga_blank_n_o	: out   std_logic									:= '1';
+		vga_sync_o		: out   std_logic									:= '0';
+		-- Ethernet Interface
+		enet_clk_o		: out   std_logic									:= '0';
+		enet_data_io	: inout std_logic_vector(15 downto 0)		:= (others => 'Z');
+		enet_cmd_o		: out   std_logic									:= '0';		-- 0=Command
+		enet_cs_n_o		: out   std_logic									:= '1';
+		enet_wr_n_o		: out   std_logic									:= '1';
+		enet_rd_n_o		: out   std_logic									:= '1';
+		enet_rst_n_o	: out   std_logic									:= '1';
+		enet_int_i		: in    std_logic;
 		-- Audio
-		AUD_XCK        : out   std_logic									:= '0';
-		AUD_BCLK       : out   std_logic									:= '0';
-		AUD_ADCLRCK    : out   std_logic									:= '0';
-		AUD_ADCDAT     : in    std_logic;
-		AUD_DACLRCK    : out   std_logic									:= '0';
-		AUD_DACDAT     : out   std_logic									:= '0';
-
-		-- TV Decoder		
-		TD_DATA        : in    std_logic_vector(7 downto 0);									--	TV Decoder Data bus 8 bits
-		TD_HS          : in    std_logic;															--	TV Decoder H_SYNC
-		TD_VS          : in    std_logic;															--	TV Decoder V_SYNC
-		TD_RESET       : out   std_logic									:= '1';					--	TV Decoder Reset
-	
+		aud_xck_o		: out   std_logic									:= '0';
+		aud_bclk_o		: out   std_logic									:= '0';
+		aud_adclrck_o	: out   std_logic									:= '0';
+		aud_adcdat_i	: in    std_logic;
+		aud_daclrck_o	: out   std_logic									:= '0';
+		aud_dacdat_o	: out   std_logic									:= '0';
+		-- TV Decoder
+		td_data_i		: in    std_logic_vector(7 downto 0);
+		td_hsync_n_i	: in    std_logic;
+		td_vsync_n_i	: in    std_logic;
+		td_reset_n_o	: out   std_logic									:= '1';
 		-- GPIO
-		GPIO_0         : inout std_logic_vector(35 downto 0)		:= (others => 'Z');
-		GPIO_1         : inout std_logic_vector(35 downto 0)		:= (others => 'Z')
+		gpio0_io			: inout std_logic_vector(35 downto 0)		:= (others => 'Z');
+		gpio1_io			: inout std_logic_vector(35 downto 0)		:= (others => 'Z')
 	);
 end entity;
 
@@ -254,30 +238,24 @@ architecture behavior of de2_top is
 	signal keymap_we_s		: std_logic;
 
 	-- Joystick (Minimig Standard)
-	alias J0_UP					: std_logic						is GPIO_1(34);	-- Pin 1
-	alias J0_DOWN				: std_logic						is GPIO_1(32);	-- Pin 2
-	alias J0_LEFT				: std_logic						is GPIO_1(30);	-- Pin 3
-	alias J0_RIGHT				: std_logic						is GPIO_1(28);	-- Pin 4
-	alias J0_MMB				: std_logic						is GPIO_1(26);	-- Pin 5
-	alias J0_BTN				: std_logic						is GPIO_1(35);	-- Pin 6
-	alias J0_BTN2				: std_logic						is GPIO_1(29);	-- Pin 9
-	alias J1_UP					: std_logic						is GPIO_1(24);
-	alias J1_DOWN				: std_logic						is GPIO_1(22);
-	alias J1_LEFT				: std_logic						is GPIO_1(20);
-	alias J1_RIGHT				: std_logic						is GPIO_1(23);
-	alias J1_MMB				: std_logic						is GPIO_1(27);
-	alias J1_BTN				: std_logic						is GPIO_1(25);
-	alias J1_BTN2				: std_logic						is GPIO_1(21);
-
-	-- Alias SD
-	alias SD_nCS  is SD_DAT3;
-	alias SD_MISO is SD_DAT;
-	alias SD_MOSI is SD_CMD;
-	alias SD_SCLK is SD_CLK;
+	alias J0_UP					: std_logic						is gpio1_io(34);	-- Pin 1
+	alias J0_DOWN				: std_logic						is gpio1_io(32);	-- Pin 2
+	alias J0_LEFT				: std_logic						is gpio1_io(30);	-- Pin 3
+	alias J0_RIGHT				: std_logic						is gpio1_io(28);	-- Pin 4
+	alias J0_MMB				: std_logic						is gpio1_io(26);	-- Pin 5
+	alias J0_BTN				: std_logic						is gpio1_io(35);	-- Pin 6
+	alias J0_BTN2				: std_logic						is gpio1_io(29);	-- Pin 9
+	alias J1_UP					: std_logic						is gpio1_io(24);
+	alias J1_DOWN				: std_logic						is gpio1_io(22);
+	alias J1_LEFT				: std_logic						is gpio1_io(20);
+	alias J1_RIGHT				: std_logic						is gpio1_io(23);
+	alias J1_MMB				: std_logic						is gpio1_io(27);
+	alias J1_BTN				: std_logic						is gpio1_io(25);
+	alias J1_BTN2				: std_logic						is gpio1_io(21);
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
-	signal bus_data_from_s	: std_logic_vector( 7 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
 	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
 	signal bus_rd_n_s			: std_logic;
 	signal bus_wr_n_s			: std_logic;
@@ -300,16 +278,16 @@ begin
 	-- PLL
 	pll_1: entity work.pll1
 	port map (
-		inclk0	=> CLOCK_50,
+		inclk0	=> clk50_i,
 		c0			=> clock_master_s,		-- 21.428571 MHz (6x NTSC)
 		c1			=> clock_sdram_s,			-- 85.714286
-		c2			=> DRAM_CLK,				-- 85.714286 90°
+		c2			=> dram_clk_o,				-- 85.714286 90°
 		locked	=> pll_locked_s
 	);
 
 	pll_2: entity work.pll2
 	port map (
-		inclk0		=> CLOCK_27,
+		inclk0		=> clk27_i,
 		c0				=> clock_audio_s		-- 24.000000 MHz
 	);
 
@@ -350,7 +328,7 @@ begin
 		softreset_o		=> soft_reset_s_s,
 		-- Options
 		opt_nextor_i	=> '1',
-		opt_mr_type_i	=> SW(2 downto 1),
+		opt_mr_type_i	=> sw_i(2 downto 1),
 		opt_vga_on_i	=> '1',
 		-- RAM
 		ram_addr_o		=> ram_addr_s,
@@ -431,10 +409,10 @@ begin
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		flspi_cs_n_o	=> open,
-		spi_cs_n_o		=> SD_nCS,
-		spi_sclk_o		=> SD_SCLK,
-		spi_mosi_o		=> SD_MOSI,
-		spi_miso_i		=> SD_MISO,
+		spi_cs_n_o		=> sd_cs_n_o,
+		spi_sclk_o		=> sd_sclk_o,
+		spi_mosi_o		=> sd_mosi_o,
+		spi_miso_i		=> sd_miso_i,
 		-- DEBUG
 		D_wait_o			=> open,
 		D_slots_o		=> open,
@@ -455,8 +433,8 @@ begin
 		-- LEDs
 		led_caps_i		=> caps_en_s,
 		-- PS/2 interface
-		ps2_clk_io		=> PS2_CLK,
-		ps2_data_io		=> PS2_DAT,
+		ps2_clk_io		=> ps2_clk_io,
+		ps2_data_io		=> ps2_dat_io,
 		--
 		reset_o			=> soft_reset_k_s,
 		por_o				=> soft_por_s,
@@ -476,15 +454,15 @@ begin
 		beep_i			=> beep_s,
 		k7_audio_o		=> k7_ai_s,
 
-		i2s_xck_o		=> AUD_XCK,
-		i2s_bclk_o		=> AUD_BCLK,
-		i2s_adclrck_o	=> AUD_ADCLRCK,
-		i2s_adcdat_i	=> AUD_ADCDAT,
-		i2s_daclrck_o	=> AUD_DACLRCK,
-		i2s_dacdat_o	=> AUD_DACDAT,
+		i2s_xck_o		=> aud_xck_o,
+		i2s_bclk_o		=> aud_bclk_o,
+		i2s_adclrck_o	=> aud_adclrck_o,
+		i2s_adcdat_i	=> aud_adcdat_i,
+		i2s_daclrck_o	=> aud_daclrck_o,
+		i2s_dacdat_o	=> aud_dacdat_o,
 
-		i2c_sda_io		=> I2C_SDAT,
-		i2c_scl_io		=> I2C_SCLK
+		i2c_sda_io		=> i2c_sdat_io,
+		i2c_scl_io		=> i2c_sclk_io
 	);
 
 	-- VRAM
@@ -500,15 +478,15 @@ begin
 		data_i	=> vram_data_to_s,
 		data_o	=> vram_data_from_s
 	);
---	SRAM_ADDR	<= "0000" & vram_addr_s;
---	SRAM_DQ		<= "ZZZZZZZZ" & vram_data_to_s	when vram_we_s = '1' else
+--	sram_addr_o	<= "0000" & vram_addr_s;
+--	sram_data_io		<= "ZZZZZZZZ" & vram_data_to_s	when vram_we_s = '1' else
 --						(others => 'Z');
---	vram_data_from_s	<= SRAM_DQ( 7 downto 0);
---	SRAM_UB_N			<= '1';
---	SRAM_LB_N			<= '0';
---	SRAM_CE_N			<= not vram_ce_s;
---	SRAM_OE_N			<= not vram_oe_s;
---	SRAM_WE_N			<= not vram_we_s;
+--	vram_data_from_s	<= sram_data_io( 7 downto 0);
+--	sram_ub_n_o			<= '1';
+--	sram_lb_n_o			<= '0';
+--	sram_ce_n_o			<= not vram_ce_s;
+--	sram_oe_n_o			<= not vram_oe_s;
+--	sram_we_n_o			<= not vram_we_s;
 
 	-- RAM
 	ram: entity work.ssdram
@@ -527,24 +505,23 @@ begin
 		oe_i			=> ram_oe_s,
 		we_i			=> ram_we_s,
 		-- SD-RAM ports
-		mem_cke_o	=> DRAM_CKE,
-		mem_cs_n_o	=> DRAM_CS_N,
-		mem_ras_n_o	=> DRAM_RAS_N,
-		mem_cas_n_o	=> DRAM_CAS_N,
-		mem_we_n_o	=> DRAM_WE_N,
-		mem_udq_o	=> DRAM_UDQM,
-		mem_ldq_o	=> DRAM_LDQM,
-		mem_ba_o(0)	=> DRAM_BA_0,
-		mem_ba_o(1)	=> DRAM_BA_1,
-		mem_addr_o	=> DRAM_ADDR,
-		mem_data_io	=> DRAM_DQ
+		mem_cke_o	=> dram_cke_o,
+		mem_cs_n_o	=> dram_cs_n_o,
+		mem_ras_n_o	=> dram_ras_n_o,
+		mem_cas_n_o	=> dram_cas_n_o,
+		mem_we_n_o	=> dram_we_n_o,
+		mem_udq_o	=> dram_udqm_o,
+		mem_ldq_o	=> dram_ldqm_o,
+		mem_ba_o	=> dram_ba_o,
+		mem_addr_o	=> dram_addr_o,
+		mem_data_io	=> dram_data_io
 	);
 
 	-- Glue logic
 
 	-- Resets
-	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or KEY(3) = '0'	else '0';
-	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1'  or KEY(0) = '0'	else '0';
+	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or key_n_i(3) = '0'	else '0';
+	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1'  or key_n_i(0) = '0'	else '0';
 
 	process(clock_master_s)
 	begin
@@ -558,76 +535,78 @@ begin
 	end process;
 
 	-- VGA Output
-	VGA_R			<= rgb_r_s & "000000";
-	VGA_G			<= rgb_g_s & "000000";
-	VGA_B			<= rgb_b_s & "000000";
-	VGA_HS		<= rgb_hsync_n_s;
-	VGA_VS		<= rgb_vsync_n_s;
-	VGA_BLANK	<= '1';
-	VGA_CLK		<= clock_master_s;
+	vga_r_o			<= rgb_r_s & "000000";
+	vga_g_o			<= rgb_g_s & "000000";
+	vga_b_o			<= rgb_b_s & "000000";
+	vga_hsync_n_o		<= rgb_hsync_n_s;
+	vga_vsync_n_o		<= rgb_vsync_n_s;
+	vga_blank_n_o	<= '1';
+	vga_clk_o		<= clock_master_s;
 
-	-- JT51 tests
-	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
-
-	jt51: entity work.jt51_wrapper
-	port map (
-		clock_i			=> clock_3m_s,
-		reset_i			=> reset_s,
-		addr_i			=> bus_addr_s(0),
-		cs_n_i			=> jt51_cs_n_s,
-		wr_n_i			=> bus_wr_n_s,
-		rd_n_i			=> bus_rd_n_s,
-		data_i			=> bus_data_to_s,
-		data_o			=> bus_data_from_s,
-		ct1_o				=> open,
-		ct2_o				=> open,
-		irq_n_o			=> open,
-		p1_o				=> open,
-		-- Low resolution output (same as real chip)
-		sample_o			=> open,
-		left_o			=> open,
-		right_o			=> open,
-		-- Full resolution output
-		xleft_o			=> jt51_left_s,
-		xright_o			=> jt51_right_s,
-		-- unsigned outputs for sigma delta converters, full resolution		
-		dacleft_o		=> open,
-		dacright_o		=> open
-	);
+	ptjt: if per_jt51_g generate
+		-- JT51 tests
+		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
+	
+		jt51: entity work.jt51_wrapper
+		port map (
+			clock_i			=> clock_3m_s,
+			reset_i			=> reset_s,
+			addr_i			=> bus_addr_s(0),
+			cs_n_i			=> jt51_cs_n_s,
+			wr_n_i			=> bus_wr_n_s,
+			rd_n_i			=> bus_rd_n_s,
+			data_i			=> bus_data_to_s,
+			data_o			=> bus_data_from_s,
+			ct1_o				=> open,
+			ct2_o				=> open,
+			irq_n_o			=> open,
+			p1_o				=> open,
+			-- Low resolution output (same as real chip)
+			sample_o			=> open,
+			left_o			=> open,
+			right_o			=> open,
+			-- Full resolution output
+			xleft_o			=> jt51_left_s,
+			xright_o			=> jt51_right_s,
+			-- unsigned outputs for sigma delta converters, full resolution
+			dacleft_o		=> open,
+			dacright_o		=> open
+		);
+	end generate;
 
 	-- DEBUG
 	D_display_s	<= bus_addr_s;
 
-	LEDG(0) <= turbo_on_s;
-	LEDG(1) <= vga_en_s;
-	LEDG(2) <= ntsc_pal_s;
-	LEDG(7) <= not jt51_cs_n_s;
---	LEDG(8) <= reset_s;
+	ledg_o(0) <= turbo_on_s;
+	ledg_o(1) <= vga_en_s;
+	ledg_o(2) <= ntsc_pal_s;
+	ledg_o(7) <= not jt51_cs_n_s;
+--	ledg_o(8) <= reset_s;
 
-	LEDR(15 downto 0) <= std_logic_vector(jt51_left_s);
+	ledr_o(15 downto 0) <= std_logic_vector(jt51_left_s);
 
 	ld3: entity work.seg7
 	port map(
 		D		=> D_display_s(15 downto 12),
-		Q		=> HEX3
+		Q		=> display3_o
 	);
 
 	ld2: entity work.seg7
 	port map(
 		D		=> D_display_s(11 downto 8),
-		Q		=> HEX2
+		Q		=> display2_o
 	);
 
 	ld1: entity work.seg7
 	port map(
 		D		=> D_display_s(7 downto 4),
-		Q		=> HEX1
+		Q		=> display1_o
 	);
 
 	ld0: entity work.seg7
 	port map(
 		D		=> D_display_s(3 downto 0),
-		Q		=> HEX0
+		Q		=> display0_o
 	);
 
 end architecture;

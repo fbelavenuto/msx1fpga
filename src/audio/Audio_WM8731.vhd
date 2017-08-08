@@ -79,17 +79,18 @@ end entity;
 
 architecture Behavior of Audio_WM8731 is
 
+	constant beep_vol_c		: signed(15 downto 0) := "0011110000000000";
+
 	signal pcm_lrclk_s		: std_logic;
+	signal ear_r				: std_logic;
+	signal pcm_inl_s			: std_logic_vector(15 downto 0);
 	signal pcm_l_s				: std_logic_vector(15 downto 0);
 	signal pcm_r_s				: std_logic_vector(15 downto 0);
-	signal pcm_inl_s			: std_logic_vector(15 downto 0);
-
-	signal ear_r				: std_logic;
-
-	signal beep_s				: std_logic_vector(15 downto 0);
-
-	constant beep_vol_c		: std_logic_vector(15 downto 0) := "0011110000000000";
-
+	signal beep_sig_s			: signed(15 downto 0);
+	signal psg_sig_s			: signed(15 downto 0);
+	signal scc_sig_s			: signed(15 downto 0);
+	signal jt51_l_sig_s		: signed(15 downto 0);
+	signal jt51_r_sig_s		: signed(15 downto 0);
 
 begin
 
@@ -152,21 +153,14 @@ begin
 	i2s_adclrck_o <= pcm_lrclk_s;
 	i2s_daclrck_o <= pcm_lrclk_s;
 	 
-	beep_s	<= beep_vol_c when beep_i = '1'		else (others => '0');
+	beep_sig_s		<= beep_vol_c when beep_i = '1'		else (others => '0');
+	psg_sig_s		<= "00" & signed(audio_psg_i) & "000000";
+	scc_sig_s		<= audio_scc_i(14) & audio_scc_i;
+	jt51_l_sig_s	<= jt51_left_i;
+	jt51_r_sig_s	<= jt51_right_i;
 
-	pcm_l_s <= std_logic_vector(
-					unsigned(beep_s) +
-					unsigned("0" & audio_psg_i & "0000000") +
-					unsigned(audio_scc_i & "0") +
-					unsigned(jt51_left_i)
-				);
-
-	pcm_r_s <= std_logic_vector(
-					unsigned(beep_s) +
-					unsigned("0" & audio_psg_i & "0000000") +
-					unsigned(audio_scc_i & "0") +
-					unsigned(jt51_right_i)
-				);
+	pcm_l_s 	<= std_logic_vector(beep_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s);
+	pcm_r_s 	<= std_logic_vector(beep_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s);
 
 	k7_audio_o <= ear_r;
 

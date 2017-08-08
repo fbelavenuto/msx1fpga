@@ -218,12 +218,13 @@ jt51_mod u_mod(
 localparam opreg_w = 42;
 reg  [opreg_w-1:0] reg_op[31:0];
 reg  [opreg_w-1:0] reg_out;
+integer i;
 
 initial
 begin
-	for (integer i=0; i<32; i=i+1)
+	for (i=0; i<32; i=i+1)
 	begin
-		reg_op[i] = 42'b111111111111111111111111111111111111111111;
+		reg_op[i] = ~0;
 	end
 end
 

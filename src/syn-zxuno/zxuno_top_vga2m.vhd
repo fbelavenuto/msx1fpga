@@ -44,6 +44,9 @@ use ieee.numeric_std.all;
 use work.vdp18_paletas_3bit_pack.all;
 
 entity zxuno_top_vga2m is
+	generic (
+		per_jt51_g			: boolean		:= false
+	);
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
@@ -179,7 +182,7 @@ architecture behavior of zxuno_top_vga2m is
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
-	signal bus_data_from_s	: std_logic_vector( 7 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
 	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
 	signal bus_rd_n_s			: std_logic;
 	signal bus_wr_n_s			: std_logic;
@@ -191,8 +194,8 @@ architecture behavior of zxuno_top_vga2m is
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: signed(15 downto 0);
-	signal jt51_right_s		: signed(15 downto 0);
+	signal jt51_left_s		: signed(15 downto 0)					:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)					:= (others => '0');
 
 begin
 
@@ -358,7 +361,7 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DAC
+	audio: entity work.Audio_DACs
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
@@ -441,34 +444,36 @@ begin
 	vga_csync_n_o	<= rgb_hsync_n_s;
 	vga_vsync_n_o	<= rgb_vsync_n_s;
 
-	-- JT51 tests
-	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
+	ptjt: if per_jt51_g generate
+		-- JT51 tests
+		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
-	jt51: entity work.jt51_wrapper
-	port map (
-		clock_i			=> clock_3m_s,
-		reset_i			=> reset_s,
-		addr_i			=> bus_addr_s(0),
-		cs_n_i			=> jt51_cs_n_s,
-		wr_n_i			=> bus_wr_n_s,
-		rd_n_i			=> bus_rd_n_s,
-		data_i			=> bus_data_to_s,
-		data_o			=> bus_data_from_s,
-		ct1_o				=> open,
-		ct2_o				=> open,
-		irq_n_o			=> open,
-		p1_o				=> open,
-		-- Low resolution output (same as real chip)
-		sample_o			=> open,
-		left_o			=> open,
-		right_o			=> open,
-		-- Full resolution output
-		xleft_o			=> jt51_left_s,
-		xright_o			=> jt51_right_s,
-		-- unsigned outputs for sigma delta converters, full resolution		
-		dacleft_o		=> open,
-		dacright_o		=> open
-	);
+		jt51: entity work.jt51_wrapper
+		port map (
+			clock_i			=> clock_3m_s,
+			reset_i			=> reset_s,
+			addr_i			=> bus_addr_s(0),
+			cs_n_i			=> jt51_cs_n_s,
+			wr_n_i			=> bus_wr_n_s,
+			rd_n_i			=> bus_rd_n_s,
+			data_i			=> bus_data_to_s,
+			data_o			=> bus_data_from_s,
+			ct1_o				=> open,
+			ct2_o				=> open,
+			irq_n_o			=> open,
+			p1_o				=> open,
+			-- Low resolution output (same as real chip)
+			sample_o			=> open,
+			left_o			=> open,
+			right_o			=> open,
+			-- Full resolution output
+			xleft_o			=> jt51_left_s,
+			xright_o			=> jt51_right_s,
+			-- unsigned outputs for sigma delta converters, full resolution		
+			dacleft_o		=> open,
+			dacright_o		=> open
+		);
+	end generate;
 
 	-- DEBUG
 	led_o		<= not sd_cs_n_s;
