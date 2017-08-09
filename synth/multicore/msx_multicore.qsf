@@ -173,6 +173,7 @@ set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to joy2_right_i
 set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to joy2_up_i
 set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_l_o
 set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_r_o
+set_global_assignment -name SDC_FILE "../../src/syn-multicore/timing.sdc"
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll1.qip"
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd

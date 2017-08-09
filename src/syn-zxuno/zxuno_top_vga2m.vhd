@@ -45,7 +45,7 @@ use work.vdp18_paletas_3bit_pack.all;
 
 entity zxuno_top_vga2m is
 	generic (
-		per_jt51_g			: boolean		:= false
+		per_jt51_g			: boolean		:= true
 	);
 	port (
 		-- Clocks
