@@ -152,7 +152,7 @@ begin
 			sw_ff_q(0) <= sw_ff_q(1);
 		end if;
 	end process;
-	
+
 	clock_out1_s <= clock_3m_s when sw_ff_q(1) = '0' else clock_7m_s;
 
 	-- Out
@@ -160,7 +160,7 @@ begin
 	clock_5m_en_o	<= clock_5m_en_s;
 	clock_psg_en_o	<= clock_psg_en_s;
 	clock_3m_o		<= clock_3m_s;
-	
+
 	with sw_ff_q select
 		clock_cpu_o <=
 			clock_3m_s		when "00",

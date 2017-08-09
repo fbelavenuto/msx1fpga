@@ -39,7 +39,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity Audio_DAC is
+entity Audio_DACs is
 	port (
 		clock_i			: in  std_logic;
 		reset_i			: in  std_logic;
@@ -55,71 +55,62 @@ entity Audio_DAC is
 	);
 end entity;
 
--- 32767	0111111111111111
+-- 32767  0111111111111111
 --
--- 1		0000000000000001
--- 0		0000000000000000
--- -1		1111111111111111
+-- 1      0000000000000001
+-- 0      0000000000000000
+-- -1     1111111111111111
 --
--- -32768	1000000000000000
+-- -32768 1000000000000000
 
-architecture Behavior of Audio_DAC is
+architecture Behavior of Audio_DACs is
 
-	constant beep_vol_c	: std_logic_vector(15 downto 0) := "0111000000000000";
+	constant beep_vol_c	: signed(15 downto 0) := "0011111111111111";
 
-	signal pcm_l_s			: std_logic_vector(15 downto 0);
-	signal pcm_r_s			: std_logic_vector(15 downto 0);
-	signal beep_s			: std_logic_vector(15 downto 0);
-	signal scc_uns_s		: unsigned(15 downto 0);
-	signal jt51_l_uns_s	: unsigned(15 downto 0);
-	signal jt51_r_uns_s	: unsigned(15 downto 0);
+	signal pcm_l_s			: signed(15 downto 0);
+	signal pcm_r_s			: signed(15 downto 0);
+	signal beep_sig_s		: signed(15 downto 0);
+	signal psg_sig_s		: signed(15 downto 0);
+	signal scc_sig_s		: signed(15 downto 0);
+	signal jt51_l_sig_s	: signed(15 downto 0);
+	signal jt51_r_sig_s	: signed(15 downto 0);
 
 begin
 
 	-- Left
-	audiol : entity work.dac
+	audiol : entity work.dac_dsm2v
 	generic map (
-		msbi_g	=> 15
+		nbits_g	=> 16
 	)
 	port map (
-		clk_i		=> clock_i,
-		res_i		=> reset_i,
+		reset_i	=> reset_i,
+		clock_i	=> clock_i,
 		dac_i		=> pcm_l_s,
 		dac_o		=> dacout_l_o
 	);
 
 	-- Right
-	audior : entity work.dac
+	audior : entity work.dac_dsm2v
 	generic map (
-		msbi_g	=> 15
+		nbits_g	=> 16
 	)
 	port map (
-		clk_i		=> clock_i,
-		res_i		=> reset_i,
+		reset_i	=> reset_i,
+		clock_i	=> clock_i,
 		dac_i		=> pcm_r_s,
 		dac_o		=> dacout_r_o
 	);
 
-	beep_s			<= beep_vol_c when beep_i = '1'		else (others => '0');
-	scc_uns_s		<= '0' & not audio_scc_i(14)  & unsigned(audio_scc_i (13 downto 0));
-	jt51_l_uns_s	<= '0' & not jt51_left_i(15)  & unsigned(jt51_left_i (14 downto 1));
-	jt51_r_uns_s	<= '0' & not jt51_right_i(15) & unsigned(jt51_right_i(14 downto 1));
+	beep_sig_s		<= beep_vol_c when beep_i = '1'		else (others => '0');
+	psg_sig_s		<= "00" & signed(audio_psg_i) & "000000";
+	scc_sig_s		<= audio_scc_i(14) & audio_scc_i;
+	jt51_l_sig_s	<= jt51_left_i;
+	jt51_r_sig_s	<= jt51_right_i;
 
-	pcm_l_s 	<= std_logic_vector(
-						unsigned(beep_s) + 
-						unsigned("0" & audio_psg_i & "0000000") +
-						scc_uns_s +
-						jt51_l_uns_s
-	);
+	pcm_l_s 	<= beep_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s;
+	pcm_r_s 	<= beep_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s;
 
-	pcm_r_s 	<= std_logic_vector(
-						unsigned(beep_s) + 
-						unsigned("0" & audio_psg_i & "0000000") +
-						scc_uns_s +
-						jt51_r_uns_s
-	);
-
-	audio_mix_l_o <= pcm_l_s;
-	audio_mix_r_o <= pcm_r_s;
+	audio_mix_l_o <= std_logic_vector(pcm_l_s);
+	audio_mix_r_o <= std_logic_vector(pcm_r_s);
 
 end architecture;

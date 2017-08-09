@@ -130,21 +130,21 @@ begin
 	process (cpu_a)
 	begin
 		case cpu_a is
-			when X"0000" => cpu_di <= X"31";		-- LD SP, $0000
+			when X"0000" => cpu_di <= X"11";		-- LD DE, $0000
 			when X"0001" => cpu_di <= X"00";		-- 
 			when X"0002" => cpu_di <= X"00";		-- 
-			when X"0003" => cpu_di <= X"3E";		-- LD A, $A5
-			when X"0004" => cpu_di <= X"A5";		-- 
-			when X"0005" => cpu_di <= X"32";		-- LD ($1234), A
-			when X"0006" => cpu_di <= X"34";		-- 
-			when X"0007" => cpu_di <= X"12";		-- 
-			when X"0008" => cpu_di <= X"D3";		-- OUT ($AA), A
-			when X"0009" => cpu_di <= X"AA";		-- 
-			when X"000A" => cpu_di <= X"DB";		-- IN A, ($55)
-			when X"000B" => cpu_di <= X"55";		-- 
-			when X"000C" => cpu_di <= X"00";		-- 
-			when X"000D" => cpu_di <= X"D3";		-- OUT ($AA), A (wait)
-			when X"000E" => cpu_di <= X"AA";		-- 
+			when X"0003" => cpu_di <= X"21";		-- LD HL, $2000
+			when X"0004" => cpu_di <= X"00";		-- 
+			when X"0005" => cpu_di <= X"20";		--
+			when X"0006" => cpu_di <= X"01";		-- LD BC, $FFFF
+			when X"0007" => cpu_di <= X"FF";		-- 
+			when X"0008" => cpu_di <= X"FF";		-- 
+			when X"0009" => cpu_di <= X"ED";		-- LDI
+			when X"000A" => cpu_di <= X"A0";		-- 
+			when X"000B" => cpu_di <= X"ED";		-- LDI
+			when X"000C" => cpu_di <= X"A0";		-- 
+			when X"000D" => cpu_di <= X"ED";		-- LDI
+			when X"000E" => cpu_di <= X"A0";		-- 
 			when X"000F" => cpu_di <= X"00";		-- 
 			when others  => cpu_di <= X"00";		-- 
 		end case;

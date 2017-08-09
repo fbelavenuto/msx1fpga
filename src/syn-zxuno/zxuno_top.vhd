@@ -46,7 +46,8 @@ use ieee.std_logic_unsigned.all;
 
 entity zxuno_top is
 	generic (
-		ramsize_g			: integer := 512			-- 512 or 2048
+		ramsize_g			: integer		:= 512;			-- 512 or 2048
+		per_jt51_g			: boolean		:= false
 	);
 	port (
 		-- Clocks
@@ -160,9 +161,7 @@ architecture behavior of zxuno_top is
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
-	signal audio_s				: std_logic_vector(15 downto 0);
 	signal beep_s				: std_logic;
-	signal dac_s				: std_logic;
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -188,6 +187,23 @@ architecture behavior of zxuno_top is
 
 	-- Joystick
 	signal joy_out1_s			: std_logic;
+
+	-- Bus
+	signal bus_addr_s			: std_logic_vector(15 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
+	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
+	signal bus_rd_n_s			: std_logic;
+	signal bus_wr_n_s			: std_logic;
+	signal bus_m1_n_s			: std_logic;
+	signal bus_iorq_n_s		: std_logic;
+	signal bus_mreq_n_s		: std_logic;
+	signal bus_sltsl1_n_s	: std_logic;
+	signal bus_sltsl2_n_s	: std_logic;
+
+	-- JT51
+	signal jt51_cs_n_s		: std_logic;
+	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 
 begin
 
@@ -252,16 +268,16 @@ begin
 		rom_ce_o			=> rom_ce_s,
 		rom_oe_o			=> rom_oe_s,
 		-- External bus
-		bus_addr_o		=> open,
-		bus_data_i		=> (others => '1'),
-		bus_data_o		=> open,
-		bus_rd_n_o		=> open,
-		bus_wr_n_o		=> open,
-		bus_m1_n_o		=> open,
-		bus_iorq_n_o	=> open,
-		bus_mreq_n_o	=> open,
-		bus_sltsl1_n_o	=> open,
-		bus_sltsl2_n_o	=> open,
+		bus_addr_o		=> bus_addr_s,
+		bus_data_i		=> bus_data_from_s,
+		bus_data_o		=> bus_data_to_s,
+		bus_rd_n_o		=> bus_rd_n_s,
+		bus_wr_n_o		=> bus_wr_n_s,
+		bus_m1_n_o		=> bus_m1_n_s,
+		bus_iorq_n_o	=> bus_iorq_n_s,
+		bus_mreq_n_o	=> bus_mreq_n_s,
+		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
+		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
 		bus_wait_n_i	=> '1',
 		bus_nmi_n_i		=> '1',
 		bus_int_n_i		=> '1',
@@ -367,15 +383,19 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DAC
+	audio: entity work.Audio_DACs
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
-		audio_mix_o		=> audio_s,
-		dac_out_o		=> dac_s
+		jt51_left_i		=> jt51_left_s,
+		jt51_right_i	=> jt51_right_s,
+		audio_mix_l_o	=> open,
+		audio_mix_r_o	=> open,
+		dacout_l_o		=> dac_l_o,
+		dacout_r_o		=> dac_r_o
 	);
 
 	-- VRAM
@@ -429,10 +449,6 @@ begin
 		end if;
 	end process;
 
-	-- Audio
-	dac_l_o		<= dac_s;
-	dac_r_o		<= dac_s;
-
 	-- RAM
 	sramint: if ramsize_g = 512 generate
 
@@ -460,6 +476,37 @@ begin
 	vga_vsync_n_o	<= rgb_vsync_n_s			when vga_en_s = '1'	else '1';
 	vga_ntsc_o		<= not ntsc_pal_s;
 	vga_pal_o		<= ntsc_pal_s;
+
+	ptjt: if per_jt51_g generate
+		-- JT51 tests
+		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
+
+		jt51: entity work.jt51_wrapper
+		port map (
+			clock_i			=> clock_3m_s,
+			reset_i			=> reset_s,
+			addr_i			=> bus_addr_s(0),
+			cs_n_i			=> jt51_cs_n_s,
+			wr_n_i			=> bus_wr_n_s,
+			rd_n_i			=> bus_rd_n_s,
+			data_i			=> bus_data_to_s,
+			data_o			=> bus_data_from_s,
+			ct1_o				=> open,
+			ct2_o				=> open,
+			irq_n_o			=> open,
+			p1_o				=> open,
+			-- Low resolution output (same as real chip)
+			sample_o			=> open,
+			left_o			=> open,
+			right_o			=> open,
+			-- Full resolution output
+			xleft_o			=> jt51_left_s,
+			xright_o			=> jt51_right_s,
+			-- unsigned outputs for sigma delta converters, full resolution		
+			dacleft_o		=> open,
+			dacright_o		=> open
+		);
+	end generate;
 
 	-- DEBUG
 	led_o		<= not sd_cs_n_s;

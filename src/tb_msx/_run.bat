@@ -39,6 +39,8 @@ vcom ..\peripheral\escci\scc_wave.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\peripheral\escci\escci.vhd
 IF ERRORLEVEL 1 GOTO error
+vcom ..\peripheral\memoryctl.vhd
+IF ERRORLEVEL 1 GOTO error
 
 vcom ..\video\vdp18\vdp18_pack-p.vhd
 IF ERRORLEVEL 1 GOTO error

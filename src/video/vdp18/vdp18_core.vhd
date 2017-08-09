@@ -191,7 +191,7 @@ architecture struct of vdp18_core is
 	signal palette_wr_s		: std_logic;
 	signal ntsc_pal_i_s		: std_logic;
 	signal ntsc_pal_e_s		: std_logic;
-	signal oddline_s			: std_logic;
+	signal oddline_s			: std_logic							:= '0';
 
 begin
 

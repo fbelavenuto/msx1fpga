@@ -6,8 +6,8 @@ run
 -ofmt NGC
 -p xc6slx9-2-tqg144
 -top wxedax_top
--opt_mode Area
--opt_level 2
+-opt_mode Speed
+-opt_level 1
 -power NO
 -iuc YES
 -keep_hierarchy No
