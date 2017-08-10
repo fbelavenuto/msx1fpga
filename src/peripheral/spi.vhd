@@ -62,7 +62,9 @@ entity spi is
 		spi_cs_n_o		: out   std_logic_vector(2 downto 0)	:= "111";
 		spi_sclk_o		: out   std_logic;
 		spi_mosi_o		: out   std_logic;
-		spi_miso_i		: in    std_logic
+		spi_miso_i		: in    std_logic;
+		sd_wp_n_i		: in    std_logic;
+		sd_pres_n_i		: in    std_logic
 	);
 end entity;
 
@@ -76,19 +78,45 @@ architecture rtl of spi is
 	signal port0_r			: std_logic_vector(7 downto 0);
 	signal port1_r			: std_logic_vector(7 downto 0);
 	signal enable_s		: std_logic;
+	signal sd_chg_s		: std_logic;
+	signal sd_chg_q		: std_logic;
+	signal spi_ctrl_rd_s	: std_logic;
 
 begin
 
 	enable_s <= '1'	when cs_i = '1' and (wr_i = '1' or rd_i = '1')	else '0';
 
+	spi_ctrl_rd_s	<= '1' when enable_s = '1' and addr_i = '1' and rd_i = '1'	else '0';
+
 	-- Port reading
 	has_data_o	<= '1'	when enable_s = '1' and rd_i = '1'  else	
 						'0';
-	data_o <=	port0_r	when enable_s = '1' and addr_i = '0' and rd_i = '1'  else
-					port1_r	when enable_s = '1' and addr_i = '1' and rd_i = '1'  else
+	data_o <=	port0_r	when enable_s = '1' and addr_i = '0' and rd_i = '1'	else
+					port1_r	when spi_ctrl_rd_s = '1'										else
 					(others => '1');
 
-	port0_r	<= "00001100";
+	port0_r	<= "00000" & sd_wp_n_i & sd_pres_n_i & sd_chg_s;
+
+	-- Disk change
+	process (reset_i, spi_ctrl_rd_s, sd_pres_n_i)
+	begin
+		if reset_i = '1' then
+			sd_chg_q <= '0';
+		elsif sd_pres_n_i = '1' then
+			sd_chg_q <= '1';
+		elsif falling_edge(spi_ctrl_rd_s) then
+			sd_chg_q <= '0';
+		end if;
+	end process;
+
+	process (reset_i, spi_ctrl_rd_s)
+	begin
+		if reset_i = '1' then
+			sd_chg_s <= '0';
+		elsif rising_edge(spi_ctrl_rd_s) then
+			sd_chg_s <= sd_chg_q;
+		end if;
+	end process;
 
 	--------------------------------------------------
 	-- Essa parte lida com a porta SPI por hardware --

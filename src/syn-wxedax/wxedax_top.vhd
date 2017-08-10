@@ -95,10 +95,12 @@ entity wxedax_top is
 		audio_dac_r_o			: out   std_logic									:= '0';
 		buzzer_o					: out   std_logic									:= '1';
 		-- SD Card
+		sd_cs_n_o				: out   std_logic									:= '1';
 		sd_sclk_o				: out   std_logic									:= '0';
 		sd_mosi_o				: out   std_logic									:= '0';
 		sd_miso_i				: in    std_logic;
-		sd_cs_n_o				: out   std_logic									:= '1';
+		sd_pres_n_i				: in    std_logic;
+		sd_wp_n_i				: in    std_logic;
 		-- Joystick SNES
 		pad_clk_o				: out   std_logic									:= '0';
 		pad_latch_o				: out   std_logic									:= '0';
@@ -343,6 +345,8 @@ begin
 		spi_sclk_o		=> spi_sclk_s,
 		spi_mosi_o		=> spi_mosi_s,
 		spi_miso_i		=> spi_miso_s,
+		sd_pres_n_i		=> sd_pres_n_i,
+		sd_wp_n_i		=> sd_wp_n_i,
 		-- DEBUG
 		D_wait_o			=> open,
 		D_slots_o		=> open,

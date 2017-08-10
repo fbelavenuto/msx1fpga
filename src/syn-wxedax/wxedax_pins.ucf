@@ -105,15 +105,17 @@ NET "audio_dac_r_o"     LOC="P67"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
 NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
 
 # SD/MMC
+NET "sd_cs_n_o"         LOC="P66"  | IOSTANDARD = LVCMOS33;
 NET "sd_sclk_o"         LOC="P78"  | IOSTANDARD = LVCMOS33;
 NET "sd_mosi_o"         LOC="P80"  | IOSTANDARD = LVCMOS33;
 NET "sd_miso_i"         LOC="P74"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "sd_cs_n_o"         LOC="P66"  | IOSTANDARD = LVCMOS33;
+NET "sd_pres_n_i"       LOC="P81"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "sd_wp_n_i"         LOC="P82"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # SNES joypad
-NET "pad_clk_o"			LOC="P81"  | IOSTANDARD = LVCMOS33;
-NET "pad_latch_o"			LOC="P82"  | IOSTANDARD = LVCMOS33;
-NET "pad_data_i"			LOC="P85"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "pad_clk_o"			LOC="P85"  | IOSTANDARD = LVCMOS33;
+NET "pad_latch_o"			LOC="P83"  | IOSTANDARD = LVCMOS33;
+NET "pad_data_i"			LOC="P84"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Others
 #NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;
@@ -122,11 +124,11 @@ NET "pad_data_i"			LOC="P85"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 #DS_A   = 80 (usado)
 #DS_B   = 79 (usado)
-#DS_C   = 83 
+#DS_C   = 83 (usado)
 #DS_D   = 82 (usado)
 #DS_E   = 81 (usado)
 #DS_F   = 78 (usado)
-#DS_G   = 84 
+#DS_G   = 84 (usado)
 #DS_DP  = 85 (usado)
 #DS_EN1 = 66 (usado)
 #DS_EN2 = 74 (usado)

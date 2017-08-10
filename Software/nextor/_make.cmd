@@ -9,7 +9,6 @@ goto ok
 
 :error
 echo Error!
-pause
 
 :ok
 echo.

@@ -153,6 +153,8 @@ entity msx is
 		spi_sclk_o		: out std_logic;
 		spi_mosi_o		: out std_logic;
 		spi_miso_i		: in  std_logic								:= '0';
+		sd_pres_n_i		: in  std_logic								:= '0';
+		sd_wp_n_i		: in  std_logic								:= '1';
 		-- DEBUG
 		D_wait_o			: out std_logic;
 		D_slots_o		: out std_logic_vector( 7 downto 0);
@@ -275,6 +277,7 @@ architecture Behavior of msx is
 	signal d_from_spi_s		: std_logic_vector( 7 downto 0);
 	signal nxt_rom_page_s	: std_logic_vector( 2 downto 0);
 	signal nxt_rom_cs_s		: std_logic;
+	signal nxt_rom_wr_s		: std_logic;
 	signal spi1_cs_n_s		: std_logic;
 
 	-- SCC/Megaram
@@ -479,7 +482,9 @@ begin
 		spi_cs_n_o(0)	=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,
-		spi_miso_i		=> spi_miso_i
+		spi_miso_i		=> spi_miso_i,
+		sd_wp_n_i		=> sd_wp_n_i,
+		sd_pres_n_i		=> sd_pres_n_i
 	);
 
 	-- ROM Nextor control
@@ -495,6 +500,7 @@ begin
 		wr_n_i		=> wr_n_s,
 		--
 		rom_cs_o		=> nxt_rom_cs_s,
+		rom_wr_o		=> nxt_rom_wr_s,
 		rom_page_o	=> nxt_rom_page_s
 	);
 
@@ -671,6 +677,7 @@ begin
 	ram_oe_o		<= not rd_n_s;
 	ram_we_o		<= '1' when wr_n_s = '0' and (ram_cs_s = '1' or mr_ram_ce_s = '1')	else
 						'1' when wr_n_s = '0' and iplram_cs_s = '1' and iplram_bw_s = '0'	else
+						'1' when wr_n_s = '0' and nxt_rom_wr_s = '1'								else				-- Nextor extra RAM
 						'0';
 	ram_cs_s		<= '1' when	slot3_exp_n_s(1) = '0' else '0';
 	iplram_cs_s	<= '1' when slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 14) /= "00"	else '0';

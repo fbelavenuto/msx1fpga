@@ -54,6 +54,7 @@ entity romnextor is
 		wr_n_i		: in  std_logic;
 		--
 		rom_cs_o		: out std_logic;
+		rom_wr_o		: out std_logic;
 		rom_page_o	: out std_logic_vector( 2 downto 0)
 	);
 end entity;
@@ -61,7 +62,7 @@ end entity;
 architecture Behavior of romnextor is
 
 	signal rom_page_s	: std_logic_vector(2 downto 0);
-	signal rom_cs_s	: std_logic;
+	signal ram_wr_s	: std_logic;
 
 begin
 
@@ -81,11 +82,17 @@ begin
 
 	rom_page_o <= rom_page_s;
 
-	rom_cs_s <=	'0' when enable_i = '0'																		else
-					'1' when sltsl_n_i = '0' and rd_n_i = '0' and addr_i(15 downto 14) = "01"	else
-					'1' when sltsl_n_i = '0' and rd_n_i = '0' and addr_i(15 downto 14) = "10"	else
+	ram_wr_s	<= '1' when sltsl_n_i = '0' and wr_n_i = '0' and rom_page_s = "111" and
+								addr_i(15 downto 13) = "0111" 												else
 					'0';
 
-	rom_cs_o <= rom_cs_s;
+	rom_cs_o <=	'0' when enable_i = '0'																		else
+					'1' when sltsl_n_i = '0' and rd_n_i = '0' and addr_i(15 downto 14) = "01"	else
+					'1' when ram_wr_s = '1'																		else
+					'0';
+
+	rom_wr_o	<= '0' when enable_i = '0'																		else
+					'1' when ram_wr_s = '1'																		else
+					'0';
 
 end architecture;
