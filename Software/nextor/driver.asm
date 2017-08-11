@@ -20,7 +20,7 @@
 ;	<read>
 ;	b0	: 0=SD disk change status
 ;	b1	: 0=SD card present
-;	b2	: 0=Write protecton enabled for SD card
+;	b2	: 1=Write protecton enabled for SD card
 ;	b3-7: Reserved for future use. Must be masked out from readings.
 ;	<write>
 ;	b0	: SD card chip-select (0=selected)
@@ -87,8 +87,6 @@ INITXT	= $006C		; Inicializa SCREEN0
 CHSNS	= $009C		; Sense keyboard buffer for character
 CHGET	= $009F		; Get character from keyboard buffer
 CHPUT	= $00A2		; A=char
-CLS	= $00C3		; Chamar com A=0
-ERAFNK	= $00CC		; Erase function key display
 SNSMAT	= $0141		; Read row of keyboard matrix
 KILBUF	= $0156		; Clear keyboard buffer
 EXTROM	= $015F
@@ -100,14 +98,11 @@ REDCLK	= $01F5
 
 ; System variables
 MSXVER	= $002D
-LINL40	= $F3AE		; Width
 LINLEN	= $F3B0
 INTFLG	= $FC9B
 SCRMOD	= $FCAF
 
-
 ;-----------------------------------------------------------------------------
-
 
 	org		$4000
 
@@ -353,14 +348,6 @@ DRV_INIT:
 	ld		de,strTitle					; prints the title 
 	call	printString
 
-;	ld		a, $41
-;	call	CHPUT
-;	inc		a
-;	ld		(WRKAREA.CARDFLAGS), a
-;	ld		a, (WRKAREA.CARDFLAGS)
-;	call	CHPUT
-;.l:
-;	jr	.l
 	xor		a							; Initialize SD card flags
 	ld		(WRKAREA.CARDFLAGS), a
 
@@ -524,9 +511,7 @@ DEV_RW:
 	jr nc,	.saicomerroidl
 	dec		c							; somente 1 logical unit
 	jr nz,	.saicomerroidl
-	push	hl
 	call	testaCartao					; verificar se cartao esta OK
-	pop		hl
 	jr nc,	.ok
 	pop		af							; retira AF guardado no inicio
 	ld		a, ENRDY					; Not ready
@@ -559,7 +544,7 @@ leitura:
 	ld	c, a
 	inc	de
 	ld	a, (de)		; 4. n. bloco
-	inc	de
+;	inc	de
 	ld	b, a
 	pop	af
 	ld	d, a
@@ -654,9 +639,7 @@ DEV_INFO:
 	inc		b
 	cp		a, 2						; somente 1 dispositivo
 	jr nc,	.saicomerro
-	push	hl
 	call	testaCartao					; verificar se cartao esta OK
-	pop		hl
 	jr nc,	.ok							; nao houve erro
 .saicomerro:
 	ld		a, 1						; informar erro
@@ -848,9 +831,7 @@ LUN_INFO:
 	jr nc,	.saicomerro
 	dec		b							; somente 1 logical unit
 	jr nz,	.saicomerro
-	push	hl
 	call	testaCartao
-	pop		hl
 	jr nc,	.ok							; nao tem erro com o cartao
 .saicomerro:
 	ld		a, 1						; informar erro
@@ -906,7 +887,7 @@ LUN_INFO:
 ; Testa se cartao esta inserido e/ou houve erro
 ; na ultima vez que foi acessado. Carry indica
 ; erro
-; Destroi AF, HL, IX, C
+; Destroi AF, C
 ;------------------------------------------------
 testaCartao:
 	ld	(WRKAREA.NUMSD), a	; salva numero do device atual (1 ou 2)
@@ -1414,17 +1395,19 @@ GravarBloco:
 	ld	a, CMD25	; CMD25 = write multiple blocks
 	call	SD_SEND_CMD
 	or	a
-	jr	z, .loopZ80
+	jr	z, .loop
 .erroEscritaBlocoR: ; Trick to save some cycles inside the block transfer loop
 	scf
 	jp	terminaLeituraEscritaBloco
 
-.loopZ80:	; Z80 optimized loop
+.loop:
 	ld	c, PORTDATA
 	ld	a, $FC		; mandar $FC para indicar que os proximos dados
 	out	(c),a		; sao para gravacao
+	nop
 	.512	outi		; OUTI x512
 	out	(c),a	; Send a dummy 16bit CRC
+	nop
 	out	(c),a
 	call	WAIT_RESP_NO_FF	; esperar cartao
 	and	$1F		; testa bits erro
@@ -1433,13 +1416,16 @@ GravarBloco:
 	call	WAIT_RESP_NO_00	; esperar cartao
 	jr	c,.erroEscritaBlocoZ
 	dec	ixh		; nblocks=nblocks-1
-	jp	nz,.loopZ80
+	jp	nz,.loop
 .loopend:
 	in	a, (c)	; dummy reads
+	nop
 	in	a, (c)
 	ld	a, $FD		; enviar $FD para informar ao cartao que acabou os dados
 	out	(c),a
+	nop
 	in	a, (c)	; dummy reads
+	nop
 	in	a, (c)
 	call	WAIT_RESP_NO_00	; esperar cartao
 	jp	.fim		; CMD25 concluido, sair informando nenhum erro
@@ -1456,10 +1442,12 @@ GravarBloco:
 	ld	c, PORTDATA
 	ld	a, $FE		; mandar $FE para indicar que vamos mandar dados para gravacao
 	out	(c),a
+	nop
 	.512	outi		; OUTI x512
 .part2s:
 	ld	a, $FF		; envia dummy CRC
 	out	(c),a
+	nop
 	out	(c),a
 	call	WAIT_RESP_NO_FF	; esperar cartao
 	and	$1F		; testa bits erro
@@ -1498,7 +1486,7 @@ LerBloco:
 	call	SD_SEND_CMD_GET_ERROR
 	jr	c,terminaLeituraEscritaBloco
 
-.loopZ80:
+.loop:
 	ld	bc,0
 .zwaitFE:
 	in	a,(PORTDATA)
@@ -1515,9 +1503,10 @@ LerBloco:
 	ld	c,PORTDATA
 	.512	ini
 	in	a, (c)	; discard 16bit CRC
+	nop
 	in	a, (c)
 	dec	ixh		; nblocks=nblocks-1
-	jp	nz,.loopZ80
+	jp	nz,.loop
 .loopend:
 	ld	a, CMD12	; acabou os blocos, mandar CMD12 para cancelar leitura
 	call	SD_SEND_CMD_NO_ARGS
@@ -1535,6 +1524,7 @@ LerBloco:
 	.512	ini
 .part2s:
 	in	a, (c)	; discard 16bit CRC
+	nop
 	in	a, (c)
 .fim:
 	xor	a		; zera carry para informar leitura sem erros
@@ -1750,14 +1740,16 @@ INICHKSTOP:
 	; Handle STOP to pause and read messages, and ask for the copyright info
 	ld	de,strBootpaused
 	call	printString
-.wait1:	ld	a,7
+.wait1:
+	ld	a,7
 	call	SNSMAT
 	and	$10			; Is STOP still pressed?
 	jr	z,.wait1		; Wait for STOP to be released
 	xor	a
 	ld	(INTFLG),a		; Clear STOP flag
 	ld	b,0			; b=inhibit 'i' key flag
-.wait2: call	CHSNS
+.wait2:
+	call	CHSNS
 	call	nz,.chkikey		; Wait until a key is pressed
 	ld	a,(INTFLG)
 	cp	4			; Was STOP pressed?
