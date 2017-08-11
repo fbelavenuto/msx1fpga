@@ -353,7 +353,14 @@ DRV_INIT:
 	ld		de,strTitle					; prints the title 
 	call	printString
 
-.sdhcinit:
+;	ld		a, $41
+;	call	CHPUT
+;	inc		a
+;	ld		(WRKAREA.CARDFLAGS), a
+;	ld		a, (WRKAREA.CARDFLAGS)
+;	call	CHPUT
+;.l:
+;	jr	.l
 	xor		a							; Initialize SD card flags
 	ld		(WRKAREA.CARDFLAGS), a
 
@@ -370,7 +377,7 @@ DRV_INIT:
 .detect:
 	ld		(WRKAREA.NUMSD), a			; SD card detection process
 	push	af
-	ld		de, strCartao
+	ld		de, strSDSlot
 	call	printString
 	pop		af
 	add		'0'
@@ -394,7 +401,7 @@ DRV_INIT:
 .marcaErro:
 	jp		marcaErroCartao				; slot vazio ou erro de deteccao, marcar nas flags
 .detectou:
-	call	calculaCIDoffset			; calculamos em IX a posicao correta do offset CID dependendo do cartao atual
+	call	getCIDaddr			; calculamos em IX a posicao correta do offset CID dependendo do cartao atual
 	ld		a, (ix+15)					; pegar byte SDV1 ou SDV2
 	ld		de, strSDV1					; e imprimir
 	or		a
@@ -523,7 +530,6 @@ DEV_RW:
 	jr nc,	.ok
 	pop		af							; retira AF guardado no inicio
 	ld		a, ENRDY					; Not ready
-;	ld		a, EDISK					; General unknown disk error
 	ld		b, 0
 	ret
 .saicomerroidl:
@@ -535,12 +541,12 @@ DEV_RW:
 	ld		a, b
 	ld		(WRKAREA.NUMBLOCKS), a		; save the number of blocks to transfer 
 	exx
-	call	calculaCIDoffset	; ix=CID offset 
+	call	getCIDaddr	; ix=CID offset 
 	ld	a, (ix+15)	; verificar se eh SDV1 ou SDV2
 	ld	ixl, a		; ixl=SDcard version
-	pop	af		; a=Device number, f=read/write flag 
 	exx			; hl=Source/dest Address, de=Pointer to sect#
 	ld	ixh, b 		; ixh=Number of blocks to transfer
+	pop	af		; a=Device number, f=read/write flag 
 	jr	c,escrita	; Skip if it's a write operation 
 leitura:
 	ld	a, (de)		; 1. n. bloco
@@ -655,7 +661,6 @@ DEV_INFO:
 .saicomerro:
 	ld		a, 1						; informar erro
 	ret
-
 .ok:
 	djnz	.naoBasic
 
@@ -668,7 +673,7 @@ DEV_INFO:
 
 .naoBasic:
 	push	hl
-	call	calculaCIDoffset			; calculamos em IX a posicao correta do offset CID dependendo do cartao atual
+	call	getCIDaddr			; calculamos em IX a posicao correta do offset CID dependendo do cartao atual
 	pop		hl
 
 	djnz	.naoManuf
@@ -788,7 +793,7 @@ DEV_STATUS:
 	;***FixMe: Disk change detection doesn't work
 	; Will have to check both the hardware disk-change and the software
 	; disk-change reported by LUN_NFO
-	call	detectCard	; erro na deteccao do cartao, tentar re-detectar
+	call	detectCard
 	jr	c,.cartaoComErro	; nao conseguimos detectar, sai com erro
 
 .semMudanca:
@@ -844,7 +849,7 @@ LUN_INFO:
 	dec		b							; somente 1 logical unit
 	jr nz,	.saicomerro
 	push	hl
-	call	testaCartao					; Load IY with WorkArea
+	call	testaCartao
 	pop		hl
 	jr nc,	.ok							; nao tem erro com o cartao
 .saicomerro:
@@ -938,9 +943,9 @@ marcaErroCartao:
 ;------------------------------------------------
 ; Calcula offset do buffer na RAM em HL e IX para
 ; os dados do CID dependendo do cartao atual
-; Destroi AF, DE, HL e IX
+; Destroi AF, HL e IX
 ;------------------------------------------------
-calculaCIDoffset:
+getCIDaddr:
 	ld	hl, WRKAREA.BCID1
 	ld	a, (WRKAREA.NUMSD)
 	dec	a
@@ -948,14 +953,14 @@ calculaCIDoffset:
 	ld	hl, WRKAREA.BCID2
 .c1:
 	push	hl		
-	pop	ix		; vamos colocar HL em IX
+	pop	ix		; IX = HL
 	ret
 
 ;------------------------------------------------
 ; Calcula offset do buffer na RAM para os dados
 ; do total de blocos dependendo do cartao atual
 ; Offset fica em HL e IX
-; Destroi AF, DE, HL e IX
+; Destroi AF, HL e IX
 ;------------------------------------------------
 calculaBLOCOSoffset:
 	ld	hl, WRKAREA.BLOCKS1
@@ -994,7 +999,7 @@ detectCard:
 	ld		a, CMD9							; ler CSD
 	call	lerBlocoCxD
 	ret	c
-	call	calculaCIDoffset				; calculamos em IX e HL a posicao correta do offset CID dependendo do cartao atual
+	call	getCIDaddr						; calculamos em IX e HL a posicao correta do offset CID dependendo do cartao atual
 	ld		a, CMD10						; ler CID
 	call	lerBlocoCxD
 	ret	c
@@ -1841,7 +1846,7 @@ strCopyright:
 	; fall throw
 strCrLf:
 	db	13,10,0
-strCartao:
+strSDSlot:
 	db	"Slot ",0
 strVazio:
 	db	"Empty",13,10,0

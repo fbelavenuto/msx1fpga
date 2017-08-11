@@ -83,7 +83,7 @@ begin
 	rom_page_o <= rom_page_s;
 
 	ram_wr_s	<= '1' when sltsl_n_i = '0' and wr_n_i = '0' and rom_page_s = "111" and
-								addr_i(15 downto 13) = "0111" 												else
+								addr_i >= X"7000" and addr_i <= X"7FD0"									else
 					'0';
 
 	rom_cs_o <=	'0' when enable_i = '0'																		else

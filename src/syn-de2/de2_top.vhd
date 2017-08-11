@@ -413,6 +413,8 @@ begin
 		spi_sclk_o		=> sd_sclk_o,
 		spi_mosi_o		=> sd_mosi_o,
 		spi_miso_i		=> sd_miso_i,
+		sd_pres_n_i		=> '0',
+		sd_wp_i			=> '0',
 		-- DEBUG
 		D_wait_o			=> open,
 		D_slots_o		=> open,

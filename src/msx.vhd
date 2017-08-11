@@ -154,7 +154,7 @@ entity msx is
 		spi_mosi_o		: out std_logic;
 		spi_miso_i		: in  std_logic								:= '0';
 		sd_pres_n_i		: in  std_logic								:= '0';
-		sd_wp_n_i		: in  std_logic								:= '1';
+		sd_wp_i			: in  std_logic								:= '0';
 		-- DEBUG
 		D_wait_o			: out std_logic;
 		D_slots_o		: out std_logic_vector( 7 downto 0);
@@ -483,7 +483,7 @@ begin
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,
 		spi_miso_i		=> spi_miso_i,
-		sd_wp_n_i		=> sd_wp_n_i,
+		sd_wp_i			=> sd_wp_i,
 		sd_pres_n_i		=> sd_pres_n_i
 	);
 

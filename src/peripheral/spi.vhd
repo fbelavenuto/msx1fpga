@@ -39,8 +39,8 @@
 -------------------------------------------------------------------------------
 ---
 ---   SPI ports:
----	0 - Card /CS
----	1 - SPI interface
+---	0 - Control
+---	1 - Data
 ---
 
 library ieee;
@@ -63,7 +63,7 @@ entity spi is
 		spi_sclk_o		: out   std_logic;
 		spi_mosi_o		: out   std_logic;
 		spi_miso_i		: in    std_logic;
-		sd_wp_n_i		: in    std_logic;
+		sd_wp_i			: in    std_logic;
 		sd_pres_n_i		: in    std_logic
 	);
 end entity;
@@ -95,7 +95,7 @@ begin
 					port1_r	when spi_ctrl_rd_s = '1'										else
 					(others => '1');
 
-	port0_r	<= "00000" & sd_wp_n_i & sd_pres_n_i & sd_chg_s;
+	port0_r	<= "00000" & sd_wp_i & sd_pres_n_i & sd_chg_s;
 
 	-- Disk change
 	process (reset_i, spi_ctrl_rd_s, sd_pres_n_i)
