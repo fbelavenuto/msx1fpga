@@ -86,13 +86,13 @@ begin
 
 	enable_s <= '1'	when cs_i = '1' and (wr_i = '1' or rd_i = '1')	else '0';
 
-	spi_ctrl_rd_s	<= '1' when enable_s = '1' and addr_i = '1' and rd_i = '1'	else '0';
+	spi_ctrl_rd_s	<= '1' when enable_s = '1' and addr_i = '0' and rd_i = '1'	else '0';
 
 	-- Port reading
 	has_data_o	<= '1'	when enable_s = '1' and rd_i = '1'  else	
 						'0';
-	data_o <=	port0_r	when enable_s = '1' and addr_i = '0' and rd_i = '1'	else
-					port1_r	when spi_ctrl_rd_s = '1'										else
+	data_o <=	port0_r	when spi_ctrl_rd_s = '1'										else
+					port1_r	when enable_s = '1' and addr_i = '1' and rd_i = '1'	else
 					(others => '1');
 
 	port0_r	<= "00000" & sd_wp_i & sd_pres_n_i & sd_chg_s;

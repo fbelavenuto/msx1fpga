@@ -216,11 +216,11 @@ int fat_init()
 	if (!MMC_Read(sector, data_buffer)) {
 		return FALSE;
 	}
-
+/*
 	if ((data_buffer[0x1FE] != 0x55) || (data_buffer[0x1FF] != 0xAA)) {
 		return FALSE;
 	}
-
+*/
 	if ((data_buffer[0x0B] != 0) || (data_buffer[0x0C] != 2)) {
 		return FALSE;
 	}

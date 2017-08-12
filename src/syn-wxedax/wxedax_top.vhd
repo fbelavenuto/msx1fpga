@@ -100,7 +100,7 @@ entity wxedax_top is
 		sd_mosi_o				: out   std_logic									:= '0';
 		sd_miso_i				: in    std_logic;
 		sd_pres_n_i				: in    std_logic;
-		sd_wp_n_i				: in    std_logic;
+		sd_wp_i					: in    std_logic;
 		-- Joystick SNES
 		pad_clk_o				: out   std_logic									:= '0';
 		pad_latch_o				: out   std_logic									:= '0';
@@ -346,7 +346,7 @@ begin
 		spi_mosi_o		=> spi_mosi_s,
 		spi_miso_i		=> spi_miso_s,
 		sd_pres_n_i		=> sd_pres_n_i,
-		sd_wp_n_i		=> sd_wp_n_i,
+		sd_wp_i			=> sd_wp_i,
 		-- DEBUG
 		D_wait_o			=> open,
 		D_slots_o		=> open,

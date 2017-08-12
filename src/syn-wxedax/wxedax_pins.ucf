@@ -110,7 +110,7 @@ NET "sd_sclk_o"         LOC="P78"  | IOSTANDARD = LVCMOS33;
 NET "sd_mosi_o"         LOC="P80"  | IOSTANDARD = LVCMOS33;
 NET "sd_miso_i"         LOC="P74"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "sd_pres_n_i"       LOC="P81"  | IOSTANDARD = LVCMOS33 | PULLUP;
-NET "sd_wp_n_i"         LOC="P82"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "sd_wp_i"           LOC="P82"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # SNES joypad
 NET "pad_clk_o"			LOC="P85"  | IOSTANDARD = LVCMOS33;

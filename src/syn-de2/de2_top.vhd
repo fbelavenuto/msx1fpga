@@ -76,7 +76,7 @@ entity de2_top is
 		ledg_o			: out   std_logic_vector( 8 downto 0)		:= (others => '0');
 		-- Serial
 		uart_rx_i		: in    std_logic;
-		uart_tx_o		: out   std_logic									:= '0';
+		uart_tx_o		: out   std_logic									:= '1';
 		-- IRDA
 		irda_rx_i		: in    std_logic;
 		irda_tx_o		: out   std_logic									:= '0';
@@ -253,6 +253,9 @@ architecture behavior of de2_top is
 	alias J1_BTN				: std_logic						is gpio1_io(25);
 	alias J1_BTN2				: std_logic						is gpio1_io(21);
 
+	-- SD
+	signal sd_cs_n_s			: std_logic;
+
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
 	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
@@ -409,7 +412,7 @@ begin
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		flspi_cs_n_o	=> open,
-		spi_cs_n_o		=> sd_cs_n_o,
+		spi_cs_n_o		=> sd_cs_n_s,
 		spi_sclk_o		=> sd_sclk_o,
 		spi_mosi_o		=> sd_mosi_o,
 		spi_miso_i		=> sd_miso_i,
@@ -536,6 +539,9 @@ begin
 		end if;
 	end process;
 
+	-- SD
+	sd_cs_n_o <= sd_cs_n_s;
+
 	-- VGA Output
 	vga_r_o			<= rgb_r_s & "000000";
 	vga_g_o			<= rgb_g_s & "000000";
@@ -579,11 +585,11 @@ begin
 	-- DEBUG
 	D_display_s	<= bus_addr_s;
 
-	ledg_o(0) <= turbo_on_s;
-	ledg_o(1) <= vga_en_s;
-	ledg_o(2) <= ntsc_pal_s;
-	ledg_o(7) <= not jt51_cs_n_s;
---	ledg_o(8) <= reset_s;
+	ledg_o(7) <= turbo_on_s;
+	ledg_o(6) <= vga_en_s;
+	ledg_o(5) <= ntsc_pal_s;
+	ledg_o(4) <= not jt51_cs_n_s;
+	ledg_o(0) <= not sd_cs_n_s;
 
 	ledr_o(15 downto 0) <= std_logic_vector(jt51_left_s);
 

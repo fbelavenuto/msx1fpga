@@ -18,7 +18,7 @@
 ; Technical info:
 ; I/O port 0x9E: Interface status and card select register (read/write)
 ;	<read>
-;	b0	: 0=SD disk change status
+;	b0	: 1=SD disk was changed
 ;	b1	: 0=SD card present
 ;	b2	: 1=Write protecton enabled for SD card
 ;	b3-7: Reserved for future use. Must be masked out from readings.
@@ -334,7 +334,7 @@ DRV_TIMI:
 ;     get two allocated drives.)
 
 DRV_INIT:
-	or		a							; Is this the 1st call? 
+	or		a							; Is this the 1st call?
 	jp nz,	.call2
 ; 1st call:
 	ld		hl, 0
@@ -342,10 +342,10 @@ DRV_INIT:
 	ret
 
 .call2:
-; 2nd call: 
+; 2nd call:
 	call	MYSETSCR					; Set the screen mode
 
-	ld		de,strTitle					; prints the title 
+	ld		de,strTitle					; prints the title
 	call	printString
 
 	xor		a							; Initialize SD card flags
@@ -524,15 +524,15 @@ DEV_RW:
 	ret
 .ok:
 	ld		a, b
-	ld		(WRKAREA.NUMBLOCKS), a		; save the number of blocks to transfer 
+	ld		(WRKAREA.NUMBLOCKS), a		; save the number of blocks to transfer
 	exx
-	call	getCIDaddr	; ix=CID offset 
+	call	getCIDaddr	; ix=CID offset
 	ld	a, (ix+15)	; verificar se eh SDV1 ou SDV2
 	ld	ixl, a		; ixl=SDcard version
 	exx			; hl=Source/dest Address, de=Pointer to sect#
 	ld	ixh, b 		; ixh=Number of blocks to transfer
-	pop	af		; a=Device number, f=read/write flag 
-	jr	c,escrita	; Skip if it's a write operation 
+	pop	af		; a=Device number, f=read/write flag
+	jr	c,escrita	; Skip if it's a write operation
 leitura:
 	ld	a, (de)		; 1. n. bloco
 	push	af
@@ -769,25 +769,39 @@ DEV_STATUS:
 	jr nc,	.saicomerro
 	dec		b							; 1 logical unit somente
 	jr nz,	.saicomerro
-	ld	(WRKAREA.NUMSD),a	; salva numero do device atual (1 ou 2)
-	in	a, (PORTCTL)	; testar se cartao esta inserido
-	and	$02
-	jr	nz,.cartaoAusente	; se slot do cartao estiver vazio, marcamos o erro nas flags
-	;***FixMe: Disk change detection doesn't work
-	; Will have to check both the hardware disk-change and the software
-	; disk-change reported by LUN_NFO
+	ld		(WRKAREA.NUMSD),a			; salva numero do device atual (1 ou 2)
+	ld		c, a
+	in		a, (PORTCTL)				; destructive read
+	ld		b, a
+	and		$02							; testar se cartao esta inserido
+	jr nz,	.cartaoAusente				; se slot do cartao estiver vazio, marcamos o erro nas flags
+	ld		a, b
+	and		$01
+	jr nz,	.changed
+	ld		a, (WRKAREA.CARDFLAGS)
+	and		c
+	jr z,	.semMudanca					; cartao nao marcado com erro, pula
 	call	detectCard
-	jr	c,.cartaoComErro	; nao conseguimos detectar, sai com erro
-
+	jr c,	.cartaoComErro				; nao conseguimos detectar, sai com erro
 .semMudanca:
-	ld	a, 1		; informa ao Nextor que cartao esta OK e nao mudou
-	ret
-.comMudanca:
-	ld	a, 2		; informa ao Nextor que cartao esta OK e mudou
+	ld	a, 1							; informa ao Nextor que cartao esta OK e nao mudou
+	jr .ok
+.changed:
+	push	bc
+	call	detectCard
+	pop		bc
+	jr c,	.cartaoComErro				; nao conseguimos detectar, sai com erro
+	ld	a, 2							; informa ao Nextor que cartao esta OK e mudou
+.ok:
+	ex		af, af'
+	ld		a, (WRKAREA.CARDFLAGS)
+	and		c							; limpa bit
+	ld		(WRKAREA.CARDFLAGS), a
+	ex		af, af'
 	ret
 .cartaoComErro:
 .cartaoAusente:
-	call	marcaErroCartao	; marcar erro do cartao nas flags
+	call	marcaErroCartao				; marcar erro do cartao nas flags
 .saicomerro:
 	ld	a, 0		; informa erro
 	ret
@@ -837,11 +851,7 @@ LUN_INFO:
 	ld		a, 1						; informar erro
 	ret
 .ok:
-	exx	
-	; ***FixMe: Will have to check disk-change, and daisy chain this as a
-	; software flag so DEV_STATUS can also be notified
-	call	detectCard	; erro na deteccao do cartao, tentar re-detectar
-	jr	c,.saicomerro
+	exx
 	call	calculaBLOCOSoffset	; calcular em IX e HL o offset correto do buffer que armazena total de blocos
 	exx			; do cartao dependendo do cartao atual solicitado
 	xor	a
@@ -862,7 +872,7 @@ LUN_INFO:
 	inc	hl
 	ld	(hl),0		; The highest byte must be set to 0, as SDcards
 				; have 24bit total block numbers, and Nextor
-				; requires 32bits. 
+				; requires 32bits.
 	inc	hl
 	ld	(hl),1		; flags: dispositivo R/W removivel
 	inc	hl
@@ -887,25 +897,41 @@ LUN_INFO:
 ; Testa se cartao esta inserido e/ou houve erro
 ; na ultima vez que foi acessado. Carry indica
 ; erro
-; Destroi AF, C
+; Destroi AF
 ;------------------------------------------------
 testaCartao:
-	ld	(WRKAREA.NUMSD), a	; salva numero do device atual (1 ou 2)
-	ld	c, a
-	in	a, (PORTCTL)	; testar se cartao esta inserido
-	and	$02
-	jr	nz,.saicomerro				
-	ld	a, c						; conseguimos detectar, tira erro nas flags
-	cpl			; inverte bits para fazer o AND
-	ld	c, a
-	ld	a, (WRKAREA.CARDFLAGS)
-	and	c			; limpa bit
-	ld	(WRKAREA.CARDFLAGS), a
+	push	bc
+	ld		(WRKAREA.NUMSD), a			; salva numero do device atual (1 ou 2)
+	ld		c, a
+	ld		a, (WRKAREA.CARDFLAGS)
+	and		c
+	jr nz,	.changed
+	in		a, (PORTCTL)				; destructive read
+	ld		b, a
+	and		$02
+	jr nz,	.saicomerro
+	ld		a, b
+	and		$01
+	jr nz,	.changed
+.ok:
+	ld		a, c						; no error
+	cpl									; inverte bits para fazer o AND
+	ld		c, a
+	ld		a, (WRKAREA.CARDFLAGS)
+	and		c							; limpa bit
+	ld		(WRKAREA.CARDFLAGS), a
+	pop		bc
 	ret
+.changed:
+	push	bc
+	call	detectCard					; Destroy C
+	pop		bc
+	jr nc,	.ok
 .saicomerro:
-	ld	a, (WRKAREA.CARDFLAGS)	; marca bit de erro nas flags
-	or	c
-	ld	(WRKAREA.CARDFLAGS), a
+	ld		a, (WRKAREA.CARDFLAGS)		; marca bit de erro nas flags
+	or		c
+	ld		(WRKAREA.CARDFLAGS), a
+	pop		bc
 	scf
 	ret
 
@@ -933,7 +959,7 @@ getCIDaddr:
 	jr	z,.c1
 	ld	hl, WRKAREA.BCID2
 .c1:
-	push	hl		
+	push	hl
 	pop	ix		; IX = HL
 	ret
 
@@ -950,7 +976,7 @@ calculaBLOCOSoffset:
 	jr	z,.c1
 	ld	hl, WRKAREA.BLOCKS2
 .c1:
-	push	hl		
+	push	hl
 	pop	ix		; Vamos colocar HL em IX
 	ret
 
@@ -975,8 +1001,7 @@ detectCard:
 	ret	c									; retorna se erro
 	call	testaSDCV2						; tenta inicializar um cartao SDV2
 	ret	c
-	push	iy								; colocar em HL buffer da RAM de trabalho
-	pop		hl								; CSD esta no offset 0, nao precisamos somar
+	ld		hl, WRKAREA.BCSD
 	ld		a, CMD9							; ler CSD
 	call	lerBlocoCxD
 	ret	c
@@ -1033,7 +1058,7 @@ detectCard:
 	ld		a, (hl)							; proximo byte
 	and		3								; 2 bits de C_SIZE_MUL
 	ld		b, a							; B contem os 2 bits de C_SIZE_MUL
-	inc		hl						
+	inc		hl
 	ld		a, (hl)							; proximo byte
 	and		$80								; 1 bit de C_SIZE_MUL
 	add		a, a							; rotaciona para esquerda jogando no carry
@@ -1131,7 +1156,7 @@ testaSDCV2:
 	jr c,	.pula						; cartao recusou CMD8, enviar comando CMD1
 	ld		hl, SD_SEND_ACMD41			; cartao aceitou CMD8, enviar comando ACMD41
 .pula:
-	ld		bc, 20		; B = 0, C = 20: 5120 tentativas
+	ld		bc, 120		; B = 0, C = 120: 30720 tentativas
 .loop:
 	push	bc
 	call	.jumpHL						; chamar rotina correta em HL
@@ -1166,13 +1191,12 @@ lerBlocoCxD:
 ; Destroi AF, B, DE
 ; ------------------------------------------------
 iniciaSD:
-	call	disableCards
-
+	ld		a, $FF
+	out		(PORTCTL), a				; disable SD card
 	ld		b, 10						; enviar 80 pulsos de clock com cartao desabilitado
-enviaClocksInicio:
-	ld		a, $FF						; manter MOSI em 1
+.loop:
 	out		(PORTDATA), a
-	djnz	enviaClocksInicio
+	djnz	.loop
 	call	enableSD					; ativar cartao atual
 	ld		b, 8						; 8 tentativas para CMD0
 SD_SEND_CMD0:
@@ -1273,7 +1297,7 @@ SD_SEND_CMD_2_ARGS_GET_R3:
 
 ; ------------------------------------------------
 ; Enviar comando em A com 4 bytes de parametros
-; em BC DE e enviar CRC correto se for CMD0 ou 
+; em BC DE e enviar CRC correto se for CMD0 ou
 ; CMD8 e aguardar processamento do cartao
 ; Output  : A=0 if there was no error
 ; Destroi AF, BC
@@ -1287,10 +1311,13 @@ SD_SEND_CMD:
 	ld		a, b
 	out		(PORTDATA), a
 	ld		a, c
+	nop
 	out		(PORTDATA), a
 	ld		a, d
+	nop
 	out		(PORTDATA), a
 	ld		a, e
+	nop
 	out		(PORTDATA), a
 	pop		af
 	cp		CMD0
@@ -1311,7 +1338,7 @@ enviaCRC:
 ; Destroi AF, BC
 ; ------------------------------------------------
 WAIT_RESP_NO_FF:
-	ld		bc, 1						; 256 tentativas
+	ld		bc, 100						; 25600 tentativas
 .loop:
 	in		a, (PORTDATA)
 	cp		$FF							; testa $FF
@@ -1360,7 +1387,7 @@ WAIT_RESP_NO_00:
 ; ------------------------------------------------
 enableSD:
 	in		a, (PORTDATA)				; dummy read
-	ld	a, (WRKAREA.NUMSD)
+	ld		a, (WRKAREA.NUMSD)
 	cpl
 	out		(PORTCTL), a
 	ret
@@ -1374,7 +1401,7 @@ enableSD:
 ; ------------------------------------------------
 GravarBloco:
 	dec	ixl		; SDcard V1?
-	call	m,blocoParaByte	; Yes, convert blocks to bytes 
+	call	m,blocoParaByte	; Yes, convert blocks to bytes
 	call	enableSD	; selecionar cartao atual
 	ld	a,ixh		; get Number of blocks to write
 	dec	a
@@ -1475,9 +1502,9 @@ terminaLeituraEscritaBloco:
 ; ------------------------------------------------
 LerBloco:
 	dec	ixl		; SDcard V1?
-	call	m,blocoParaByte	; Yes, convert blocks to bytes 
+	call	m,blocoParaByte	; Yes, convert blocks to bytes
 	call	enableSD
-	ld	a,ixh		; get Number of blocks to write
+	ld	a,ixh		; get Number of blocks to read
 	dec	a
 	jp	z,.umBloco	; somente um bloco, pular
 
@@ -1544,9 +1571,9 @@ blocoParaByte:
 	rl		b
 	ret
 
-; ========================================================================== 
+; ==========================================================================
 ; Funcoes utilitarias
-; ========================================================================== 
+; ==========================================================================
 
 ; ------------------------------------------------
 ; Imprime string na tela apontada por DE
@@ -1735,7 +1762,7 @@ MYSETSCR:
 INICHKSTOP:
 	ld	a,(INTFLG)
 	cp	4			; Was STOP pressed?
-	ret	nz			; No, quit as fast as possible 
+	ret	nz			; No, quit as fast as possible
 
 	; Handle STOP to pause and read messages, and ask for the copyright info
 	ld	de,strBootpaused
@@ -1777,7 +1804,7 @@ INICHKSTOP:
 	cp	'I'
 	ret	nz
 .showcopyright:
-	inc	b			; Inhibit further presses of the i key 
+	inc	b			; Inhibit further presses of the i key
 	ld	de,strCopyright
 	jp	printString
 
@@ -1853,13 +1880,13 @@ strSDV2:
 ; RAM area
 	org		$7000
 
-; Work area variables 
+; Work area variables
 WRKAREA.BCSD 		ds 16	; Card Specific Data
 WRKAREA.BCID1		ds 16	; Card-ID of card1
 WRKAREA.BCID2		ds 16	; Card-ID of card2
-WRKAREA.NUMSD		ds 1	; Currently selected card: 1 or 2 
-WRKAREA.CARDFLAGS	ds 1	; Flags that indicate card-change or card error 
-WRKAREA.NUMBLOCKS	ds 1	; Number of blocks in multi-block operations 
+WRKAREA.NUMSD		ds 1	; Currently selected card: 1 or 2
+WRKAREA.CARDFLAGS	ds 1	; Flags that indicate card-change or card error
+WRKAREA.NUMBLOCKS	ds 1	; Number of blocks in multi-block operations
 WRKAREA.BLOCKS1		ds 3	; 3 bytes. Size of card1, in blocks.
 WRKAREA.BLOCKS2		ds 3	; 3 bytes. Size of card2, in blocks.
 WRKAREA.TEMP		ds 1	; Temporary data
