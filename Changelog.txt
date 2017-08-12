@@ -6,7 +6,7 @@
 	- ESCCI (Megaram SCC from OCM) is now allocated in slot 2 (Partial support to MGLCOM.COM software)
 	- Fixed M1 Wait generator
 	- Fixed color index 2 in palette
-	- New Loader with new FAT driver (from SMS papilio), saving some space in code.
+	- New Loader with new FAT driver (from SMS papilio), saving some space in the code.
 	- New loader configured to FAT16 partitions only (ID 0x0E is not supported anymore)
 	- Implemented Keymap reconfiguration by SWIOPORTS
 	- Implemented V99x8 NTSC/PAL register #9 bit 1
@@ -15,3 +15,15 @@
 	- Added 7MHz turbo (F11 key toggle)
 	- Fixed French keymap
 	- Implemented Scanlines: In CONFIG.TXT and 'Scroll-lock' key toggles.
+
+1.2:
+	- Added JT51 core (OPM YM2151 clone), thanks to Jose Tejada (jotego)
+	- New SD interface, with RAM and disk change
+	- New Nextor driver with disk change support and optimizations
+	- Fixed VDP wait generator, now turbo works fine
+	- Renamed signals in the DE1 and DE2 top modules
+	- Added new sigma-delta DAC that accepts signed signals and fixed the mixer levels
+	- Implemented RAM size configurable (512K, 2M ou 8M bytes)
+	- Added support to update flash by the MSX itself (WXEDAX board)
+	- Added SNES controller (WXEDAX board)
+

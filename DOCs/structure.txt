@@ -1,6 +1,7 @@
 
 I/O map (in hex):
 
+20-21		JT51 OPM clone (configurable)
 40-4F		Switched I/O ports
 90-91		Printer
 98-9A		VDP TMS9918 (with extensions)
