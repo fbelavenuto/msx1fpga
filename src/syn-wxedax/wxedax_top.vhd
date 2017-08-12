@@ -50,7 +50,7 @@ entity wxedax_top is
 	port (
 		-- Clock (48MHz)
 		clock_48M_i				: in    std_logic;
-		-- SDRAM (W9864G6JH = 4Mx16 = 8MB)
+		-- SDRAM (W9864G6JH-6 = 4Mx16 = 8MB)
 		sdram_clock_o			: out   std_logic									:= '0';
 		sdram_cke_o    	  	: out   std_logic									:= '0';
 		sdram_addr_o			: out   std_logic_vector(11 downto 0)		:= (others => '0');

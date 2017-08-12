@@ -348,9 +348,6 @@ DRV_INIT:
 	ld		de,strTitle					; prints the title
 	call	printString
 
-	xor		a							; Initialize SD card flags
-	ld		(WRKAREA.CARDFLAGS), a
-
 	ld		a, 1						; Detect SD card #1 (only 1 SD for now)
 	call	.detect
 	ld		bc, 0
@@ -378,17 +375,15 @@ DRV_INIT:
 	jr z,	.naoVazio
 	ld		de, strVazio				; nop
 	call	printString
-	jp		.marcaErro
+	ret
 .naoVazio:
 	call	detectCard					; Yep, initialize it and detect it
 	jr nc,	.detectou
 	call	disableCards
 	ld		de, strNaoIdentificado
-	call	printString
-.marcaErro:
-	jp		marcaErroCartao				; slot vazio ou erro de deteccao, marcar nas flags
+	jp		printString
 .detectou:
-	call	getCIDaddr			; calculamos em IX a posicao correta do offset CID dependendo do cartao atual
+	call	getCIDaddr					; calculamos em IX a posicao correta do offset CID dependendo do cartao atual
 	ld		a, (ix+15)					; pegar byte SDV1 ou SDV2
 	ld		de, strSDV1					; e imprimir
 	or		a
@@ -407,10 +402,9 @@ DRV_INIT:
 	ld		a, (ix)						; pegar byte do fabricante
 	call	pegaFabricante				; achar nome do fabricante
 	ex		de, hl
-	call	printString	; e imprimir
+	call	printString					; e imprimir
 	ld		de, strCrLf
-	call	printString
-	ret
+	jp		printString
 
 
 ;-----------------------------------------------------------------------------
@@ -508,16 +502,10 @@ DRV_DIRECT4:
 DEV_RW:
 	push	af
 	cp		a, 2						; somente 1 dispositivo
-	jr nc,	.saicomerroidl
+	jr nc,	.error
 	dec		c							; somente 1 logical unit
-	jr nz,	.saicomerroidl
-	call	testaCartao					; verificar se cartao esta OK
-	jr nc,	.ok
-	pop		af							; retira AF guardado no inicio
-	ld		a, ENRDY					; Not ready
-	ld		b, 0
-	ret
-.saicomerroidl:
+	jr z,	.ok
+.error:
 	pop		af							; retira AF guardado no inicio
 	ld		a, EIDEVL					; informar erro
 	ld		b, 0
@@ -552,19 +540,18 @@ leitura:
 	ld	e, a		; BC DE = 32 bits numero do bloco
 	call	LerBloco	; chamar rotina de leitura de dados
 	jr	nc,.ok
-	call	marcaErroCartao		; ocorreu erro na leitura, marcar erro
 	ld	a,(WRKAREA.NUMBLOCKS) ; Get the number of requested blocks
 	sub	ixh		; subtract the number of remaining blocks
 	ld	b,a		; b=number of blocks read
-;	ld	a, ENRDY	; Not ready
-	ld	a, EDISK	; General unknown disk error
+	ld	a, ENRDY	; Not ready
+;	ld	a, EDISK	; General unknown disk error
 .ok:
 	xor	a		; tudo OK, informar ao Nextor
 	ret
 
 escrita:
 	; Test if the card is write protected
-	in	a,(PORTCTL)	; testar se cartao esta protegido
+	in	a,(PORTCTL)	; destructive read
 	and	$4
 	jr	z,.ok
 	ld	a, EWPROT	; disco protegido
@@ -589,7 +576,6 @@ escrita:
 	ld	e, a		; BC DE = 32 bits numero do bloco
 	call	GravarBloco	; chamar rotina de gravacao de dados
 	jr	nc,.ok2
-	call	marcaErroCartao		; ocorreu erro, marcar nas flags
 	ld	a,(WRKAREA.NUMBLOCKS) ; Get the number of requested blocks
 	sub	ixh		; subtract the number of remaining blocks
 	ld	b,a		; b=number of blocks written
@@ -638,10 +624,7 @@ escrita:
 DEV_INFO:
 	inc		b
 	cp		a, 2						; somente 1 dispositivo
-	jr nc,	.saicomerro
-	call	testaCartao					; verificar se cartao esta OK
-	jr nc,	.ok							; nao houve erro
-.saicomerro:
+	jr c,	.ok
 	ld		a, 1						; informar erro
 	ret
 .ok:
@@ -765,45 +748,30 @@ DEV_INFO:
 ; DEV_STATUS itself. Please read the Driver Developer Guide for more info.
 
 DEV_STATUS:
-	cp		a, 2						; 1 dispositivo somente
-	jr nc,	.saicomerro
-	dec		b							; 1 logical unit somente
-	jr nz,	.saicomerro
-	ld		(WRKAREA.NUMSD),a			; salva numero do device atual (1 ou 2)
+	cp		a, 2						; only 1 device
+	jr nc,	.error
+	dec		b							; only 1 logical unit
+	jr nz,	.error
+	ld		(WRKAREA.NUMSD),a
 	ld		c, a
 	in		a, (PORTCTL)				; destructive read
 	ld		b, a
-	and		$02							; testar se cartao esta inserido
-	jr nz,	.cartaoAusente				; se slot do cartao estiver vazio, marcamos o erro nas flags
+	and		$02							; SD card present?
+	jr nz,	.error						; no
 	ld		a, b
-	and		$01
-	jr nz,	.changed
-	ld		a, (WRKAREA.CARDFLAGS)
-	and		c
-	jr z,	.semMudanca					; cartao nao marcado com erro, pula
-	call	detectCard
-	jr c,	.cartaoComErro				; nao conseguimos detectar, sai com erro
-.semMudanca:
-	ld	a, 1							; informa ao Nextor que cartao esta OK e nao mudou
-	jr .ok
+	and		$01							; changed?
+	jr nz,	.changed					; yes
+	ld		a, 1						; SD card is ok and has not changed
+	ret
 .changed:
 	push	bc
-	call	detectCard
+	call	detectCard					; Re-detect
 	pop		bc
-	jr c,	.cartaoComErro				; nao conseguimos detectar, sai com erro
-	ld	a, 2							; informa ao Nextor que cartao esta OK e mudou
-.ok:
-	ex		af, af'
-	ld		a, (WRKAREA.CARDFLAGS)
-	and		c							; limpa bit
-	ld		(WRKAREA.CARDFLAGS), a
-	ex		af, af'
+	jr c,	.error
+	ld		a, 2						; SD card is ok and has changed
 	ret
-.cartaoComErro:
-.cartaoAusente:
-	call	marcaErroCartao				; marcar erro do cartao nas flags
-.saicomerro:
-	ld	a, 0		; informa erro
+.error:
+	ld		a, 0						; informa erro
 	ret
 
 ;-----------------------------------------------------------------------------
@@ -844,9 +812,7 @@ LUN_INFO:
 	cp		a, 2						; somente 1 dispositivo
 	jr nc,	.saicomerro
 	dec		b							; somente 1 logical unit
-	jr nz,	.saicomerro
-	call	testaCartao
-	jr nc,	.ok							; nao tem erro com o cartao
+	jr z,	.ok
 .saicomerro:
 	ld		a, 1						; informar erro
 	ret
@@ -892,60 +858,6 @@ LUN_INFO:
 ;------------------------------------------------
 ; Rotinas auxiliares
 ;------------------------------------------------
-
-;------------------------------------------------
-; Testa se cartao esta inserido e/ou houve erro
-; na ultima vez que foi acessado. Carry indica
-; erro
-; Destroi AF
-;------------------------------------------------
-testaCartao:
-	push	bc
-	ld		(WRKAREA.NUMSD), a			; salva numero do device atual (1 ou 2)
-	ld		c, a
-	ld		a, (WRKAREA.CARDFLAGS)
-	and		c
-	jr nz,	.changed
-	in		a, (PORTCTL)				; destructive read
-	ld		b, a
-	and		$02
-	jr nz,	.saicomerro
-	ld		a, b
-	and		$01
-	jr nz,	.changed
-.ok:
-	ld		a, c						; no error
-	cpl									; inverte bits para fazer o AND
-	ld		c, a
-	ld		a, (WRKAREA.CARDFLAGS)
-	and		c							; limpa bit
-	ld		(WRKAREA.CARDFLAGS), a
-	pop		bc
-	ret
-.changed:
-	push	bc
-	call	detectCard					; Destroy C
-	pop		bc
-	jr nc,	.ok
-.saicomerro:
-	ld		a, (WRKAREA.CARDFLAGS)		; marca bit de erro nas flags
-	or		c
-	ld		(WRKAREA.CARDFLAGS), a
-	pop		bc
-	scf
-	ret
-
-;------------------------------------------------
-; Marcar bit de erro nas flags
-; Destroi AF, C
-;------------------------------------------------
-marcaErroCartao:
-	ld	a, (WRKAREA.NUMSD)		; cartao atual (1 ou 2)
-	ld	c, a
-	ld	a, (WRKAREA.CARDFLAGS)	; marcar erro
-	or	c
-	ld	(WRKAREA.CARDFLAGS), a
-	ret
 
 ;------------------------------------------------
 ; Calcula offset do buffer na RAM em HL e IX para
@@ -1885,7 +1797,6 @@ WRKAREA.BCSD 		ds 16	; Card Specific Data
 WRKAREA.BCID1		ds 16	; Card-ID of card1
 WRKAREA.BCID2		ds 16	; Card-ID of card2
 WRKAREA.NUMSD		ds 1	; Currently selected card: 1 or 2
-WRKAREA.CARDFLAGS	ds 1	; Flags that indicate card-change or card error
 WRKAREA.NUMBLOCKS	ds 1	; Number of blocks in multi-block operations
 WRKAREA.BLOCKS1		ds 3	; 3 bytes. Size of card1, in blocks.
 WRKAREA.BLOCKS2		ds 3	; 3 bytes. Size of card2, in blocks.
