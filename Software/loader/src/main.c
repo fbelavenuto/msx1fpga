@@ -158,6 +158,12 @@ void main()
 	putdec8(hwversion & 0x0F);
 	vdp_putstring("\n\n");
 
+	if (!MMC_IsPresent()) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("No SD card in the slot!");
+	}
+
 	vdp_putstring("Initializing SD Card: ");
 
 	if (!MMC_Init()) {

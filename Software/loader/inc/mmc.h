@@ -102,6 +102,7 @@ __sfr __at 0x9F SPI_DATA;
 #define     CMD62       0x7e        /*--*/
 #define     CMD63       0x7f        /*--*/
 
+unsigned char MMC_IsPresent();
 unsigned char MMC_Init(void);
 unsigned char MMC_Read(unsigned long lba, unsigned char *pReadBuffer);
 

@@ -16,6 +16,16 @@
 ;You should have received a copy of the GNU General Public License
 ;along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;
+; Technical info:
+; I/O port 0x9E: Interface status and card select register (read/write)
+;	<read>
+;	b0	: 1=SD disk was changed
+;	b1	: 0=SD card present
+;	b2	: 1=Write protecton enabled for SD card
+;	b3-7: Reserved for future use. Must be masked out from readings.
+;	<write>
+;	b0	: SD card chip-select (0=selected)
+; I/O port 0x9F: SPI data transfer (read/write)
 
 	.module mmc
 	.optsdcc -mz80
@@ -48,11 +58,26 @@ ACMD41	= 41 | 0x40
 
 
 ; ------------------------------------------------
+; unsigned char MMC_IsPresent();
+;
+_MMC_IsPresent::
+	in		a, (SPI_CTRL)
+	ld		l, #1
+	and		#0x02						; Is there an SD Card in the slot?
+	jr z,	.ispresent
+	ld		l, #0
+.ispresent:
+	ret
+
+; ------------------------------------------------
 ; Algoritmo para inicializar um cartao SD
 ; ------------------------------------------------
 ; unsigned char MMC_Init();
 ;
 _MMC_Init::
+	in		a, (SPI_CTRL)
+	and		#0x02						; Is there an SD Card in the slot?
+	jr nz,	deuerroi
 	ld		a, #0xFF
 	out		(SPI_CTRL), a				; desabilita SD
 	ld		b, #10						; enviar 80 pulsos de clock com cartao desabilitado
