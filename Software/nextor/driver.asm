@@ -1,6 +1,6 @@
 ; MSX1 FPGA project
 ;
-;Copyright (c) 2016 Fabio Belavenuto
+;Copyright (c) 2017 FBLabs and FRS
 ;
 ;This program is free software: you can redistribute it and/or modify
 ;it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@
 
 	output	"driver.bin"
 
+; Uses HW (1) or SW (0) disk-change:
+HWDS = 1
 
 ;-----------------------------------------------------------------------------
 ;
@@ -336,8 +338,8 @@ DRV_INIT:
 	or		a							; Is this the 1st call?
 	jp nz,	.call2
 ; 1st call:
-	ld		hl, 0
-	or		a		; Clear Cy
+	ld		hl, 0						; No RAM needed
+	or		a							; Clear Cy
 	ret
 
 .call2:
@@ -346,6 +348,11 @@ DRV_INIT:
 
 	ld		de,strTitle					; prints the title
 	call	printString
+
+ IF HWDS = 0
+	xor		a
+	ld		(WRKAREA.FLAGS), a
+ ENDIF
 
 	ld		a, 1						; Detect SD card #1 (only 1 SD for now)
 	call	.detect
@@ -510,6 +517,10 @@ DEV_RW:
 	ld		b, 0
 	ret
 .ok:
+ IF HWDS = 0
+	call	checkSWDS
+	jr c,	.error
+ ENDIF
 	ld		a, b
 	ld		(WRKAREA.NUMBLOCKS), a		; save the number of blocks to transfer
 	exx
@@ -618,9 +629,14 @@ DEV_INFO:
 	inc		b
 	cp		a, 2						; only 1 device
 	jr c,	.ok
+.error:
 	ld		a, 1						; error
 	ret
 .ok:
+ IF HWDS = 0
+	call	checkSWDS
+	jr c,	.error
+ ENDIF
 	djnz	.noBasic
 
 ; Basic information:
@@ -746,7 +762,17 @@ DEV_STATUS:
 	dec		b							; only 1 logical unit
 	jr nz,	.error
 	ld		(WRKAREA.NUMSD),a
-	ld		c, a
+ IF HWDS = 0
+	ld		a, (WRKAREA.FLAGS)
+	and		1
+	jr z,	.nochange
+	call	detectCard					; try redetect
+	jr c,	.withError
+	ld		a, (WRKAREA.FLAGS)
+	and		$FE
+	ld		(WRKAREA.FLAGS), a
+	jr		.changed
+ ELSE
 	in		a, (PORTCTL)				; destructive read
 	ld		b, a
 	and		$02							; SD card present?
@@ -754,17 +780,25 @@ DEV_STATUS:
 	ld		a, b
 	and		$01							; changed?
 	jr nz,	.changed					; yes
+ ENDIF
+
+.nochange:
 	ld		a, 1						; SD card is ok and has not changed
 	ret
 .changed:
-	push	bc
-	call	detectCard					; Re-detect
-	pop		bc
+	call	detectCard					; Try redetect
 	jr c,	.error
+.changed2:
 	ld		a, 2						; SD card is ok and has changed
 	ret
+
+ IF HWDS = 0
+.withError:
+	call	marcaErroCartao				; marcar erro do cartao nas flags
+ ENDIF
+
 .error:
-	ld		a, 0						; error
+	xor		a							; error
 	ret
 
 ;-----------------------------------------------------------------------------
@@ -803,13 +837,17 @@ DEV_STATUS:
 
 LUN_INFO:
 	cp		a, 2						; only 1 device
-	jr nc,	.saicomerro
+	jr nc,	.error
 	dec		b							; only 1 logical unit
 	jr z,	.ok
-.saicomerro:
+.error:
 	ld		a, 1						; error
 	ret
 .ok:
+ IF HWDS = 0
+	call	checkSWDS
+	jr c,	.error
+ ENDIF
 	exx
 	call	getBlockAddr				; IX=# blocks address
 	exx
@@ -850,6 +888,35 @@ LUN_INFO:
 ;------------------------------------------------
 ; Auxiliary routines
 ;------------------------------------------------
+
+ IF HWDS = 0
+;------------------------------------------------
+; Testa se cartao esta inserido e/ou houve erro
+; na ultima vez que foi acessado. Carry indica
+; erro
+; Destroys AF
+;------------------------------------------------
+checkSWDS:
+	ld		a, (WRKAREA.FLAGS)			; testar bit de erro do cartao nas flags
+	and		1
+	jr z,	.ok
+	scf									; indica erro
+	ret
+.ok:
+	xor		a							; Cy = 0 indicates no error
+	ret
+
+;------------------------------------------------
+; Marcar bit de erro nas flags
+; Destroi AF
+;------------------------------------------------
+marcaErroCartao:
+	ld		a, (WRKAREA.FLAGS)			; marcar erro
+	or		1
+	ld		(WRKAREA.FLAGS), a
+	ret
+
+ ENDIF
 
 ;------------------------------------------------
 ; Get correct CID address in the IX and HL
@@ -1785,6 +1852,9 @@ WRKAREA.BLOCKS1		ds 3	; 3 bytes. Size of card1, in blocks.
 WRKAREA.BLOCKS2		ds 3	; 3 bytes. Size of card2, in blocks.
 WRKAREA.TEMP		ds 1	; Temporary data
 
+ IF HWDS = 0
+WRKAREA.FLAGS		ds 1	; Flags for soft-diskchange
+ ENDIF
 
 ;-----------------------------------------------------------------------------
 ;

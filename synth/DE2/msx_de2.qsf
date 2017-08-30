@@ -400,9 +400,6 @@ set_location_assignment PIN_AD24 -to sd_miso_i
 set_location_assignment PIN_AC23 -to sd_cs_n_o
 set_location_assignment PIN_Y21 -to sd_mosi_o
 set_location_assignment PIN_AD25 -to sd_sclk_o
-set_location_assignment PIN_T17 -to sd_wp_i
-set_location_assignment PIN_P17 -to sd_dat1_io
-set_location_assignment PIN_R17 -to sd_dat2_io
 set_location_assignment PIN_D25 -to gpio0_io[0]
 set_location_assignment PIN_J22 -to gpio0_io[1]
 set_location_assignment PIN_E26 -to gpio0_io[2]
