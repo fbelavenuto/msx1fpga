@@ -161,8 +161,8 @@ architecture behavior of multicore_top is
 
 	-- Video
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);
-	signal rgb_hsync_n_s		: std_logic;
-	signal rgb_vsync_n_s		: std_logic;
+--	signal rgb_hsync_n_s		: std_logic;
+--	signal rgb_vsync_n_s		: std_logic;
 	signal cnt_hor_s			: std_logic_vector( 8 downto 0);
 	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_hsync_n_s		: std_logic;
@@ -197,7 +197,7 @@ architecture behavior of multicore_top is
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
-	signal bus_data_from_s	: std_logic_vector( 7 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
 	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
 	signal bus_rd_n_s			: std_logic;
 	signal bus_wr_n_s			: std_logic;
@@ -209,15 +209,21 @@ architecture behavior of multicore_top is
 
 begin
 
-	-- PLL
+	-- PLL1
 	pll: entity work.pll1
 	port map (
 		inclk0	=> clock_50_i,
 		c0			=> clock_master_s,		--  21.477
 		c1			=> clock_mem_s,			--  42.954
-		c2			=> clock_vga_s,			--  25.200
-		c3			=> clock_dvi_s,			-- 126.000
 		locked	=> pll_locked_s
+	);
+
+	-- PLL2
+	pll2: entity work.pll2
+	port map (
+		inclk0	=> clock_50_i,
+		c0			=> clock_vga_s,			--  25.200
+		c1			=> clock_dvi_s				-- 126.000
 	);
 
 	-- Clocks
@@ -306,7 +312,7 @@ begin
 		beep_o			=> beep_s,
 		-- K7
 		k7_motor_o		=> open,
-		k7_audio_o		=> open,
+		k7_audio_o		=> mic_o,
 		k7_audio_i		=> ear_i,
 		-- Joystick
 		joy1_up_i		=> joy1_up_i,
@@ -333,8 +339,8 @@ begin
 		rgb_r_o			=> rgb_col_s,
 		rgb_g_o			=> open,
 		rgb_b_o			=> open,
-		hsync_n_o		=> rgb_hsync_n_s,
-		vsync_n_o		=> rgb_vsync_n_s,
+		hsync_n_o		=> open,--rgb_hsync_n_s,
+		vsync_n_o		=> open,--rgb_vsync_n_s,
 		ntsc_pal_o		=> open,
 		vga_on_k_i		=> '0',
 		scanline_on_k_i=> '0',
@@ -495,9 +501,9 @@ begin
 	process (clock_vga_s)
 		variable vga_col_v	: integer range 0 to 15;
 		variable vga_rgb_v	: std_logic_vector(15 downto 0);
-		variable vga_r_v		: std_logic_vector(3 downto 0);
-		variable vga_g_v		: std_logic_vector(3 downto 0);
-		variable vga_b_v		: std_logic_vector(3 downto 0);
+		variable vga_r_v		: std_logic_vector( 3 downto 0);
+		variable vga_g_v		: std_logic_vector( 3 downto 0);
+		variable vga_b_v		: std_logic_vector( 3 downto 0);
 		type ram_t is array (natural range 0 to 15) of std_logic_vector(15 downto 0);
 		constant rgb_c : ram_t := (
 				--      RB0G
