@@ -19,11 +19,10 @@
 1.2:
 	- Added JT51 core (OPM YM2151 clone), thanks to Jose Tejada (jotego)
 	- New SD interface, with RAM and disk change
-	- New Nextor driver with disk change support and optimizations
+	- New Nextor driver with disk change support and optimizations (two versions)
 	- Fixed VDP wait generator, now turbo works fine
 	- Renamed signals in the DE1 and DE2 top modules
 	- Added new sigma-delta DAC that accepts signed signals and fixed the mixer levels
 	- Implemented RAM size configurable (512K, 2M ou 8M bytes)
 	- Added support to update flash by the MSX itself (WXEDAX board)
 	- Added SNES controller (WXEDAX board)
-

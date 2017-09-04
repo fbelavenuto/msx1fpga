@@ -1,4 +1,4 @@
-10BN00
+11BN10
 ||||||
 |||||+-Scanlines: 1=Enabled, 0=Disabled
 ||||+--Turbo: 1=Initialize with turbo enabled

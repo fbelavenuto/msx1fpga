@@ -45,7 +45,7 @@ use ieee.std_logic_unsigned.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= false
+		hdmi_output_g		: boolean	:= true
 	);
 	port (
 		-- Clocks
