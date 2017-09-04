@@ -45,22 +45,22 @@ use ieee.std_logic_unsigned.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= true
+		hdmi_output_g		: boolean	:= false
 	);
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
 
 		-- Buttons
-		btn_n_i				: in    std_logic_vector(4 downto 1);
+		btn_n_i				: in    std_logic_vector( 4 downto 1);
 		btn_oe_n_i			: in    std_logic;
 		btn_clr_n_i			: in    std_logic;
 
 		-- SRAM (AS7C34096)
 		sram_addr_o			: out   std_logic_vector(18 downto 0)	:= (others => '0');
-		sram_data_io		: inout std_logic_vector(7 downto 0)	:= (others => 'Z');
+		sram_data_io		: inout std_logic_vector( 7 downto 0)	:= (others => 'Z');
 		sram_we_n_o			: out   std_logic								:= '1';
-		sram_ce_n_o			: out   std_logic_vector(1 downto 0)	:= (others => '1');
+		sram_ce_n_o			: out   std_logic_vector( 1 downto 0)	:= (others => '1');
 		sram_oe_n_o			: out   std_logic								:= '1';
 
 		-- PS2
@@ -98,14 +98,14 @@ entity multicore_top is
 		mic_o					: out   std_logic								:= '0';
 
 		-- VGA
-		vga_r_o				: out   std_logic_vector(2 downto 0)	:= (others => '0');
-		vga_g_o				: out   std_logic_vector(2 downto 0)	:= (others => '0');
-		vga_b_o				: out   std_logic_vector(2 downto 0)	:= (others => '0');
+		vga_r_o				: out   std_logic_vector( 2 downto 0)	:= (others => '0');
+		vga_g_o				: out   std_logic_vector( 2 downto 0)	:= (others => '0');
+		vga_b_o				: out   std_logic_vector( 2 downto 0)	:= (others => '0');
 		vga_hsync_n_o		: out   std_logic								:= '1';
 		vga_vsync_n_o		: out   std_logic								:= '1';
 
 		-- Debug
-		leds_n_o				: out   std_logic_vector(7 downto 0)	:= (others => '0')
+		leds_n_o				: out   std_logic_vector( 7 downto 0)	:= (others => '0')
 	);
 end entity;
 
@@ -138,23 +138,23 @@ architecture behavior of multicore_top is
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
-	signal ram_data_from_s	: std_logic_vector(7 downto 0);
-	signal ram_data_to_s		: std_logic_vector(7 downto 0);
+	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
+	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
 	signal ram_ce_s			: std_logic;
 	signal ram_oe_s			: std_logic;
 	signal ram_we_s			: std_logic;
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
-	signal vram_do_s			: std_logic_vector(7 downto 0);
-	signal vram_di_s			: std_logic_vector(7 downto 0);
+	signal vram_do_s			: std_logic_vector( 7 downto 0);
+	signal vram_di_s			: std_logic_vector( 7 downto 0);
 	signal vram_ce_s			: std_logic;
 	signal vram_oe_s			: std_logic;
 	signal vram_we_s			: std_logic;
 
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
-	signal audio_psg_s		: unsigned(7 downto 0);
+	signal audio_psg_s		: unsigned( 7 downto 0);
 	signal audio_l_s			: std_logic_vector(15 downto 0);
 	signal audio_r_s			: std_logic_vector(15 downto 0);
 	signal beep_s				: std_logic;
@@ -213,8 +213,8 @@ begin
 	pll: entity work.pll1
 	port map (
 		inclk0	=> clock_50_i,
-		c0			=> clock_master_s,		--  21.000
-		c1			=> clock_mem_s,			--  42.000
+		c0			=> clock_master_s,		--  21.477
+		c1			=> clock_mem_s,			--  42.954
 		c2			=> clock_vga_s,			--  25.200
 		c3			=> clock_dvi_s,			-- 126.000
 		locked	=> pll_locked_s
@@ -240,7 +240,8 @@ begin
 		hw_txt_g			=> "Multicore Board",
 		hw_version_g	=> X"12",
 		video_opt_g		=> 3,							-- No dblscan and external palette (Color in rgb_r_o)
-		ramsize_g		=> 512
+		ramsize_g		=> 512,
+		hw_hashwds_g	=> '0'
 	)
 	port map (
 		-- Clocks
@@ -386,10 +387,10 @@ begin
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
-		jt51_left_i		=> "1000000000000000",
-		jt51_right_i	=> "1000000000000000",
-		audio_mix_l_o		=> audio_l_s,
-		audio_mix_r_o		=> audio_r_s,
+		jt51_left_i		=> (others => '0'),
+		jt51_right_i	=> (others => '0'),
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s,
 		dacout_l_o		=> dac_l_o,
 		dacout_r_o		=> dac_r_o
 	);

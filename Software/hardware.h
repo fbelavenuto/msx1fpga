@@ -35,6 +35,7 @@ static const unsigned char mymkid = 40;
 #define REG_HWTXT		0x01
 #define REG_HWVER		0x02
 #define REG_HWMEMCFG	0x03
+#define REG_HWFLAGS		0x04
 #define REG_RESET		0x0A
 #define REG_KMLOWADDR	0x0D
 #define REG_KMHIGHADDR	0x0E

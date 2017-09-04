@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 static const char * msxdir   = "MSX1FPGA   ";
 static const char * cfgfile  = "CONFIG  TXT";
 static const char * nxtfile  = "NEXTOR  ROM";
+static const char * nxtfileh = "NEXTORH ROM";
 static const char * biosfile = "MSX1BIOSROM";
 
 static char *km_files[4] = {
@@ -112,7 +113,7 @@ void loadrom(unsigned int ps, unsigned int pe)
 /*******************************************************************************/
 void main()
 {
-	unsigned char hwid, hwversion, hwtxt[20], hwmemcfg;
+	unsigned char hwid, hwversion, hwtxt[20], hwmemcfg, hwds;
 	unsigned int pn_ram_start = 0, pn_ram_end = 0, pn_ram_ipl = 0;
 	unsigned int pn_mr2_start = 0, pn_mr2_end = 0;
 	unsigned int pn_rom = 0, pn_nextor = 0;
@@ -121,7 +122,7 @@ void main()
 //	unsigned char c;
 	unsigned int  k;
 	unsigned char cfgnxt, cfgvga, cfgkm, cfgcor, cfgturbo, cfgsln;
-	char *kmpfile = NULL;
+	char *kmpfile = NULL, *nxtfn = NULL;
 
 	// Init SWIO
 	SWIOP_MKID = mymkid;
@@ -146,6 +147,8 @@ void main()
 	hwversion = SWIOP_REGVAL;
 	SWIOP_REGNUM = REG_HWMEMCFG;
 	hwmemcfg = SWIOP_REGVAL;
+	SWIOP_REGNUM = REG_HWFLAGS;
+	hwds = SWIOP_REGVAL & 0x01;
 
 	vdp_gotoxy(0, 3);
 	vdp_putstring("HW ID = ");
@@ -274,8 +277,13 @@ void main()
 	}
 
 	if (cfgnxt == CFG_NEXTOR) {
-		vdp_putstring("\nLoading NEXTOR.ROM: ");
-		if (!fat_fopen(&file, nxtfile)) {
+		if (hwds == 0) {
+			nxtfn = (char *)nxtfile;
+		} else {
+			nxtfn = (char *)nxtfileh;
+		}
+		vdp_putstring("\nLoading NEXTOR: ");
+		if (!fat_fopen(&file, nxtfn)) {
 			//              11111111112222222222333
 			//     12345678901234567890123456789012
 			error("NEXTOR file not found!");

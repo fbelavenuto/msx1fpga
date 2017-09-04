@@ -37,6 +37,8 @@ Registers:
 			bit 7 = use ROM in RAM
 			bits 6-3 = reserved, always 0
 			bits 2-0 = 0=>512K, 2=>2MB, 4=>8MB
+(R )	04 => Hardware flags
+			bot 0 = Has Hardware disk-change
 ( W)	0A =>
 			bit 0 = Soft reset
 ( W)	0D => Lower address of Keymap

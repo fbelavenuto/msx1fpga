@@ -243,7 +243,8 @@ begin
 		hw_txt_g			=> "WXEDAX Board",
 		hw_version_g	=> X"12",
 		video_opt_g		=> 1,						-- dblscan configurable
-		ramsize_g		=> 8192
+		ramsize_g		=> 8192,
+		hw_hashwds_g	=> '1'
 	)
 	port map (
 		-- Clocks

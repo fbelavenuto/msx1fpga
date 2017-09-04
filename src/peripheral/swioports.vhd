@@ -60,6 +60,7 @@ entity swioports is
 		hw_txt_i			: in  string;
 		hw_version_i	: in  std_logic_vector(7 downto 0);
 		hw_memsize_i	: in  std_logic_vector(7 downto 0);
+		hw_hashwds_i	: in  std_logic;
 		nextor_en_i		: in  std_logic;
 		mr_type_i		: in  std_logic_vector(1 downto 0);
 		vga_on_i			: in  std_logic;
@@ -272,6 +273,9 @@ begin
 						has_data_regv_s	<= '1';
 					when X"03" =>
 						reg_data_s			<= hw_memsize_i;
+						has_data_regv_s	<= '1';
+					when X"04" =>
+						reg_data_s			<= "0000000" & hw_hashwds_i;
 						has_data_regv_s	<= '1';
 					when X"10" =>
 						reg_data_s			<= "000000" & vga_en_q & nextor_en_q;

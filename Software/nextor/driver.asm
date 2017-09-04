@@ -31,7 +31,7 @@
 	output	"driver.bin"
 
 ; Uses HW (1) or SW (0) disk-change:
-HWDS = 1
+HWDS = 0
 
 ;-----------------------------------------------------------------------------
 ;
@@ -387,7 +387,13 @@ DRV_INIT:
 	jr nc,	.detectou
 	call	disableCards
 	ld		de, strNaoIdentificado
-	jp		printString
+ IF HWDS = 1
+ 	jp		printString
+ ELSE
+	call	printString
+.marcaErro:
+	jp		marcaErroCartao				; slot vazio ou erro de deteccao, marcar nas flags
+ ENDIF
 .detectou:
 	call	getCIDaddr
 	ld		a, (ix+15)					; SDV1 or SDV2
@@ -549,6 +555,9 @@ isRead:
 	ld		e, a						; BC DE = 32 bits block number
 	call	readBlock
 	jr nc,	DEV_RW_OK
+ IF HWDS = 0
+	call	marcaErroCartao				; ocorreu erro na leitura, marcar erro
+ ENDIF
 	ld		a, (WRKAREA.NUMBLOCKS)		; Get the number of requested blocks
 	sub		ixh							; subtract the number of remaining blocks
 	ld		b, a						; b=number of blocks read
@@ -583,6 +592,9 @@ isWrite:
 	ld		e, a						; BC DE = 32 bits block number
 	call	writeBlock
 	jr nc,	DEV_RW_OK
+ IF HWDS = 0
+	call	marcaErroCartao				; ocorreu erro na leitura, marcar erro
+ ENDIF
 	ld		a, (WRKAREA.NUMBLOCKS)		; Get the number of requested blocks
 	sub		ixh							; subtract the number of remaining blocks
 	ld		b, a						; b=number of blocks read

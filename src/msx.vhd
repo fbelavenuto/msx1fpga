@@ -48,7 +48,8 @@ entity msx is
 		hw_txt_g			: string 								:= "NONE";
 		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
 		video_opt_g		: integer								:= 0;		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
-		ramsize_g		: integer								:= 512	-- 512, 2048 or 8192
+		ramsize_g		: integer								:= 512;	-- 512, 2048 or 8192
+		hw_hashwds_g	: std_logic								:= '0'	-- 0 = Software disk-change, 1 = Hardware disk-change
 	);
 	port (
 		-- Clocks
@@ -446,6 +447,7 @@ begin
 		hw_txt_i			=> hw_txt_g,
 		hw_version_i	=> hw_version_g,
 		hw_memsize_i	=> hw_memsize_s,
+		hw_hashwds_i	=> hw_hashwds_g,
 		nextor_en_i 	=> opt_nextor_i,
 		mr_type_i		=> opt_mr_type_i,
 		vga_on_i			=> opt_vga_on_i,
