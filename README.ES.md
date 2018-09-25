@@ -80,7 +80,9 @@ Para ello hay dos formas, usando el comando **EMUFILE** o el comando **MAPDRV**.
 
 #### 1ª FORMA. EMUFILE
 
+```
 EMUFILE CH-CIRCU.DSK -r
+```
 
 Este comando crea un fichero **NEXT_DSK.DAT** en el directorio raíz de la tarjeta SD con el contenido del disquete, y la opción "-r" fuerza un Soft Reset que hará que cuando vuelva a arrancar el Nextor-DOS cargue automáticamente el disquete.
 
@@ -93,7 +95,9 @@ Para ver todas las opciones que tiene el comando EMUFILE, ejecutarlo simplemente
 
 Este comando monta el contenido de la imagen de un disquete en una nueva unidad de disco. Por ejemplo:
 
+```
 MAPDRV B: CH-CIRCU.DSK
+```
 
 Ahora podemos ir a la unidad B: y ver los ficheros. Vemos que hay un fichero AUTOEXEC.BAS, el cual podemos ejecutar simplemente con AUTOEXEC, y el programa ya arranca.
 
@@ -112,11 +116,15 @@ Los ficheros **LOADCAX** y **LOADCAXX** se encuentran en la carpeta BIN del disq
 
 Son programas en BASIC que podemos grabar en la SD, y también cargarlos para ejecutarlos. Desde dentro del BASIC podremos teclear:
 
+```
 SAVE "A:HOLA.BAS"
+```
 
 para salvar el programa, y con 
 
+```
 LOAD "A:HOLA.BAS"
+```
 
 lo recuperamos. 
 
@@ -129,11 +137,17 @@ Para cargar un fichero .BAS desde el Nextor-DOS, simplemente escribimos su nombr
 
 El core permite la carga de programas por audio.  La forma de  hacerlo es desde BASIC con los comandos:
 
+```
 RUN”CAS:”
+```
 o bien
+```
 BLOAD”CAS:”,R
+```
 o bien:
+```
 LOAD”CAS:”,R
+```
 
 Está perfectamente explicado en el artículo Cómo cargar programas en MSX (https://programbytes48k.wordpress.com/2012/01/04/como-cargar-programas-en-msx/).
 
