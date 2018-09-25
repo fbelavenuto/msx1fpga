@@ -28,7 +28,6 @@ Para cargar una ROM en el SCC Megaram se usa el comando ROMLOAD.COM (está en lo
 Para ir al BASIC desde el MSX-DOS se debe ejecutar el comando BASIC
 Para ir al MSX-DOS desde el BASIC se debe ejecutar CALL SYSTEM
 
-
 ## Teclas del CORE:
 
 - CTRL+ALT+SUP/Del = Soft Reset del MSX
