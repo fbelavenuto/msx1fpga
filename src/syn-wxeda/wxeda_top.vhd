@@ -364,8 +364,9 @@ begin
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
-		jt51_left_i		=> (others =>'0'),
-		jt51_right_i	=> (others =>'0'),
+		ear_i				=> '0',
+		jt51_left_i		=> (others => '0'),
+		jt51_right_i	=> (others => '0'),
 		dacout_l_o		=> audio_dac_l_o,
 		dacout_r_o		=> audio_dac_r_o
 	);

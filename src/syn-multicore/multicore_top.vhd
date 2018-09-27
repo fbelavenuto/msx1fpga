@@ -393,6 +393,7 @@ begin
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		beep_i			=> beep_s,
+		ear_i				=> ear_i,
 		jt51_left_i		=> (others => '0'),
 		jt51_right_i	=> (others => '0'),
 		audio_mix_l_o	=> audio_l_s,

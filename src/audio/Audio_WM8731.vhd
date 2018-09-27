@@ -80,6 +80,7 @@ end entity;
 architecture Behavior of Audio_WM8731 is
 
 	constant beep_vol_c		: signed(15 downto 0) := "0011110000000000";
+	constant ear_vol_c		: signed(15 downto 0) := "0011110000000000";
 
 	signal pcm_lrclk_s		: std_logic;
 	signal ear_r				: std_logic;
@@ -87,6 +88,7 @@ architecture Behavior of Audio_WM8731 is
 	signal pcm_l_s				: std_logic_vector(15 downto 0);
 	signal pcm_r_s				: std_logic_vector(15 downto 0);
 	signal beep_sig_s			: signed(15 downto 0);
+	signal ear_sig_s			: signed(15 downto 0);
 	signal psg_sig_s			: signed(15 downto 0);
 	signal scc_sig_s			: signed(15 downto 0);
 	signal jt51_l_sig_s		: signed(15 downto 0);
@@ -154,6 +156,7 @@ begin
 	i2s_daclrck_o <= pcm_lrclk_s;
 	 
 	beep_sig_s		<= beep_vol_c when beep_i = '1'		else (others => '0');
+	ear_sig_s		<= ear_vol_c  when ear_r = '1'		else (others => '0');
 	psg_sig_s		<= "00" & signed(audio_psg_i) & "000000";
 	scc_sig_s		<= audio_scc_i(14) & audio_scc_i;
 	jt51_l_sig_s	<= jt51_left_i;

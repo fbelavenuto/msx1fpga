@@ -48,6 +48,7 @@ entity Audio_DAC is
 		jt51_left_i		: in  signed(15 downto 0);
 		jt51_right_i	: in  signed(15 downto 0);
 		beep_i			: in  std_logic;
+		ear_i				: in  std_logic;
 		audio_mix_l_o	: out std_logic_vector(15 downto 0);
 		audio_mix_r_o	: out std_logic_vector(15 downto 0);
 		dacout_l_o		: out std_logic;
@@ -66,10 +67,12 @@ end entity;
 architecture Behavior of Audio_DAC is
 
 	constant beep_vol_c	: std_logic_vector(15 downto 0) := "0111000000000000";
+	constant ear_vol_c	: std_logic_vector(15 downto 0) := "0111000000000000";
 
 	signal pcm_l_s			: std_logic_vector(15 downto 0);
 	signal pcm_r_s			: std_logic_vector(15 downto 0);
 	signal beep_s			: std_logic_vector(15 downto 0);
+	signal ear_s			: std_logic_vector(15 downto 0);
 	signal scc_uns_s		: unsigned(15 downto 0);
 	signal jt51_l_uns_s	: unsigned(15 downto 0);
 	signal jt51_r_uns_s	: unsigned(15 downto 0);
@@ -101,12 +104,14 @@ begin
 	);
 
 	beep_s			<= beep_vol_c when beep_i = '1'		else (others => '0');
+	ear_s				<= ear_vol_c  when ear_i = '1'		else (others => '0');
 	scc_uns_s		<= '0' & not audio_scc_i(14)  & unsigned(audio_scc_i (13 downto 0));
 	jt51_l_uns_s	<= '0' & not jt51_left_i(15)  & unsigned(jt51_left_i (14 downto 1));
 	jt51_r_uns_s	<= '0' & not jt51_right_i(15) & unsigned(jt51_right_i(14 downto 1));
 
 	pcm_l_s 	<= std_logic_vector(
 						unsigned(beep_s) + 
+						unsigned(ear_s) + 
 						unsigned("0" & audio_psg_i & "0000000") +
 						scc_uns_s +
 						jt51_l_uns_s
@@ -114,6 +119,7 @@ begin
 
 	pcm_r_s 	<= std_logic_vector(
 						unsigned(beep_s) + 
+						unsigned(ear_s) + 
 						unsigned("0" & audio_psg_i & "0000000") +
 						scc_uns_s +
 						jt51_r_uns_s

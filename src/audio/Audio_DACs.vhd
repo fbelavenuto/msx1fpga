@@ -45,6 +45,7 @@ entity Audio_DACs is
 		reset_i			: in  std_logic;
 		audio_scc_i		: in  signed(14 downto 0);
 		audio_psg_i		: in  unsigned(7 downto 0);
+		ear_i			: in  std_logic;
 		jt51_left_i		: in  signed(15 downto 0);
 		jt51_right_i	: in  signed(15 downto 0);
 		beep_i			: in  std_logic;
@@ -66,10 +67,12 @@ end entity;
 architecture Behavior of Audio_DACs is
 
 	constant beep_vol_c	: signed(15 downto 0) := "0011111111111111";
+	constant ear_vol_c	: signed(15 downto 0) := "0011111111111111";
 
 	signal pcm_l_s			: signed(15 downto 0);
 	signal pcm_r_s			: signed(15 downto 0);
 	signal beep_sig_s		: signed(15 downto 0);
+	signal ear_sig_s		: signed(15 downto 0);
 	signal psg_sig_s		: signed(15 downto 0);
 	signal scc_sig_s		: signed(15 downto 0);
 	signal jt51_l_sig_s	: signed(15 downto 0);
@@ -102,13 +105,14 @@ begin
 	);
 
 	beep_sig_s		<= beep_vol_c when beep_i = '1'		else (others => '0');
+	ear_sig_s		<= ear_vol_c when ear_i = '1'		else (others => '0');
 	psg_sig_s		<= "00" & signed(audio_psg_i) & "000000";
 	scc_sig_s		<= audio_scc_i(14) & audio_scc_i;
 	jt51_l_sig_s	<= jt51_left_i;
 	jt51_r_sig_s	<= jt51_right_i;
 
-	pcm_l_s 	<= beep_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s;
-	pcm_r_s 	<= beep_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s;
+	pcm_l_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s;
+	pcm_r_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s;
 
 	audio_mix_l_o <= std_logic_vector(pcm_l_s);
 	audio_mix_r_o <= std_logic_vector(pcm_r_s);
