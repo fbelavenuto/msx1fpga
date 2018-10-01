@@ -1,7 +1,8 @@
+-------------------------------------------------------------------------------
 --
 -- MSX1 FPGA project
 --
--- Copyright (c) 2016 - Fabio Belavenuto
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved
 --
@@ -19,7 +20,7 @@
 -- be used to endorse or promote products derived from this software without
 -- specific prior written permission.
 --
--- THIS CODE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 -- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
 -- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
 -- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
@@ -31,15 +32,18 @@
 -- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 -- POSSIBILITY OF SUCH DAMAGE.
 --
--- You are responsible for any legal issues arising from your use of this code.
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
 --
+-------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity Audio_DACs is
+entity mixers is
 	port (
 		clock_i			: in  std_logic;
 		reset_i			: in  std_logic;
@@ -49,12 +53,10 @@ entity Audio_DACs is
 		jt51_left_i		: in  signed(15 downto 0);
 		jt51_right_i	: in  signed(15 downto 0);
 		beep_i			: in  std_logic;
-		audio_mix_l_o	: out std_logic_vector(15 downto 0);
-		audio_mix_r_o	: out std_logic_vector(15 downto 0);
-		dacout_l_o		: out std_logic;
-		dacout_r_o		: out std_logic
+		audio_mix_l_o	: out signed(15 downto 0);
+		audio_mix_r_o	: out signed(15 downto 0)
 	);
-end entity;
+end mixers;
 
 -- 32767  0111111111111111
 --
@@ -64,7 +66,7 @@ end entity;
 --
 -- -32768 1000000000000000
 
-architecture Behavior of Audio_DACs is
+architecture Behavioral of mixers is
 
 	constant beep_vol_c	: signed(15 downto 0) := "0011111111111111";
 	constant ear_vol_c	: signed(15 downto 0) := "0011111111111111";
@@ -80,30 +82,6 @@ architecture Behavior of Audio_DACs is
 
 begin
 
-	-- Left
-	audiol : entity work.dac_dsm2v
-	generic map (
-		nbits_g	=> 16
-	)
-	port map (
-		reset_i	=> reset_i,
-		clock_i	=> clock_i,
-		dac_i		=> pcm_l_s,
-		dac_o		=> dacout_l_o
-	);
-
-	-- Right
-	audior : entity work.dac_dsm2v
-	generic map (
-		nbits_g	=> 16
-	)
-	port map (
-		reset_i	=> reset_i,
-		clock_i	=> clock_i,
-		dac_i		=> pcm_r_s,
-		dac_o		=> dacout_r_o
-	);
-
 	beep_sig_s		<= beep_vol_c when beep_i = '1'		else (others => '0');
 	ear_sig_s		<= ear_vol_c when ear_i = '1'		else (others => '0');
 	psg_sig_s		<= "00" & signed(audio_psg_i) & "000000";
@@ -114,7 +92,7 @@ begin
 	pcm_l_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s;
 	pcm_r_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s;
 
-	audio_mix_l_o <= std_logic_vector(pcm_l_s);
-	audio_mix_r_o <= std_logic_vector(pcm_r_s);
+	audio_mix_l_o <= pcm_l_s;
+	audio_mix_r_o <= pcm_r_s;
 
-end architecture;
+end Behavioral;

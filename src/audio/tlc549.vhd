@@ -1,6 +1,7 @@
 --
--- TBBlue / ZX Spectrum Next project
--- Copyright (c) 2015 - Fabio Belavenuto & Victor Trucco
+-- MSX1 FPGA project
+--
+-- Copyright (c) 2016 - Fabio Belavenuto
 --
 -- All rights reserved
 --
@@ -33,6 +34,7 @@
 -- You are responsible for any legal issues arising from your use of this code.
 --
 --
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_arith.all;
