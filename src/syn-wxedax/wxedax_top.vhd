@@ -413,6 +413,7 @@ begin
 		reset_i			=> reset_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
+		ear_i				=> ear_s,
 		jt51_left_i		=> jt51_left_s,
 		jt51_right_i	=> jt51_right_s,
 		beep_i			=> beep_s,
