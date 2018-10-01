@@ -280,3 +280,5 @@ greybox_tmp
 /Software/updater/*.noi
 /Software/updater/obj
 /src/peripheral/pll1.qip
+/synth/mist/db
+/synth/mist/incremental_db

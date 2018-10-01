@@ -155,6 +155,8 @@ architecture behavior of wxedax_top is
 	signal beep_s				: std_logic;
 	signal tapein_s			: std_logic_vector(7 downto 0);
 	signal ear_s				: std_logic;
+	signal audio_l_s			: signed(15 downto 0);
+	signal audio_r_s			: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -407,21 +409,44 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DACs
+	mixer: entity work.mixers
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
+		ear_i				=> ear_s,
 		jt51_left_i		=> jt51_left_s,
 		jt51_right_i	=> jt51_right_s,
 		beep_i			=> beep_s,
-		audio_mix_l_o	=> open,
-		audio_mix_r_o	=> open,
-		dacout_l_o		=> audio_dac_l_o,
-		dacout_r_o		=> audio_dac_r_o
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s
 	);
 
+	-- Left Channel
+	audiol : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
+	port map (
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_l_s,
+		dac_o		=> audio_dac_l_o
+	);
+
+	-- Right Channel
+	audior : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
+	port map (
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_r_s,
+		dac_o		=> audio_dac_r_o
+	);
+	
 	-- VRAM
 	vram: entity work.spram
 	generic map (

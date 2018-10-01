@@ -45,10 +45,10 @@ entity Audio_DAC is
 		reset_i			: in  std_logic;
 		audio_scc_i		: in  signed(14 downto 0);
 		audio_psg_i		: in  unsigned(7 downto 0);
+		ear_i				: in  std_logic;
 		jt51_left_i		: in  signed(15 downto 0);
 		jt51_right_i	: in  signed(15 downto 0);
 		beep_i			: in  std_logic;
-		ear_i				: in  std_logic;
 		audio_mix_l_o	: out std_logic_vector(15 downto 0);
 		audio_mix_r_o	: out std_logic_vector(15 downto 0);
 		dacout_l_o		: out std_logic;
