@@ -83,7 +83,7 @@ architecture Behavioral of mixers is
 begin
 
 	beep_sig_s		<= beep_vol_c when beep_i = '1'		else (others => '0');
-	ear_sig_s		<= ear_vol_c when ear_i = '1'		else (others => '0');
+	ear_sig_s		<= ear_vol_c  when ear_i = '1'		else (others => '0');
 	psg_sig_s		<= "00" & signed(audio_psg_i) & "000000";
 	scc_sig_s		<= audio_scc_i(14) & audio_scc_i;
 	jt51_l_sig_s	<= jt51_left_i;

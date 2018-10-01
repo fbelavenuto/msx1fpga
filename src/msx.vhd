@@ -149,7 +149,6 @@ entity msx is
 		scanline_on_k_i: in  std_logic;
 		scanline_en_o	: out std_logic;
 		-- SPI/SD
-		flspi_cs_n_o	: out std_logic;
 		spi_cs_n_o		: out std_logic;
 		spi_sclk_o		: out std_logic;
 		spi_mosi_o		: out std_logic;
@@ -279,7 +278,6 @@ architecture Behavior of msx is
 	signal nxt_rom_page_s	: std_logic_vector( 2 downto 0);
 	signal nxt_rom_cs_s		: std_logic;
 	signal nxt_rom_wr_s		: std_logic;
-	signal spi1_cs_n_s		: std_logic;
 
 	-- SCC/Megaram
 	signal mram_cs_s			: std_logic;
@@ -479,8 +477,8 @@ begin
 		data_o			=> d_from_spi_s,
 		has_data_o		=> spi_hd_s,
 		-- SD card interface
-		spi_cs_n_o(2)	=> flspi_cs_n_o,
-		spi_cs_n_o(1)	=> spi1_cs_n_s,
+		spi_cs_n_o(2)	=> open,
+		spi_cs_n_o(1)	=> open,
 		spi_cs_n_o(0)	=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,

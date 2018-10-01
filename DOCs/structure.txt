@@ -18,6 +18,7 @@ Hardware IDs:
 5  = Multicore Board
 6  = ZX-Uno Board
 7  = ZX-Uno Board VGA2M
+8  = Multicore2 Board
 
 Switched I/O ports:
 

@@ -126,7 +126,6 @@ architecture behavior of wxedax_top is
 	-- Clocks
 	signal clock_master_s	: std_logic;
 	signal clock_sdram_s		: std_logic;
-	signal clock_sdram_o_s	: std_logic;
 	signal clock_vdp_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
