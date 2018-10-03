@@ -28,32 +28,33 @@
 -- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 --
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use WORK.VM2413.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use work.vm2413.all;
 
-entity OutputMemory is port (
-  clk    : in std_logic;
-  reset  : in std_logic;
-  wr     : in std_logic;
-  addr  : in SLOT_TYPE;
-  wdata  : in SIGNED_LI_TYPE;
-  rdata  : out SIGNED_LI_TYPE;
-  addr2  : in SLOT_TYPE;
-  rdata2 : out SIGNED_LI_TYPE
-);
-end OutputMemory;
+entity OutputMemory is
+	port (
+		clk    : in std_logic;
+		reset  : in std_logic;
+		wr     : in std_logic;
+		addr   : in std_logic_vector( 4 downto 0 );
+		wdata  : in SIGNED_LI_TYPE;
+		rdata  : out SIGNED_LI_TYPE;
+		addr2  : in std_logic_vector( 4 downto 0 );
+		rdata2 : out SIGNED_LI_TYPE
+	);
+end entity;
 
 architecture RTL of OutputMemory is
 
 	type SIGNED_LI_ARRAY_TYPE is array (0 to 18) of SIGNED_LI_VECTOR_TYPE;
-	signal data_array : SIGNED_LI_ARRAY_TYPE;
-   signal init_ch : integer range 0 to 18;
+	signal data_array : SIGNED_LI_ARRAY_TYPE := (others => (others => '0'));
+	signal init_ch : integer range 0 to 18;
 	signal mem_wr_s					: std_logic;
 	signal mem_addr_s					: integer;
 	signal mem_data_s					: SIGNED_LI_VECTOR_TYPE;
-	attribute ram_style        : string;
+	attribute ram_style				: string;
 	attribute ram_style of data_array : signal is "block";
 
 begin
@@ -62,20 +63,20 @@ begin
 	mem_addr_s	<= init_ch				when init_ch /= 18 else conv_integer(addr);
 	mem_data_s	<= (others => '0')	when init_ch /= 18 else CONV_SIGNED_LI_VECTOR(wdata);
 
-  process(clk, reset)
-  begin
-    if (reset = '1') then
-      init_ch <= 0;
-    elsif clk'event and clk='1' then
-      if mem_wr_s = '1' then
-        data_array(mem_addr_s) <= mem_data_s;
-      end if;
-      rdata <= CONV_SIGNED_LI(data_array(conv_integer(addr)));
-      rdata2 <= CONV_SIGNED_LI(data_array(conv_integer(addr2)));
-      if init_ch /= 18 then
-        init_ch <= init_ch + 1;
+	process(clk, reset)
+	begin
+		if (reset = '1') then
+			init_ch <= 0;
+		elsif clk'event and clk='1' then
+			if mem_wr_s = '1' then
+				data_array(mem_addr_s) <= mem_data_s;
+			end if;
+			rdata <= CONV_SIGNED_LI(data_array(conv_integer(addr)));
+			rdata2 <= CONV_SIGNED_LI(data_array(conv_integer(addr2)));
+			if init_ch /= 18 then
+				init_ch <= init_ch + 1;
+			end if;
 		end if;
-    end if;
-  end process;
+	end process;
 
-end RTL;
+end architecture;

@@ -28,42 +28,34 @@
 -- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 --
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use ieee.std_logic_arith.all;
-use WORK.VM2413.ALL;
+use work.vm2413.all;
 
 entity TemporalMixer is
-  port (
-    clk    : in std_logic;
-    reset  : in std_logic;
-    clkena : in std_logic;
-
-    slot   : in SLOT_TYPE;
-    stage  : in STAGE_TYPE;
-
-    rhythm : in std_logic;
-
-    maddr : out SLOT_TYPE;
-    mdata : in SIGNED_LI_TYPE;
-
-    mo : out std_logic_vector(9 downto 0);
-    ro : out std_logic_vector(9 downto 0)
-  );
-end TemporalMixer;
+	port (
+		clk    : in std_logic;
+		reset  : in std_logic;
+		clkena : in std_logic;
+		slot   : in std_logic_vector( 4 downto 0 );
+		stage  : in std_logic_vector( 1 downto 0 );
+		rhythm : in std_logic;
+		maddr : out std_logic_vector( 4 downto 0 );
+		mdata : in SIGNED_LI_TYPE;
+		mo : out std_logic_vector(9 downto 0);
+		ro : out std_logic_vector(9 downto 0)
+	);
+end entity;
 
 architecture RTL of TemporalMixer is
-
   signal mmute, rmute : std_logic;
-
 begin
 
   process (clk, reset)
   begin
-
     if reset = '1' then
-
       mo <= (others =>'0');
       ro <= (others =>'0');
       maddr <= (others => '0');
@@ -158,4 +150,4 @@ begin
 
   end process;
 
-end RTL;
+end architecture;

@@ -1,5 +1,5 @@
 --
--- FeedbackMemory.vhd
+-- InterpolateMul.vhd
 --
 -- Copyright (c) 2006 Mitsutaka Okazaki (brezza@pokipoki.org)
 -- All rights reserved.
@@ -28,58 +28,27 @@
 -- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 --
+--
+--  modified by t.hara
+--
+-- ----------------------------------------------------------------------------
+
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-use work.vm2413.all;
+use ieee.std_logic_signed.all;
 
---
--- This module represents a store for feedback data of all OPLL channels. The feedback
--- data is written by the OutputGenerator module. Then the value written is
--- read from the Operator module.
---
-entity FeedbackMemory is
+entity InterpolateMul is
 	port (
-		clk    : in std_logic;
-		reset  : in std_logic;
-		wr     : in std_logic;
-		waddr  : in integer range 0 to 9-1;
-		wdata  : in SIGNED_LI_TYPE;
-		raddr  : in integer range 0 to 9-1;
-		rdata  : out SIGNED_LI_TYPE
+		i0      : in    std_logic_vector(  8 downto 0 );    --  符号無し 9bit (整数部 0bit, 小数部 9bit)
+		i1      : in    std_logic_vector( 11 downto 0 );    --  符号付き12bit (整数部 8bit, 小数部 4bit)
+		o       : out   std_logic_vector( 13 downto 0 )     --  符号付き 7bit (整数部 8bit, 小数部 6bit)
 	);
 end entity;
 
-architecture RTL of FeedbackMemory is
-
-	type SIGNED_LI_ARRAY_TYPE is array (0 to 9-1) of SIGNED_LI_VECTOR_TYPE;
-	signal data_array : SIGNED_LI_ARRAY_TYPE := (others => (others => '0'));
-	signal init_ch : integer range 0 to 9;
-	signal mem_addr_s	: integer range 0 to 9-1;
-	signal mem_data_s	: SIGNED_LI_VECTOR_TYPE;
-	signal mem_wr_s		: std_logic;
-	attribute ram_style        : string;
-	attribute ram_style of data_array : signal is "block";
-
+architecture rtl of InterpolateMul is
+	signal w_mul    : std_logic_vector( 21 downto 0 );      --  符号付き22bit (整数部 9bit, 小数部13bit)
 begin
 
-	mem_addr_s	<= init_ch			when init_ch /= 9	else waddr;
-	mem_data_s	<= (others=>'0')	when init_ch /= 9	else CONV_SIGNED_LI_VECTOR(wdata);
-	mem_wr_s		<= '1'				when init_ch /= 9	else wr;
-
-	process(clk, reset)
-	begin
-		if reset = '1' then
-			init_ch <= 0;
-		elsif clk'event and clk='1' then
-			if mem_wr_s='1' then
-				data_array(mem_addr_s) <= mem_data_s;
-			end if;
-			rdata <= CONV_SIGNED_LI(data_array(raddr));
-			if init_ch /= 9 then
-				init_ch <= init_ch + 1;
-			end if;
-		end if;
-	end process;
-
+	w_mul   <= ('0' & i0) * i1;
+	o       <= w_mul( 20 downto 7 );        --  MSBカットで 21bit, 小数部下位 7bitカット
 end architecture;

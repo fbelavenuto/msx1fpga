@@ -37,10 +37,10 @@ entity EnvelopeMemory is
 	port (
 		clk     : in std_logic;
 		reset   : in std_logic;
-		waddr   : in SLOT_TYPE;
+		waddr   : in std_logic_vector( 4 downto 0 );
 		wr      : in std_logic;
 		wdata   : in EGDATA_TYPE;
-		raddr   : in SLOT_TYPE;
+		raddr   : in std_logic_vector( 4 downto 0 );
 		rdata   : out EGDATA_TYPE
 	);
 end entity;
@@ -48,7 +48,7 @@ end entity;
 architecture RTL of EnvelopeMemory is
 
 	type EGDATA_ARRAY is array (0 to 18-1) of EGDATA_VECTOR_TYPE;
-	signal egdata_set : EGDATA_ARRAY;
+	signal egdata_set : EGDATA_ARRAY := (others => (others => '1'));
 	signal init_slot : integer range 0 to 18;
 	signal mem_wr_s	: std_logic;
 	signal mem_addr_s	: integer;

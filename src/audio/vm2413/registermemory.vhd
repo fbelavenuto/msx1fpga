@@ -34,29 +34,29 @@
 --
 
 library ieee;
-    use ieee.std_logic_1164.all;
-    use ieee.std_logic_unsigned.all;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity RegisterMemory is
-    port (
-        clk     : in    std_logic;
-        reset   : in    std_logic;
-        addr    : in    std_logic_vector(  3 downto 0 );
-        wr      : in    std_logic;
-        idata   : in    std_logic_vector( 23 downto 0 );
-        odata   : out   std_logic_vector( 23 downto 0 )
-    );
-end RegisterMemory;
+	port (
+		clk     : in    std_logic;
+		reset   : in    std_logic;
+		addr    : in    std_logic_vector(  3 downto 0 );
+		wr      : in    std_logic;
+		idata   : in    std_logic_vector( 23 downto 0 );
+		odata   : out   std_logic_vector( 23 downto 0 )
+	);
+end entity;
 
 architecture rtl of registermemory is
-    --  チャネル情報保持用 1read/1write の SRAM
-    type regs_array_type is array (0 to 8) of std_logic_vector( 23 downto 0 );
-    signal regs_array : regs_array_type;
-	signal mem_wr_s	: std_logic;
-	signal mem_addr_s	: integer;
-	signal mem_data_s	: std_logic_vector( 23 downto 0 );
-	signal init_state : integer range 0 to 9;
-	attribute ram_style        : string;
+	--  チャネル情報保持用 1read/1write の SRAM
+	type regs_array_type is array (0 to 8) of std_logic_vector( 23 downto 0 );
+	signal regs_array			: regs_array_type := (others => (others => '0'));
+	signal mem_wr_s			: std_logic;
+	signal mem_addr_s			: integer;
+	signal mem_data_s			: std_logic_vector( 23 downto 0 );
+	signal init_state			: integer range 0 to 9;
+	attribute ram_style		: string;
 	attribute ram_style of regs_array : signal is "block";
 
 begin
@@ -64,20 +64,21 @@ begin
 	mem_addr_s	<= init_state			when init_state /= 9	else conv_integer(addr);
 	mem_data_s	<= (others => '0')	when init_state /= 9	else idata;
 	mem_wr_s		<= '1'					when init_state /= 9	else wr;
-    process( reset, clk )
-    begin
-        if( reset = '1' )then
-            init_state <= 0;
-        elsif( clk'event and clk ='1' )then
-            if( wr = '1' )then
-                --  書き込みサイクル
-                regs_array( mem_addr_s ) <= mem_data_s;
-            end if;
-            --  読み出しは常時
-            odata <= regs_array( conv_integer(addr) );
-            if( init_state /= 9 )then
-                init_state <= init_state + 1;
+
+	process (reset, clk)
+	begin
+		if reset = '1' then
+			init_state <= 0;
+		elsif clk'event and clk ='1' then
+			if mem_wr_s = '1' then
+				--  書き込みサイクル
+				regs_array( mem_addr_s ) <= mem_data_s;
+			end if;
+			--  読み出しは常時
+			odata <= regs_array( conv_integer(addr) );
+			if init_state /= 9 then
+				init_state <= init_state + 1;
 				end if;
-        end if;
-    end process;
-end rtl;
+		end if;
+	end process;
+end architecture;
