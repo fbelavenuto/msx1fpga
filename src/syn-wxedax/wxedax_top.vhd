@@ -45,7 +45,8 @@ use ieee.numeric_std.all;
 
 entity wxedax_top is
 	generic (
-		per_jt51_g				: boolean		:= true
+		per_opll_g				: boolean		:= true;
+		per_jt51_g				: boolean		:= false
 	);
 	port (
 		-- Clock (48MHz)
@@ -118,6 +119,7 @@ architecture behavior of wxedax_top is
 	signal por_clock_s		: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
+	signal reset_n_s			: std_logic;
 	signal soft_por_s			: std_logic;
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
@@ -209,9 +211,14 @@ architecture behavior of wxedax_top is
 	signal bus_sltsl2_n_s	: std_logic;
 
 	-- JT51
-	signal jt51_cs_n_s		: std_logic;
+	signal jt51_cs_n_s		: std_logic						:= '1';
 	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
 	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
+
+	--- OPLL
+	signal opll_cs_n_s		: std_logic						:= '1';
+	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
 
 begin
 
@@ -412,12 +419,14 @@ begin
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
+		ear_i				=> ear_s,
+		beep_i			=> beep_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		ear_i				=> ear_s,
 		jt51_left_i		=> jt51_left_s,
 		jt51_right_i	=> jt51_right_s,
-		beep_i			=> beep_s,
+		opll_mo_i		=> opll_mo_s,
+		opll_ro_i		=> opll_ro_s,
 		audio_mix_l_o	=> audio_l_s,
 		audio_mix_r_o	=> audio_r_s
 	);
@@ -521,6 +530,7 @@ begin
 	por_clock_s	<= '1'	when por_cnt_s /= 0																else '0';
 	por_s			<= '1'	when por_cnt_s /= 0  or soft_por_s = '1'   or keys_n_i(4) = '0'	else '0';
 	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1' or keys_n_i(1) = '0'	else '0';
+	reset_n_s	<= not reset_s;
 
 	process(clock_master_s)
 	begin
@@ -594,6 +604,25 @@ begin
 			-- unsigned outputs for sigma delta converters, full resolution		
 			dacleft_o		=> open,
 			dacright_o		=> open
+		);
+	end generate;
+
+	popll: if per_opll_g generate
+		-- OPLL tests
+		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
+		
+		opll1 : entity work.opll 
+		port map (
+			xin         => clock_master_s,
+			xout        => open,
+			xena        => clock_3m_s,
+			d           => bus_data_to_s,
+			a           => bus_addr_s(0),
+			cs_n        => opll_cs_n_s,
+			we_n        => bus_wr_n_s,
+			ic_n        => reset_n_s,
+			mo          => opll_mo_s,
+			ro          => opll_ro_s
 		);
 	end generate;
 
