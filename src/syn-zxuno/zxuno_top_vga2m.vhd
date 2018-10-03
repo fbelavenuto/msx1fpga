@@ -45,7 +45,8 @@ use work.vdp18_paletas_3bit_pack.all;
 
 entity zxuno_top_vga2m is
 	generic (
-		per_jt51_g			: boolean		:= true
+		per_opll_g			: boolean		:= true;
+		per_jt51_g			: boolean		:= false
 	);
 	port (
 		-- Clocks
@@ -121,6 +122,7 @@ architecture behavior of zxuno_top_vga2m is
 	signal por_clock_s		: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
+	signal reset_n_s			: std_logic;
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
 	signal soft_por_s			: std_logic;
@@ -154,6 +156,8 @@ architecture behavior of zxuno_top_vga2m is
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
+	signal audio_l_s			: signed(15 downto 0);
+	signal audio_r_s			: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -196,6 +200,11 @@ architecture behavior of zxuno_top_vga2m is
 	signal jt51_cs_n_s		: std_logic;
 	signal jt51_left_s		: signed(15 downto 0)					:= (others => '0');
 	signal jt51_right_s		: signed(15 downto 0)					:= (others => '0');
+
+	-- OPLL
+	signal opll_cs_n_s		: std_logic						:= '1';
+	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
 
 begin
 
@@ -339,6 +348,29 @@ begin
 
 	);
 
+	-- VRAM
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_di_s,
+		data_o	=> vram_do_s
+	);
+
+	-- Multiboot
+	mb: entity work.multiboot
+	port map (
+		reset_i		=> por_s,
+		clock_i		=> clock_vdp_s,
+		start_i		=> reload_core_s,
+		spi_addr_i	=> X"6B000000"
+	);
+
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
@@ -363,43 +395,44 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DACs
+	mixer: entity work.mixers
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
+		ear_i				=> ear_i,
+		beep_i			=> beep_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		beep_i			=> beep_s,
-		ear_i				=> ear_i,
 		jt51_left_i		=> jt51_left_s,
 		jt51_right_i	=> jt51_right_s,
-		audio_mix_l_o	=> open,
-		audio_mix_r_o	=> open,
-		dacout_l_o		=> dac_l_o,
-		dacout_r_o		=> dac_r_o
+		opll_mo_i		=> opll_mo_s,
+		opll_ro_i		=> opll_ro_s,
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s
 	);
 
-	-- VRAM
-	vram: entity work.spram
+	-- Left Channel
+	audiol : entity work.dac_dsm2v
 	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
+		nbits_g	=> 16
 	)
 	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_l_s,
+		dac_o		=> dac_l_o
 	);
 
-	-- Multiboot
-	mb: entity work.multiboot
+	-- Right Channel
+	audior : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
 	port map (
-		reset_i		=> por_s,
-		clock_i		=> clock_vdp_s,
-		start_i		=> reload_core_s,
-		spi_addr_i	=> X"6B000000"
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_r_s,
+		dac_o		=> dac_r_o
 	);
 
 	-- Glue logic
@@ -418,6 +451,7 @@ begin
 	por_clock_s	<= '1'	when por_cnt_s /= 0																else '0';
 	por_s			<= '1'	when por_cnt_s /= 0 or soft_por_s = '1' or key_service_n_i = '0'	else '0';
 	reset_s		<= '1'	when por_s = '1' or soft_rst_cnt_s = X"00" or key_nmi_n_i = '0'	else '0';
+	reset_n_s	<= not reset_s;
 
 	process(reset_s, clock_master_s)
 	begin
@@ -475,6 +509,25 @@ begin
 			-- unsigned outputs for sigma delta converters, full resolution		
 			dacleft_o		=> open,
 			dacright_o		=> open
+		);
+	end generate;
+
+	popll: if per_opll_g generate
+		-- OPLL tests
+		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
+		
+		opll1 : entity work.opll 
+		port map (
+			xin         => clock_master_s,
+			xout        => open,
+			xena        => clock_3m_s,
+			d           => bus_data_to_s,
+			a           => bus_addr_s(0),
+			cs_n        => opll_cs_n_s,
+			we_n        => bus_wr_n_s,
+			ic_n        => reset_n_s,
+			mo          => opll_mo_s,
+			ro          => opll_ro_s
 		);
 	end generate;
 

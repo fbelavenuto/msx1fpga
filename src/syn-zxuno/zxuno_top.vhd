@@ -47,7 +47,7 @@ use ieee.std_logic_unsigned.all;
 entity zxuno_top is
 	generic (
 		ramsize_g			: integer		:= 512;			-- 512 or 2048
-		per_jt51_g			: boolean		:= true
+		per_jt51_g			: boolean		:= false
 	);
 	port (
 		-- Clocks
@@ -121,6 +121,7 @@ architecture behavior of zxuno_top is
 	signal por_clock_s		: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
+	signal reset_n_s			: std_logic;
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
 	signal soft_por_s			: std_logic;
@@ -202,8 +203,8 @@ architecture behavior of zxuno_top is
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
+	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
 
 begin
 

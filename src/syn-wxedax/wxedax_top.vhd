@@ -215,7 +215,7 @@ architecture behavior of wxedax_top is
 	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
 	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
 
-	--- OPLL
+	-- OPLL
 	signal opll_cs_n_s		: std_logic						:= '1';
 	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
 	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');

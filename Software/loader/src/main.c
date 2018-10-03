@@ -32,14 +32,15 @@ static const char * msxdir   = "MSX1FPGA   ";
 static const char * cfgfile  = "CONFIG  TXT";
 static const char * nxtfile  = "NEXTOR  ROM";
 static const char * nxtfileh = "NEXTORH ROM";
-static const char * biosfile = "MSX1BIOSROM";
+static const char * romsfile = "MSXROMS ROM";
 
-static char *km_files[4] = {
+static char *km_files[5] = {
 //   12345678...
 	"EN      KMP",
 	"PTBR    KMP",
 	"FR      KMP",
 	"SPA     KMP",
+	"JP      KMP",
 };
 
 //                             11111111112222222222333
@@ -116,7 +117,7 @@ void main()
 	unsigned char hwid, hwversion, hwtxt[20], hwmemcfg, hwds;
 	unsigned int pn_ram_start = 0, pn_ram_end = 0, pn_ram_ipl = 0;
 	unsigned int pn_mr2_start = 0, pn_mr2_end = 0;
-	unsigned int pn_rom = 0, pn_nextor = 0;
+	unsigned int pn_rom = 0, pn_nextor = 0, pn_romsize = 2;
 	unsigned char buffer[512];
 	unsigned char *ppl       = (unsigned char *)0xFF00;
 //	unsigned char c;
@@ -205,7 +206,7 @@ void main()
 	cfgnxt = (buffer[0] == '1') ? CFG_NEXTOR		: 0;
 	cfgvga = (buffer[1] == '1') ? CFG_SCANDBL		: 0;
 	cfgkm  = buffer[2];
-	if (cfgkm != 'E' && cfgkm != 'B' && cfgkm != 'F' && cfgkm != 'S') {
+	if (cfgkm != 'E' && cfgkm != 'B' && cfgkm != 'F' && cfgkm != 'S' && cfgkm != 'J') {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Invalid keymap!");
@@ -221,27 +222,30 @@ void main()
 	SWIOP_REGVAL = cfgsln | cfgvga | cfgnxt;
 
 	// IPL pages config
-	if ((hwmemcfg & 0x07) == 0) {
+	if ((hwmemcfg & 0x07) == 0) {			// 512K
 		pn_ram_start = 8;
 		pn_ram_end   = 14;
 		pn_ram_ipl   = 15;
 		pn_rom       = 30;
+		pn_romsize   = 2;
 //		pn_nextor    = 0;
 		pn_mr2_start = 16;
 		pn_mr2_end   = 28;
-	} else if ((hwmemcfg & 0x07) == 2) {
+	} else if ((hwmemcfg & 0x07) == 2) {	// 2MB
 		pn_ram_start = 64;
 		pn_ram_end   = 96;
 		pn_ram_ipl   = 127;
 //		pn_rom       = 0;
+		pn_romsize   = 4;
 		pn_nextor    = 8;
 		pn_mr2_start = 32;
 		pn_mr2_end   = 64;
-	} else if ((hwmemcfg & 0x07) == 4) {
+	} else if ((hwmemcfg & 0x07) == 4) {	// 8MB
 		pn_ram_start = 256;
 		pn_ram_end   = 287;
 		pn_ram_ipl   = 511;
 //		pn_rom       = 0;
+		pn_romsize   = 4;
 		pn_nextor    = 8;
 		pn_mr2_start = 64;
 		pn_mr2_end   = 96;
@@ -261,18 +265,18 @@ void main()
 	vdp_putstring(" OK\n");
 
 	if ((hwmemcfg & 0x80) == 0x80) {
-		vdp_putstring("\nLoading MSX1BIOS.ROM: ");
-		if (!fat_fopen(&file, biosfile)) {
+		vdp_putstring("\nLoading MSXROMS.ROM: ");
+		if (!fat_fopen(&file, romsfile)) {
 			//              11111111112222222222333
 			//     12345678901234567890123456789012
-			error("MSX1BIOS file not found!");
+			error("MSXROMS file not found!");
 		}
-		if (file.size != 32768) {
+		if (file.size != 16384*pn_romsize) {
 			//              11111111112222222222333
 			//     12345678901234567890123456789012
-			error("MSXBIOS file size must be 32768!");
+			error("MSXROMS file size wrong!");
 		}
-		loadrom(pn_rom, pn_rom+2);
+		loadrom(pn_rom, pn_rom+pn_romsize);
 		vdp_putstring(" OK\n");
 	}
 
@@ -309,6 +313,9 @@ void main()
 			break;
 		case 'S':
 			kmpfile = (char *)km_files[3];
+			break;
+		case 'J':
+			kmpfile = (char *)km_files[4];
 			break;
 	};
 	vdp_putstring("\nLoading Keymap ");
