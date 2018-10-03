@@ -158,6 +158,8 @@ architecture behavior of wxedax_top is
 	signal ear_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
+	signal fir_l_s				: signed(15 downto 0);
+	signal fir_r_s				: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -431,6 +433,35 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
+	-- Low-pass filter
+	lfp_l: entity work.lowpass
+	generic map (
+		inputBitNb  => 16,
+		outputBitNb => 16,
+		shiftBitNb  => 4
+	)
+	port map (
+		clock     => clock_master_s,
+		reset     => reset_s,
+		en        => '1',
+		filterIn  => audio_l_s,
+		filterOut => fir_l_s
+	);
+
+	lfp_r: entity work.lowpass
+	generic map (
+		inputBitNb  => 16,
+		outputBitNb => 16,
+		shiftBitNb  => 4
+	)
+	port map (
+		clock     => clock_master_s,
+		reset     => reset_s,
+		en        => '1',
+		filterIn  => audio_r_s,
+		filterOut => fir_r_s
+	);
+
 	-- Left Channel
 	audiol : entity work.dac_dsm2v
 	generic map (
@@ -439,7 +470,7 @@ begin
 	port map (
 		reset_i	=> reset_s,
 		clock_i	=> clock_master_s,
-		dac_i		=> audio_l_s,
+		dac_i		=> fir_l_s,
 		dac_o		=> audio_dac_l_o
 	);
 
@@ -451,7 +482,7 @@ begin
 	port map (
 		reset_i	=> reset_s,
 		clock_i	=> clock_master_s,
-		dac_i		=> audio_r_s,
+		dac_i		=> fir_r_s,
 		dac_o		=> audio_dac_r_o
 	);
 	
