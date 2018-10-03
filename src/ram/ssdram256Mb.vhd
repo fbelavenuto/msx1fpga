@@ -43,7 +43,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity ssdram is
+entity ssdram256Mb is
 	generic (
 		freq_g			: integer := 100
 	);
@@ -52,7 +52,7 @@ entity ssdram is
 		reset_i		: in    std_logic;
 		refresh_i	: in    std_logic									:= '1';
 		-- Static RAM bus
-		addr_i		: in    std_logic_vector(22 downto 0);		-- 8MB
+		addr_i		: in    std_logic_vector(24 downto 0);		-- 32MB
 		data_i		: in    std_logic_vector( 7 downto 0);
 		data_o		: out   std_logic_vector( 7 downto 0);
 		cs_i			: in    std_logic;
@@ -67,12 +67,12 @@ entity ssdram is
 		mem_udq_o	: out   std_logic;
 		mem_ldq_o	: out   std_logic;
 		mem_ba_o		: out   std_logic_vector( 1 downto 0);
-		mem_addr_o	: out   std_logic_vector(11 downto 0);
+		mem_addr_o	: out   std_logic_vector(12 downto 0);
 		mem_data_io	: inout std_logic_vector(15 downto 0)
 	);
 end entity;
 
-architecture Behavior of ssdram is
+architecture Behavior of ssdram256Mb is
 
 	constant SdrCmd_de_c	: std_logic_vector(3 downto 0) := "1111"; -- deselect
 	constant SdrCmd_xx_c	: std_logic_vector(3 downto 0) := "0111"; -- no operation
@@ -87,12 +87,12 @@ architecture Behavior of ssdram is
 	signal SdrBa_s			: std_logic_vector(1 downto 0);
 	signal SdrUdq_s		: std_logic;
 	signal SdrLdq_s		: std_logic;
-	signal SdrAdr_s		: std_logic_vector(11 downto 0);
+	signal SdrAdr_s		: std_logic_vector(12 downto 0);
 	signal SdrDat_s		: std_logic_vector(15 downto 0);
 	
 	signal ram_req_s		: std_logic;
 	signal ram_ack_s		: std_logic;
-	signal ram_addr_s		: std_logic_vector(22 downto 0);
+	signal ram_addr_s		: std_logic_vector(24 downto 0);
 	signal ram_din_s		: std_logic_vector( 7 downto 0);
 	signal ram_dout_s		: std_logic_vector( 7 downto 0);
 	signal ram_we_s		: std_logic;
@@ -142,7 +142,7 @@ begin
 		variable SdrRoutineSeq_v			: unsigned( 7 downto 0)	:= X"00";
 		variable refreshDelayCounter_v	: unsigned(23 downto 0)	:= x"000000";
 		variable SdrRefreshCounter_v		: unsigned(15 downto 0)	:= X"0000";
-		variable SdrAddress_v				: std_logic_vector(22 downto 0);
+		variable SdrAddress_v				: std_logic_vector(24 downto 0);
 		
 	begin
 	
@@ -173,7 +173,7 @@ begin
 						SdrRoutineSeq_v	:= SdrRoutineSeq_v + 1;
 					elsif SdrRoutineSeq_v = X"14" then
 						SdrCmd_s				<= SdrCmd_ms_c;
-						SdrAdr_s				<= "00" & "1" & "00" & "010" & "0" & "000";				-- Single, Standard, CAS Latency=2, WT=0(seq), BL=1
+						SdrAdr_s				<= "000" & "1" & "00" & "010" & "0" & "000";				-- Single, Standard, CAS Latency=2, WT=0(seq), BL=1
 						SdrRoutineSeq_v := SdrRoutineSeq_v + 1;
 					elsif SdrRoutineSeq_v = X"17" then
 						SdrCmd_s <= SdrCmd_xx_c;
@@ -215,13 +215,13 @@ begin
 				when SdrRoutine_ReadOne =>	
 					if SdrRoutineSeq_v = X"00" then
 						SdrCmd_s				<= SdrCmd_ac_c;
-						SdrBa_s				<= SdrAddress_v(22 downto 21);
-						SdrAdr_s				<= SdrAddress_v(20 downto 9);				-- Row (12 bits)
+						SdrBa_s				<= SdrAddress_v(24 downto 23);
+						SdrAdr_s				<= SdrAddress_v(22 downto 10);				-- Row (13 bits)
 						SdrRoutineSeq_v	:= SdrRoutineSeq_v + 1;
 					elsif SdrRoutineSeq_v = X"02" then
 						SdrCmd_s						<= SdrCmd_rd_c;
-						SdrAdr_s(11 downto 8)	<= "0100";								-- A10 = '1' => Auto Pre-charge
-						SdrAdr_s(7 downto 0)		<= SdrAddress_v(8 downto 1);		-- Col (8 bits)
+						SdrAdr_s(12 downto 9)	<= "0010";								-- A10 = '1' => Auto Pre-charge
+						SdrAdr_s(8 downto 0)		<= SdrAddress_v(9 downto 1);		-- Col (9 bits)
 						SdrUdq_s						<= '0';
 						SdrLdq_s						<= '0';
 						SdrRoutineSeq_v			:= SdrRoutineSeq_v + 1;
@@ -245,13 +245,13 @@ begin
 				when SdrRoutine_WriteOne =>	
 					if SdrRoutineSeq_v = X"00" then
 						SdrCmd_s				<= SdrCmd_ac_c;
-						SdrBa_s				<= SdrAddress_v(22 downto 21);
-						SdrAdr_s				<= SdrAddress_v(20 downto 9);
+						SdrBa_s				<= SdrAddress_v(24 downto 23);
+						SdrAdr_s				<= SdrAddress_v(22 downto 10);
 						SdrRoutineSeq_v	:= SdrRoutineSeq_v + 1;
 					elsif SdrRoutineSeq_v = X"02" then
 						SdrCmd_s						<= SdrCmd_wr_c;
-						SdrAdr_s(11 downto 8)	<= "0100";									-- A10 = '1' => Auto Pre-charge
-						SdrAdr_s(7 downto 0)		<= SdrAddress_v(8 downto 1);
+						SdrAdr_s(12 downto 9)	<= "0010";									-- A10 = '1' => Auto Pre-charge
+						SdrAdr_s(8 downto 0)		<= SdrAddress_v(9 downto 1);
 						SdrUdq_s						<= not SdrAddress_v(0);
 						SdrLdq_s						<=     SdrAddress_v(0);
 						SdrDat_s						<= ram_din_s & ram_din_s;

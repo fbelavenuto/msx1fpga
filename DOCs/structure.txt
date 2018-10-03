@@ -19,6 +19,7 @@ Hardware IDs:
 6  = ZX-Uno Board
 7  = ZX-Uno Board VGA2M
 8  = Multicore2 Board
+9  = QMXC6SLX16 Board
 
 Switched I/O ports:
 

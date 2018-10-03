@@ -1,0 +1,114 @@
+CONFIG VCCAUX=3.3;
+
+# Clocks
+NET "clock_50M_i"       LOC="A10"  | IOSTANDARD = LVCMOS33;
+
+#SDRAM
+NET "sdram_clock_o"     LOC="H1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_cke_o"       LOC="J1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<0>"   LOC="L4"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<1>"   LOC="M3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<2>"   LOC="M4"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<3>"   LOC="N3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<4>"   LOC="R2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<5>"   LOC="R1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<6>"   LOC="P2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<7>"   LOC="P1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<8>"   LOC="N1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<9>"   LOC="M1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<10>"  LOC="L3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<11>"  LOC="L1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_addr_o<12>"  LOC="K1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_ba_o<0>"     LOC="K3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_ba_o<1>"     LOC="K2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<0>"    LOC="A3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<1>"    LOC="A2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<2>"    LOC="B3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<3>"    LOC="B2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<4>"    LOC="C3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<5>"    LOC="C2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<6>"    LOC="D3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<7>"    LOC="E3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<8>"    LOC="G1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<9>"    LOC="F1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<10>"   LOC="F2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<11>"   LOC="E1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<12>"   LOC="E2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<13>"   LOC="D1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<14>"   LOC="C1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dq_io<15>"   LOC="B1"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dqml_o"      LOC="F3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_dqmh_o"      LOC="H2"  | IOSTANDARD = LVCMOS33;
+NET "sdram_cs_n_o"      LOC="J3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_we_n_o"      LOC="G3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_cas_n_o"     LOC="H3"  | IOSTANDARD = LVCMOS33;
+NET "sdram_ras_n_o"     LOC="J4"  | IOSTANDARD = LVCMOS33;
+
+# SPI Flash (FPGA)
+NET "flash_clk_o"       LOC="R11"  | IOSTANDARD = LVCMOS33;
+NET "flash_data_i"      LOC="T10"  | IOSTANDARD = LVCMOS33;
+NET "flash_data_o"      LOC="P10"  | IOSTANDARD = LVCMOS33;
+NET "flash_cs_n_o"      LOC="T3"   | IOSTANDARD = LVCMOS33;
+
+# Video output
+NET "vga_r_o<0>"        LOC="A14"  | IOSTANDARD = LVCMOS33;
+NET "vga_r_o<1>"        LOC="C13"  | IOSTANDARD = LVCMOS33;
+NET "vga_r_o<2>"        LOC="B12"  | IOSTANDARD = LVCMOS33;
+NET "vga_r_o<3>"        LOC="C11"  | IOSTANDARD = LVCMOS33;
+NET "vga_g_o<0>"        LOC="B10"  | IOSTANDARD = LVCMOS33;
+NET "vga_g_o<1>"        LOC="C9"  | IOSTANDARD = LVCMOS33;
+NET "vga_g_o<2>"        LOC="B8"  | IOSTANDARD = LVCMOS33;
+NET "vga_g_o<3>"        LOC="C7"  | IOSTANDARD = LVCMOS33;
+NET "vga_b_o<0>"        LOC="B6"  | IOSTANDARD = LVCMOS33;
+NET "vga_b_o<1>"        LOC="B5"  | IOSTANDARD = LVCMOS33;
+NET "vga_b_o<2>"        LOC="E10"  | IOSTANDARD = LVCMOS33;
+NET "vga_b_o<3>"        LOC="E11"  | IOSTANDARD = LVCMOS33;
+NET "vga_hs_o"          LOC="F9"  | IOSTANDARD = LVCMOS33;
+NET "vga_vs_o"          LOC="C8"  | IOSTANDARD = LVCMOS33;
+
+# Keys
+NET "keys_n_i<0>"       LOC="T8"  | IOSTANDARD = LVCMOS33;
+NET "keys_n_i<1>"       LOC="R7"  | IOSTANDARD = LVCMOS33;
+
+# Leds
+NET "leds_n_o<0>"       LOC="T9"  | IOSTANDARD = LVCMOS33;
+NET "leds_n_o<1>"       LOC="R9"  | IOSTANDARD = LVCMOS33;
+
+# Keyboard
+NET "ps2_clk_io"        LOC="E7"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "ps2_dat_io"        LOC="F7"  | IOSTANDARD = LVCMOS33 | PULLUP;
+
+# Sound output
+NET "audio_dac_l_o"     LOC="D6"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
+NET "audio_dac_r_o"     LOC="P4"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
+
+# SD/MMC
+NET "sd_cs_n_o"         LOC="P5"  | IOSTANDARD = LVCMOS33;
+NET "sd_sclk_o"         LOC="M7"  | IOSTANDARD = LVCMOS33;
+NET "sd_mosi_o"         LOC="N8"  | IOSTANDARD = LVCMOS33;
+NET "sd_miso_i"         LOC="P9"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "sd_pres_n_i"       LOC="T5"  | IOSTANDARD = LVCMOS33 | PULLUP;
+NET "sd_wp_i"           LOC="T6"  | IOSTANDARD = LVCMOS33 | PULLUP;
+
+
+# Clock Constraints
+
+NET "clock_50M_i" TNM_NET = clock_50M_i;
+TIMESPEC TS_clock_50M_i = PERIOD "clock_50M_i" 20 ns HIGH 50%;
+
+NET "clock_master_s" TNM_NET = clock_master_s;
+TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.56 ns HIGH 50%;
+
+NET "clock_sdram_s" TNM_NET = clock_sdram_s;
+TIMESPEC TS_clock_sdram_s = PERIOD "clock_sdram_s" 11.645 ns HIGH 50%;
+
+NET "sdram_clock_o" TNM_NET = sdram_clock_o;
+TIMESPEC TS_sdram_clock_o = PERIOD "sdram_clock_o" 11.645 ns HIGH 50% PHASE -90;
+
+PIN "pll_1/clkout3_buf.O" CLOCK_DEDICATED_ROUTE = FALSE;
+
+NET "clks/clock_3m_s" TNM_NET = clks/clock_3m_s;
+TIMESPEC TS_clks_clock_3m_s = PERIOD "clks/clock_3m_s" 279.365 ns HIGH 50%;
+
+NET "clks/clock_vdp_s" TNM_NET = clks/clock_vdp_s;
+TIMESPEC TS_clks_clock_vdp_s = PERIOD "clks/clock_vdp_s" 93.121 ns HIGH 50%;

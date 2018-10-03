@@ -47,12 +47,14 @@ entity mixers is
 	port (
 		clock_i			: in  std_logic;
 		reset_i			: in  std_logic;
+		beep_i			: in  std_logic;
+		ear_i				: in  std_logic;
 		audio_scc_i		: in  signed(14 downto 0);
 		audio_psg_i		: in  unsigned(7 downto 0);
-		ear_i				: in  std_logic;
 		jt51_left_i		: in  signed(15 downto 0);
 		jt51_right_i	: in  signed(15 downto 0);
-		beep_i			: in  std_logic;
+		opll_mo_i		: in  signed(12 downto 0)		:= (others => '0');
+		opll_ro_i		: in  signed(12 downto 0)		:= (others => '0');
 		audio_mix_l_o	: out signed(15 downto 0);
 		audio_mix_r_o	: out signed(15 downto 0)
 	);
@@ -79,6 +81,8 @@ architecture Behavioral of mixers is
 	signal scc_sig_s		: signed(15 downto 0);
 	signal jt51_l_sig_s	: signed(15 downto 0);
 	signal jt51_r_sig_s	: signed(15 downto 0);
+	signal opll_sum_s		: signed(12 downto 0);
+	signal opll_sig_s		: signed(15 downto 0);
 
 begin
 
@@ -88,9 +92,11 @@ begin
 	scc_sig_s		<= audio_scc_i(14) & audio_scc_i;
 	jt51_l_sig_s	<= jt51_left_i;
 	jt51_r_sig_s	<= jt51_right_i;
+	opll_sum_s		<= opll_mo_i + opll_ro_i;
+	opll_sig_s		<= opll_sum_s(12) & opll_sum_s(12) & opll_sum_s(12) & opll_sum_s;
 
-	pcm_l_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s;
-	pcm_r_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s;
+	pcm_l_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s + opll_sig_s;
+	pcm_r_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s + opll_sig_s;
 
 	audio_mix_l_o <= pcm_l_s;
 	audio_mix_r_o <= pcm_r_s;
