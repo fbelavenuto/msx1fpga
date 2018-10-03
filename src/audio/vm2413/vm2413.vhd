@@ -35,10 +35,6 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 package VM2413 is
 
-  subtype CH_TYPE is integer range 0 to 9-1;
-  subtype SLOT_TYPE     is std_logic_vector( 4 downto 0 );
-  subtype STAGE_TYPE    is std_logic_vector( 1 downto 0 );
-
   subtype REGS_VECTOR_TYPE is std_logic_vector(23 downto 0);
 
   type REGS_TYPE is record
@@ -53,7 +49,6 @@ package VM2413 is
   function CONV_REGS_VECTOR ( regs : REGS_TYPE ) return REGS_VECTOR_TYPE;
   function CONV_REGS ( vec : REGS_VECTOR_TYPE ) return REGS_TYPE;
 
-  subtype VOICE_ID_TYPE is integer range 0 to 37;
   subtype VOICE_VECTOR_TYPE is std_logic_vector(35 downto 0);
 
   type VOICE_TYPE is record
@@ -70,27 +65,27 @@ package VM2413 is
   function CONV_VOICE ( inst_vec : VOICE_VECTOR_TYPE ) return VOICE_TYPE;
 
   -- Voice Parameter Types
-  subtype AM_TYPE is std_logic; -- AM switch - '0':off  '1':3.70Hz
-  subtype PM_TYPE is std_logic; -- PM switch - '0':stop '1':6.06Hz
-  subtype EG_TYPE is std_logic; -- Envelope type - '0':release '1':sustine
-  subtype KR_TYPE is std_logic; -- Keyscale Rate
-  subtype ML_TYPE is std_logic_vector(3 downto 0); -- Multiple
-  subtype WF_TYPE is std_logic; -- WaveForm - '0':sine '1':half-sine
-  subtype FB_TYPE is std_logic_vector(2 downto 0); -- Feedback
-  subtype AR_TYPE is std_logic_vector(3 downto 0); -- Attack Rate
-  subtype DR_TYPE is std_logic_vector(3 downto 0); -- Decay Rate
-  subtype SL_TYPE is std_logic_vector(3 downto 0); -- Sustine Level
-  subtype RR_TYPE is std_logic_vector(3 downto 0); -- Release Rate
+--  subtype AM_TYPE is std_logic; -- AM switch - '0':off  '1':3.70Hz
+--  subtype PM_TYPE is std_logic; -- PM switch - '0':stop '1':6.06Hz
+--  subtype EG_TYPE is std_logic; -- Envelope type - '0':release '1':sustine
+--  subtype KR_TYPE is std_logic; -- Keyscale Rate
+--  subtype ML_TYPE is std_logic_vector(3 downto 0); -- Multiple
+--  subtype WF_TYPE is std_logic; -- WaveForm - '0':sine '1':half-sine
+--  subtype FB_TYPE is std_logic_vector(2 downto 0); -- Feedback
+--  subtype AR_TYPE is std_logic_vector(3 downto 0); -- Attack Rate
+--  subtype DR_TYPE is std_logic_vector(3 downto 0); -- Decay Rate
+--  subtype SL_TYPE is std_logic_vector(3 downto 0); -- Sustine Level
+--  subtype RR_TYPE is std_logic_vector(3 downto 0); -- Release Rate
 
   -- F-Number, Block and Rks(Rate and key-scale) types
-  subtype BLK_TYPE  is std_logic_vector(2 downto 0); -- Block
-  subtype FNUM_TYPE is std_logic_vector(8 downto 0); -- F-Number
-  subtype RKS_TYPE is std_logic_vector(3 downto 0);  -- Rate-KeyScale
+--  subtype BLK_TYPE  is std_logic_vector(2 downto 0); -- Block
+--  subtype FNUM_TYPE is std_logic_vector(8 downto 0); -- F-Number
+--  subtype RKS_TYPE is std_logic_vector(3 downto 0);  -- Rate-KeyScale
 
   -- 18 bits phase counter
-  subtype PHASE_TYPE is std_logic_vector (17 downto 0);
+--  subtype PHASE_TYPE is std_logic_vector (17 downto 0);
   -- Phage generator's output
-  subtype PGOUT_TYPE is std_logic_vector (8 downto 0);
+--  subtype PGOUT_TYPE is std_logic_vector (8 downto 0);
   -- Final linear output of opll
   subtype LI_TYPE is std_logic_vector (8 downto 0); -- Wave in Linear
   -- Total Level and Envelope output
@@ -133,20 +128,6 @@ package VM2413 is
 
   function CONV_EGDATA_VECTOR( data : EGDATA_TYPE ) return EGDATA_VECTOR_TYPE;
   function CONV_EGDATA( vec : EGDATA_VECTOR_TYPE ) return EGDATA_TYPE;
-
-  component Opll port(
-    XIN     : in std_logic;
-    XOUT    : out std_logic;
-    XENA    : in std_logic;
-    D       : in std_logic_vector(7 downto 0);
-    A       : in std_logic;
-    CS_n    : in std_logic;
-    WE_n    : in std_logic;
-    IC_n    : in std_logic;
-    MO      : out std_logic_vector(9 downto 0);
-    RO      : out std_logic_vector(9 downto 0)
-  );
-  end component;
 
 end VM2413;
 

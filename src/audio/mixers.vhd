@@ -93,7 +93,7 @@ begin
 	jt51_l_sig_s	<= jt51_left_i;
 	jt51_r_sig_s	<= jt51_right_i;
 	opll_sum_s		<= opll_mo_i + opll_ro_i;
-	opll_sig_s		<= opll_sum_s(12) & opll_sum_s(12) & opll_sum_s(12) & opll_sum_s;
+	opll_sig_s		<= opll_sum_s(12) & opll_sum_s & "00";
 
 	pcm_l_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_l_sig_s + opll_sig_s;
 	pcm_r_s 	<= beep_sig_s + ear_sig_s + psg_sig_s + scc_sig_s + jt51_r_sig_s + opll_sig_s;

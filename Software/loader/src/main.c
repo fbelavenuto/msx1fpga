@@ -118,6 +118,7 @@ void main()
 	unsigned int pn_ram_start = 0, pn_ram_end = 0, pn_ram_ipl = 0;
 	unsigned int pn_mr2_start = 0, pn_mr2_end = 0;
 	unsigned int pn_rom = 0, pn_nextor = 0, pn_romsize = 2;
+	unsigned long filesize;
 	unsigned char buffer[512];
 	unsigned char *ppl       = (unsigned char *)0xFF00;
 //	unsigned char c;
@@ -271,11 +272,14 @@ void main()
 			//     12345678901234567890123456789012
 			error("MSXROMS file not found!");
 		}
-		if (file.size != 16384*pn_romsize) {
+		filesize = 16384L * (unsigned long)pn_romsize;
+
+		if (file.size != filesize) {
 			//              11111111112222222222333
 			//     12345678901234567890123456789012
 			error("MSXROMS file size wrong!");
 		}
+
 		loadrom(pn_rom, pn_rom+pn_romsize);
 		vdp_putstring(" OK\n");
 	}

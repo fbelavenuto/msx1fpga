@@ -34,42 +34,42 @@
 --
 
 library ieee;
-    use ieee.std_logic_1164.all;
-    use ieee.std_logic_unsigned.all;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 
 entity SlotCounter is
-    generic (
-        delay   : integer
-    );
-    port (
-        clk     : in    std_logic;
-        reset   : in    std_logic;
-        clkena  : in    std_logic;
+	generic (
+		delay   : integer
+	);
+	port (
+		clk     : in    std_logic;
+		reset   : in    std_logic;
+		clkena  : in    std_logic;
 
-        slot    : out   std_logic_vector( 4 downto 0 );
-        stage   : out   std_logic_vector( 1 downto 0 )
-    );
-end SlotCounter;
+		slot    : out   std_logic_vector( 4 downto 0 );
+		stage   : out   std_logic_vector( 1 downto 0 )
+	);
+end entity;
 
 architecture rtl of SlotCounter is
-    signal ff_count     : std_logic_vector( 6 downto 0 );
+	signal ff_count     : std_logic_vector( 6 downto 0 );
 begin
 
-    process( reset, clk )
-    begin
-        if( reset = '1' )then
-            ff_count <= "1000111" - delay;
-        elsif( clk'event and clk='1' )then
-            if( clkena ='1' )then
-                if( ff_count = "1000111" )then      -- 71
-                    ff_count <= (others => '0');
-                else
-                    ff_count <= ff_count + 1;
-                end if;
-            end if;
-        end if;
-    end process;
+	process (reset, clk)
+	begin
+		if reset = '1' then
+			ff_count <= "1000111" - delay;
+		elsif rising_edge(clk) then
+			if clkena ='1' then
+				if ff_count = "1000111" then      -- 71
+					ff_count <= (others => '0');
+				else
+					ff_count <= ff_count + 1;
+				end if;
+			end if;
+		end if;
+	end process;
 
-    stage   <= ff_count( 1 downto 0 );      --  0`3 ‚ÅzŠÂ
-    slot    <= ff_count( 6 downto 2 );      --  0`17 ‚ÅzŠÂ
-end rtl;
+	stage   <= ff_count(1 downto 0);      --  0`3 ‚ÅzŠÂ
+	slot    <= ff_count(6 downto 2);      --  0`17 ‚ÅzŠÂ
+end architecture;

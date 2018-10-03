@@ -28,23 +28,23 @@
 -- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 --
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use WORK.VM2413.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use work.vm2413.all;
 
 entity VoiceRom is
-  port (
-    clk    : in std_logic;
-    addr : in VOICE_ID_TYPE;
-    data  : out VOICE_TYPE
-  );
-end VoiceRom;
+	port (
+		clk    : in std_logic;
+		addr : in integer range 0 to 37;
+		data  : out VOICE_TYPE
+	);
+end entity;
 
 architecture RTL of VoiceRom is
 
-  type VOICE_ARRAY_TYPE is array (0 to 37) of VOICE_VECTOR_TYPE;
-  constant voices : VOICE_ARRAY_TYPE := (
+	type VOICE_ARRAY_TYPE is array (0 to 37) of std_logic_vector(35 downto 0);
+	constant voices : VOICE_ARRAY_TYPE := (
 -- APEK<ML>KL< TL >W<F><AR><DR><SL><RR>
   "000000000000000000000000000000000000", -- @0(M)
   "000000000000000000000000000000000000", -- @0(C)
@@ -106,14 +106,11 @@ architecture RTL of VoiceRom is
 
 begin
 
-  process (clk)
+	process (clk)
+	begin
+		if rising_edge(clk) then
+			data <= CONV_VOICE(voices(addr));
+		end if;
+	end process;
 
-  begin
-
-    if clk'event and clk = '1' then
-      data <= CONV_VOICE(voices(addr));
-    end if;
-
-  end process;
-
-end RTL;
+end architecture;

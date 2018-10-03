@@ -34,153 +34,122 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 use WORK.VM2413.ALL;
 
 entity OutputGenerator is
-    port (
-        clk         : in    std_logic;
-        reset       : in    std_logic;
-        clkena      : in    std_logic;
-        slot        : in    SLOT_TYPE;
-        stage       : in    STAGE_TYPE;
+	port (
+		clk         : in    std_logic;
+		reset       : in    std_logic;
+		clkena      : in    std_logic;
+		slot        : in    std_logic_vector( 4 downto 0 );
+		stage       : in    std_logic_vector( 1 downto 0 );
 
-        rhythm      : in    std_logic;
-        opout       : in    std_logic_vector( 13 downto 0 );
+		rhythm      : in    std_logic;
+		opout       : in    std_logic_vector( 13 downto 0 );
 
-        faddr       : in    CH_TYPE;
-        fdata       : out   SIGNED_LI_TYPE;
+		faddr       : in    integer range 0 to 9-1;
+		fdata       : out   SIGNED_LI_TYPE;
 
-        maddr       : in    SLOT_TYPE;
-        mdata       : out   SIGNED_LI_TYPE
-    );
-end OutputGenerator;
+		maddr       : in    std_logic_vector( 4 downto 0 );
+		mdata       : out   SIGNED_LI_TYPE
+	);
+end entity;
 
 architecture RTL of OutputGenerator is
 
-    component FeedbackMemory
-        port (
-            clk     : in    std_logic;
-            reset   : in    std_logic;
-            wr      : in    std_logic;
-            waddr   : in    CH_TYPE;
-            wdata   : in    SIGNED_LI_TYPE;
-            raddr   : in    CH_TYPE;
-            rdata   : out   SIGNED_LI_TYPE
-        );
-    end component;
+	function AVERAGE ( L : SIGNED_LI_TYPE ; R : SIGNED_LI_TYPE ) return SIGNED_LI_TYPE is
+		variable vL, vR : std_logic_vector(LI_TYPE'high + 2 downto 0);
+	begin
 
-    component OutputMemory
-        port (
-            clk     : in    std_logic;
-            reset   : in    std_logic;
-            wr      : in    std_logic;
-            addr    : in    SLOT_TYPE;
-            wdata   : in    SIGNED_LI_TYPE;
-            rdata   : out   SIGNED_LI_TYPE;
-            addr2   : in    SLOT_TYPE;
-            rdata2  : out   SIGNED_LI_TYPE
-        );
-    end component;
+		--  符号＋絶対値 → ２の補数
+		if( L.sign = '0' )then
+			vL := "00" & L.value;
+		else
+			vL := not ( "00" & L.value ) + '1';
+		end if;
+		if( R.sign = '0' )then
+			vR := "00" & R.value;
+		else
+			vR := not ( "00" & R.value ) + '1';
+		end if;
 
-    component LinearTable
-        port (
-            clk      : in   std_logic;
-            reset    : in   std_logic;
-            addr     : in   std_logic_vector( 13 downto 0 );
-            data     : out  SIGNED_LI_TYPE
-        );
-    end component;
+		vL := vL + vR;
 
-    function AVERAGE ( L : SIGNED_LI_TYPE ; R : SIGNED_LI_TYPE ) return SIGNED_LI_TYPE is
-        variable vL, vR : std_logic_vector(LI_TYPE'high + 2 downto 0);
-    begin
+		--  ２の補数 → 符号＋絶対値、ついでに 1/2 倍。ここで１ビット消失。
+		if vL(vL'high) = '0' then -- positive
+			return ( sign => '0', value => vL(vL'high-1 downto 1) );
+		else -- negative
+			vL := not ( vL - '1' );
+			return ( sign => '1', value => vL(vL'high-1 downto 1) );
+		end if;
 
-        --  符号＋絶対値 → ２の補数
-        if( L.sign = '0' )then
-            vL := "00" & L.value;
-        else
-            vL := not ( "00" & L.value ) + '1';
-        end if;
-        if( R.sign = '0' )then
-            vR := "00" & R.value;
-        else
-            vR := not ( "00" & R.value ) + '1';
-        end if;
+	end;
 
-        vL := vL + vR;
-
-        --  ２の補数 → 符号＋絶対値、ついでに 1/2 倍。ここで１ビット消失。
-        if vL(vL'high) = '0' then -- positive
-            return ( sign => '0', value => vL(vL'high-1 downto 1) );
-        else -- negative
-            vL := not ( vL - '1' );
-            return ( sign => '1', value => vL(vL'high-1 downto 1) );
-        end if;
-
-    end;
-
-    signal fb_wr, mo_wr : std_logic;
-    signal fb_addr      : CH_TYPE;
-    signal mo_addr      : SLOT_TYPE;
-    signal li_data, fb_wdata, mo_wdata, mo_rdata : SIGNED_LI_TYPE;
+	signal fb_wr, mo_wr : std_logic;
+	signal fb_addr      : integer range 0 to 9-1;
+	signal mo_addr      : std_logic_vector( 4 downto 0 );
+	signal li_data, fb_wdata, mo_wdata, mo_rdata : SIGNED_LI_TYPE;
 begin
 
-    Fmem : FeedbackMemory port map(
-        clk     => clk,
-        reset   => reset,
-        wr      => fb_wr,
-        waddr   => fb_addr,
-        wdata   => fb_wdata,
-        raddr   => faddr,
-        rdata   => fdata
-    );
+	Fmem : entity work.FeedbackMemory
+	port map(
+		clk     => clk,
+		reset   => reset,
+		wr      => fb_wr,
+		waddr   => fb_addr,
+		wdata   => fb_wdata,
+		raddr   => faddr,
+		rdata   => fdata
+	);
 
-    Mmem : OutputMemory port map(
-        clk     => clk,
-        reset   => reset,
-        wr      => mo_wr,
-        addr    => mo_addr,
-        wdata   => mo_wdata,
-        rdata   => mo_rdata,
-        addr2   => maddr,
-        rdata2  => mdata
-    );
+	Mmem : entity work.OutputMemory
+	port map(
+		clk     => clk,
+		reset   => reset,
+		wr      => mo_wr,
+		addr    => mo_addr,
+		wdata   => mo_wdata,
+		rdata   => mo_rdata,
+		addr2   => maddr,
+		rdata2  => mdata
+	);
 
-    Ltbl : LinearTable port map (
-        clk     => clk,
-        reset   => reset,
-        addr    => opout,           --  0～127 (opout は FF の出力だからダイレクトに入れても問題ない）
-        data    => li_data          --  0～511
-    );
+	Ltbl : entity work.LinearTable
+	port map (
+		clk     => clk,
+		reset   => reset,
+		addr    => opout,           --  0～127 (opout は FF の出力だからダイレクトに入れても問題ない）
+		data    => li_data          --  0～511
+	);
 
-    process( reset, clk )
-    begin
-        if( reset = '1' )then
-            mo_wr <= '0';
-            fb_wr <= '0';
-        elsif( clk'event and clk = '1' )then
-            if( clkena = '1' )then
-                mo_addr <= slot;
+	process( reset, clk )
+	begin
+		if( reset = '1' )then
+			mo_wr <= '0';
+			fb_wr <= '0';
+		elsif( clk'event and clk = '1' )then
+			if( clkena = '1' )then
+				mo_addr <= slot;
 
-                if( stage = 0 )then
-                    mo_wr   <= '0';
-                    fb_wr   <= '0';
+				if( stage = 0 )then
+					mo_wr   <= '0';
+					fb_wr   <= '0';
 
-                elsif( stage = 1 )then
-                    --  opout に所望の値が入ってくるステージ
-                elsif( stage = 2 )then
-                    --  待ち
-                elsif( stage = 3 )then
-                    --  LinerTable から opout で指定されたアドレスに対応する値が出てくるステージ
-                    if( slot(0) = '0' )then
-                        --  フィードバックメモリにはモジュレータのときしか書き込まない
-                        fb_addr <= conv_integer(slot)/2;
-                        fb_wdata<= AVERAGE(mo_rdata, li_data);
-                        fb_wr   <= '1';
-                    end if;
-                    -- Store raw output
-                    mo_wdata<= li_data;
-                    mo_wr   <= '1';
-                end if;
-            end if;
-        end if;
-    end process;
+				elsif( stage = 1 )then
+					--  opout に所望の値が入ってくるステージ
+				elsif( stage = 2 )then
+					--  待ち
+				elsif( stage = 3 )then
+					--  LinerTable から opout で指定されたアドレスに対応する値が出てくるステージ
+					if( slot(0) = '0' )then
+						--  フィードバックメモリにはモジュレータのときしか書き込まない
+						fb_addr <= conv_integer(slot)/2;
+						fb_wdata<= AVERAGE(mo_rdata, li_data);
+						fb_wr   <= '1';
+					end if;
+					-- Store raw output
+					mo_wdata<= li_data;
+					mo_wr   <= '1';
+				end if;
+			end if;
+		end if;
+	end process;
 
-end RTL;
+end architecture;

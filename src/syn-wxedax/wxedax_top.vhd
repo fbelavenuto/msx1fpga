@@ -644,16 +644,15 @@ begin
 		
 		opll1 : entity work.opll 
 		port map (
-			xin         => clock_master_s,
-			xout        => open,
-			xena        => clock_3m_s,
-			d           => bus_data_to_s,
-			a           => bus_addr_s(0),
+			clock_i		=> clock_master_s,
+			clock_en_i        => clock_3m_s,
+			reset_i		=> reset_s,
+			data_i           => bus_data_to_s,
+			addr_i           => bus_addr_s(0),
 			cs_n        => opll_cs_n_s,
 			we_n        => bus_wr_n_s,
-			ic_n        => reset_n_s,
-			mo          => opll_mo_s,
-			ro          => opll_ro_s
+			melody_o          => opll_mo_s,
+			rythm_o          => opll_ro_s
 		);
 	end generate;
 

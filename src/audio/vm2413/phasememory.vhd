@@ -28,31 +28,31 @@
 -- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 --
 --
-library IEEE;
-use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
-use WORK.VM2413.ALL;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use work.vm2413.all;
 
 entity PhaseMemory is
-  port (
-    clk     : in std_logic;
-    reset   : in std_logic;
-    slot    : in SLOT_TYPE;
-    memwr   : in std_logic;
-    memout  : out PHASE_TYPE;
-    memin   : in  PHASE_TYPE
-  );
+	port (
+		clk     : in std_logic;
+		reset   : in std_logic;
+		slot    : in std_logic_vector( 4 downto 0 );
+		memwr   : in std_logic;
+		memout  : out std_logic_vector (17 downto 0);
+		memin   : in  std_logic_vector (17 downto 0)
+	);
 end PhaseMemory;
 
 architecture RTL of PhaseMemory is
 
-  type PHASE_ARRAY_TYPE is array (0 to 18-1) of PHASE_TYPE;
-  signal phase_array : PHASE_ARRAY_TYPE;
+	type PHASE_ARRAY_TYPE is array (0 to 18-1) of std_logic_vector (17 downto 0);
+	signal phase_array : PHASE_ARRAY_TYPE := (others => (others => '0'));
 	signal init_slot : integer range 0 to 18;
 	signal mem_wr_s	: std_logic;
 	signal mem_addr_s	: integer;
-	signal mem_data_s	: PHASE_TYPE;
-	attribute ram_style        : string;
+	signal mem_data_s	: std_logic_vector (17 downto 0);
+	attribute ram_style		: string;
 	attribute ram_style of phase_array : signal is "block";
 
 begin
@@ -61,19 +61,19 @@ begin
 	mem_addr_s	<= init_slot			when init_slot /= 18 else conv_integer(slot);
 	mem_data_s	<= (others => '0')	when init_slot /= 18 else memin;
 
-  process (clk, reset)
-  begin
-   if reset = '1' then
-      init_slot <= 0;
-   elsif clk'event and clk = '1' then
-     if mem_wr_s = '1' then
-         phase_array(mem_addr_s) <= mem_data_s;
-     end if;
-     memout <= phase_array(conv_integer(slot));
-     if init_slot /= 18 then
-       init_slot <= init_slot + 1;
-	  end if;
-    end if;
-  end process;
+	process (clk, reset)
+	begin
+		if reset = '1' then
+			init_slot <= 0;
+		elsif rising_edge(clk) then
+			if mem_wr_s = '1' then
+				phase_array(mem_addr_s) <= mem_data_s;
+			end if;
+			memout <= phase_array(conv_integer(slot));
+			if init_slot /= 18 then
+				init_slot <= init_slot + 1;
+			end if;
+		end if;
+	end process;
 
 end RTL;
