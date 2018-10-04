@@ -40,21 +40,20 @@ use work.vm2413.all;
 
 entity Operator is
 	port (
-		clk     : in    std_logic;
-		reset   : in    std_logic;
-		clkena  : in    std_logic;
-		slot    : in    std_logic_vector( 4 downto 0 );
-		stage   : in    std_logic_vector( 1 downto 0 );
-		rhythm  : in    std_logic;
-		WF      : in    std_logic;
-		FB      : in    std_logic_vector(2 downto 0);
-		noise   : in    std_logic;
-		pgout   : in    std_logic_vector( 17 downto 0 );    --  êÆêîïî 9bit, è¨êîïî 9bit
-		egout   : in    std_logic_vector( 12 downto 0 );
-		faddr   : out   integer range 0 to 9-1;
-		fdata   : in    SIGNED_LI_TYPE;
-
-		opout   : out   std_logic_vector( 13 downto 0 )     -- êÆêîïî 8bit, è¨êîïî 6bit
+		clk		: in    std_logic;
+		reset		: in    std_logic;
+		clkena	: in    std_logic;
+		slot		: in    std_logic_vector( 4 downto 0 );
+		stage		: in    std_logic_vector( 1 downto 0 );
+		rhythm	: in    std_logic;
+		WF			: in    std_logic;
+		FB			: in    std_logic_vector(2 downto 0);
+		noise		: in    std_logic;
+		pgout		: in    std_logic_vector( 17 downto 0 );    --   9bit,è 9bit
+		egout		: in    std_logic_vector( 12 downto 0 );
+		faddr		: out   integer range 0 to 9-1;
+		fdata		: in    SIGNED_LI_TYPE;
+		opout		: out   std_logic_vector( 13 downto 0 )     -- ê 8bit, 6bit
 	);
 end entity;
 

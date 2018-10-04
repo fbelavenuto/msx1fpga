@@ -40,22 +40,19 @@ use work.vm2413.all;
 
 entity PhaseGenerator is
 	port (
-		clk      : in std_logic;
-		reset    : in std_logic;
-		clkena   : in std_logic;
-		
-		slot     : in std_logic_vector( 4 downto 0 );
-		stage    : in std_logic_vector( 1 downto 0 );
-		
-		rhythm : in std_logic;
-		pm     : in std_logic;
-		ml     : in std_logic_vector(3 downto 0);
-		blk    : in std_logic_vector(2 downto 0);
-		fnum   : in std_logic_vector(8 downto 0);
-		key    : in std_logic;
-		
-		noise  : out std_logic;
-		pgout  : out std_logic_vector( 17 downto 0 )
+		clk		: in std_logic;
+		reset		: in std_logic;
+		clkena	: in std_logic;
+		slot		: in std_logic_vector( 4 downto 0 );
+		stage		: in std_logic_vector( 1 downto 0 );
+		rhythm	: in std_logic;
+		pm			: in std_logic;
+		ml			: in std_logic_vector(3 downto 0);
+		blk		: in std_logic_vector(2 downto 0);
+		fnum		: in std_logic_vector(8 downto 0);
+		key		: in std_logic;
+		noise		: out std_logic;
+		pgout		: out std_logic_vector( 17 downto 0 )
 	);
 end entity;
 

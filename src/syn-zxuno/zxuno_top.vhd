@@ -163,6 +163,8 @@ architecture behavior of zxuno_top is
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
+	signal audio_l_s			: signed(15 downto 0);
+	signal audio_r_s			: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -227,7 +229,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> open
 	);
 
 	-- The MSX1
@@ -362,6 +365,20 @@ begin
 		data		=> rom_data_s
 	);
 	
+	-- VRAM
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_di_s,
+		data_o	=> vram_do_s
+	);
+
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
@@ -386,34 +403,44 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DACs
+	mixer: entity work.mixers
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
+		ear_i				=> ear_i,
+		beep_i			=> beep_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		ear_i			=> ear_i,
-		beep_i			=> beep_s,
 		jt51_left_i		=> jt51_left_s,
 		jt51_right_i	=> jt51_right_s,
-		audio_mix_l_o	=> open,
-		audio_mix_r_o	=> open,
-		dacout_l_o		=> dac_l_o,
-		dacout_r_o		=> dac_r_o
+		opll_mo_i		=> (others => '0'),
+		opll_ro_i		=> (others => '0'),
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s
 	);
 
-	-- VRAM
-	vram: entity work.spram
+	-- Left Channel
+	audiol : entity work.dac_dsm2v
 	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
+		nbits_g	=> 16
 	)
 	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_l_s,
+		dac_o		=> dac_l_o
+	);
+
+	-- Right Channel
+	audior : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
+	port map (
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_r_s,
+		dac_o		=> dac_r_o
 	);
 
 	-- Multiboot

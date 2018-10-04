@@ -45,7 +45,7 @@ use ieee.std_logic_unsigned.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= true
+		hdmi_output_g		: boolean	:= false
 	);
 	port (
 		-- Clocks
@@ -155,9 +155,9 @@ architecture behavior of multicore_top is
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned( 7 downto 0);
-	signal audio_l_s			: std_logic_vector(15 downto 0);
-	signal audio_r_s			: std_logic_vector(15 downto 0);
 	signal beep_s				: std_logic;
+	signal audio_l_s			: signed(15 downto 0);
+	signal audio_r_s			: signed(15 downto 0);
 
 	-- Video
 	signal rgb_col_s			: std_logic_vector( 3 downto 0);
@@ -236,7 +236,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> open
 	);
 
 	-- The MSX1
@@ -385,23 +386,6 @@ begin
 		extra_keys_o	=> extra_keys_s
 	);
 
-	-- Audio
-	audio: entity work.Audio_DAC
-	port map (
-		clock_i			=> clock_master_s,
-		reset_i			=> reset_s,
-		audio_scc_i		=> audio_scc_s,
-		audio_psg_i		=> audio_psg_s,
-		beep_i			=> beep_s,
-		ear_i				=> ear_i,
-		jt51_left_i		=> (others => '0'),
-		jt51_right_i	=> (others => '0'),
-		audio_mix_l_o	=> audio_l_s,
-		audio_mix_r_o	=> audio_r_s,
-		dacout_l_o		=> dac_l_o,
-		dacout_r_o		=> dac_r_o
-	);
-
 	-- RAM and VRAM
 	sram0: entity work.dpSRAM_5128
 	port map (
@@ -426,6 +410,47 @@ begin
 		sram_ce_n_o		=> sram_ce_n_o(0),
 		sram_oe_n_o		=> sram_oe_n_o,
 		sram_we_n_o		=> sram_we_n_o
+	);
+
+	-- Audio
+	mixer: entity work.mixers
+	port map (
+		clock_i			=> clock_master_s,
+		reset_i			=> reset_s,
+		ear_i				=> ear_i,
+		beep_i			=> beep_s,
+		audio_scc_i		=> audio_scc_s,
+		audio_psg_i		=> audio_psg_s,
+		jt51_left_i		=> (others => '0'),
+		jt51_right_i	=> (others => '0'),
+		opll_mo_i		=> (others => '0'),
+		opll_ro_i		=> (others => '0'),
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s
+	);
+
+	-- Left Channel
+	audiol : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
+	port map (
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_l_s,
+		dac_o		=> dac_l_o
+	);
+
+	-- Right Channel
+	audior : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
+	port map (
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_r_s,
+		dac_o		=> dac_r_o
 	);
 
 	-- Glue logic
@@ -558,8 +583,8 @@ begin
 
 	uh: if hdmi_output_g generate
 
-		sound_hdmi_l_s <= '0' & audio_l_s(15 downto 1);
-		sound_hdmi_r_s <= '0' & audio_r_s(15 downto 1);
+		sound_hdmi_l_s <= '0' & std_logic_vector(audio_l_s(15 downto 1));
+		sound_hdmi_r_s <= '0' & std_logic_vector(audio_r_s(15 downto 1));
 
 		-- HDMI
 		hdmi: entity work.hdmi

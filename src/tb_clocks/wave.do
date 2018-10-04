@@ -14,6 +14,7 @@ add wave -noupdate -radix unsigned /tb/u_target/pos_cnt3_q
 add wave -noupdate -radix unsigned /tb/u_target/neg_cnt3_q
 add wave -noupdate -divider {New Divider}
 add wave -noupdate /tb/u_target/clock_3m_s
+add wave -noupdate /tb/u_target/clock_3m_en_s
 add wave -noupdate /tb/u_target/clock_7m_s
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {160 ns} 0}

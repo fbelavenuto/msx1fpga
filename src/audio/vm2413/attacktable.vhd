@@ -37,27 +37,6 @@
 -------------------------------------------------------------------------------
 library ieee;
     use ieee.std_logic_1164.all;
-    use ieee.std_logic_signed.all;
-
-entity attack_table_mul is
-    port(
-        i0      : in    std_logic_vector(  7 downto 0 );    --  符号無し 8bit (整数部 0bit, 小数部 8bit)
-        i1      : in    std_logic_vector(  7 downto 0 );    --  符号付き 8bit (整数部 8bit)
-        o       : out   std_logic_vector( 13 downto 0 )     --  符号付き14bit (整数部 8bit, 小数部 6bit)
-    );
-end attack_table_mul;
-
-architecture rtl of attack_table_mul is
-    signal w_mul    : std_logic_vector( 16 downto 0 );
-begin
-
-    w_mul   <= ('0' & i0) * i1;
-    o       <= w_mul( 15 downto 2 );        --  bit16 は bit15 と同じなのでカット。bit1～0 (小数部) は切り捨て。
-end rtl;
-
--------------------------------------------------------------------------------
-library ieee;
-    use ieee.std_logic_1164.all;
     use ieee.std_logic_unsigned.all;
     use ieee.std_logic_arith;
 
@@ -72,7 +51,7 @@ end AttackTable;
 
 architecture rtl of attacktable is
 
-    component attack_table_mul
+    component AttackTableMul
         port(
             i0      : in    std_logic_vector(  7 downto 0 );    --  符号無し 8bit (整数部 0bit, 小数部 8bit)
             i1      : in    std_logic_vector(  7 downto 0 );    --  符号付き 8bit (整数部 8bit)
@@ -138,7 +117,7 @@ begin
     --  o = i1 * (1 - k) + i2 * w = i1 - w * i1 + w * i2 = i1 + w * (i2 - i1)
     w_sub   <= ('0' & ff_d2) - ('0' & ff_d1);
 
-    u_attack_table_mul: attack_table_mul
+    u_attack_table_mul: AttackTableMul
     port map (
         i0      => ff_w,
         i1      => w_sub,

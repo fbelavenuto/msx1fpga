@@ -189,8 +189,8 @@ set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpSRAM_5128.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/YM2149.vhd
-set_global_assignment -name VHDL_FILE ../../src/audio/Audio_DAC.vhd
-set_global_assignment -name VHDL_FILE ../../src/audio/dac.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/mixers.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/dac_dsm2v.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_core.vhd
 set_global_assignment -name VHDL_FILE "../../src/video/vdp18/vdp18_pack-p.vhd"
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_sprite.vhd

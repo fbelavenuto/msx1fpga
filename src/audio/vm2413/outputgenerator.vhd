@@ -35,20 +35,17 @@ use WORK.VM2413.ALL;
 
 entity OutputGenerator is
 	port (
-		clk         : in    std_logic;
-		reset       : in    std_logic;
-		clkena      : in    std_logic;
-		slot        : in    std_logic_vector( 4 downto 0 );
-		stage       : in    std_logic_vector( 1 downto 0 );
-
-		rhythm      : in    std_logic;
-		opout       : in    std_logic_vector( 13 downto 0 );
-
-		faddr       : in    integer range 0 to 9-1;
-		fdata       : out   SIGNED_LI_TYPE;
-
-		maddr       : in    std_logic_vector( 4 downto 0 );
-		mdata       : out   SIGNED_LI_TYPE
+		clk			: in    std_logic;
+		reset			: in    std_logic;
+		clkena		: in    std_logic;
+		slot			: in    std_logic_vector( 4 downto 0 );
+		stage			: in    std_logic_vector( 1 downto 0 );
+		rhythm		: in    std_logic;
+		opout			: in    std_logic_vector( 13 downto 0 );
+		faddr			: in    integer range 0 to 9-1;
+		fdata			: out   SIGNED_LI_TYPE;
+		maddr			: in    std_logic_vector( 4 downto 0 );
+		mdata			: out   SIGNED_LI_TYPE
 	);
 end entity;
 

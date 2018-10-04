@@ -58,7 +58,9 @@ architecture testbench of tb is
 		clock_vdp_o		: out std_logic;
 		clock_5m_en_o	: out std_logic;
 		clock_cpu_o		: out std_logic;
-		clock_psg_en_o	: out std_logic
+		clock_psg_en_o	: out std_logic;
+		clock_3m_o		: out std_logic;
+		clock_3m_en_o	: out std_logic
 	);
 	end component;
 
@@ -70,6 +72,8 @@ architecture testbench of tb is
 	signal clock_5m_en_s	: std_logic;
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
+	signal clock_3m_s		: std_logic;
+	signal clock_3m_en_s	: std_logic;
 
 begin
 
@@ -82,7 +86,9 @@ begin
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> clock_5m_en_s,
 		clock_cpu_o		=> clock_cpu_s,
-		clock_psg_en_o	=> clock_psg_en_s
+		clock_psg_en_o	=> clock_psg_en_s,
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> clock_3m_en_s
 	);
 
 	-- ----------------------------------------------------- --

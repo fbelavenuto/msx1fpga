@@ -39,16 +39,12 @@ entity SumMixer is
 	port (
 		clk		: in std_logic;
 		reset		: in std_logic;
-		clkena 	: in std_logic;
-
+		clkena	: in std_logic;
 		slot		: in std_logic_vector( 4 downto 0 );
 		stage		: in std_logic_vector( 1 downto 0 );
-
 		rhythm	: in std_logic;
-
 		maddr		: out std_logic_vector( 4 downto 0 );
 		mdata		: in SIGNED_LI_TYPE;
-
 		melody_o	: out signed(12 downto 0);
 		rhythm_o	: out signed(12 downto 0)
 	);

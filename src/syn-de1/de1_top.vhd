@@ -50,7 +50,8 @@ use ieee.numeric_std.all;
 -- Generic top-level entity for Altera DE1 board
 entity de1_top is
 	generic (
-		per_jt51_g				: boolean		:= true
+		per_opll_g		: boolean		:= true;
+		per_jt51_g		: boolean		:= true
 	);
 	port (
 		-- Clocks
@@ -149,6 +150,7 @@ architecture behavior of de1_top is
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
+	signal clock_3m_en_s		: std_logic;
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
@@ -171,7 +173,9 @@ architecture behavior of de1_top is
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
-	signal k7_ai_s				: std_logic;
+	signal ear_s				: std_logic;
+	signal audio_l_s			: signed(15 downto 0);
+	signal audio_r_s			: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -224,6 +228,11 @@ architecture behavior of de1_top is
 	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
 	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 
+	-- OPLL
+	signal opll_cs_n_s		: std_logic						:= '1';
+	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
+
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
 
@@ -249,7 +258,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> clock_3m_en_s
 	);
 
 	-- The MSX1
@@ -325,7 +335,7 @@ begin
 		-- K7
 		k7_motor_o		=> open,
 		k7_audio_o		=> open,
-		k7_audio_i		=> k7_ai_s,
+		k7_audio_i		=> ear_s,
 		-- Joystick
 		joy1_up_i		=> J0_UP,
 		joy1_down_i		=> J0_DOWN,
@@ -392,29 +402,6 @@ begin
 		extra_keys_o	=> extra_keys_s
 	);
 
-	-- Audio
-	audio: entity work.Audio_WM8731
-	port map (
-		clock_i			=> clk24_i(0),
-		reset_i			=> reset_s,
-		audio_scc_i		=> audio_scc_s,
-		audio_psg_i		=> audio_psg_s,
-		jt51_left_i		=> jt51_left_s,
-		jt51_right_i	=> jt51_right_s,
-		beep_i			=> beep_s,
-		k7_audio_o		=> k7_ai_s,
-
-		i2s_xck_o		=> aud_xck_o,
-		i2s_bclk_o		=> aud_bclk_o,
-		i2s_adclrck_o	=> aud_adclrck_o,
-		i2s_adcdat_i	=> aud_adcdat_i,
-		i2s_daclrck_o	=> aud_daclrck_o,
-		i2s_dacdat_o	=> aud_dacdat_o,
-
-		i2c_sda_io		=> i2c_sdat_io,
-		i2c_scl_io		=> i2c_sclk_io
-	);
-
 	-- VRAM
 --	vram: entity work.spram
 --	generic map (
@@ -465,6 +452,42 @@ begin
 		mem_ba_o	=> dram_ba_o,
 		mem_addr_o	=> dram_addr_o,
 		mem_data_io	=> dram_data_io
+	);
+
+	-- Audio
+	mixer: entity work.mixers
+	port map (
+		clock_i			=> clock_master_s,
+		reset_i			=> reset_s,
+		ear_i				=> ear_s,
+		beep_i			=> beep_s,
+		audio_scc_i		=> audio_scc_s,
+		audio_psg_i		=> audio_psg_s,
+		jt51_left_i		=> jt51_left_s,
+		jt51_right_i	=> jt51_right_s,
+		opll_mo_i		=> opll_mo_s,
+		opll_ro_i		=> opll_ro_s,
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s
+	);
+
+	codec: entity work.WM8731
+	port map (
+		clock_i			=> clk24_i(0),
+		reset_i			=> reset_s,
+		k7_audio_o		=> ear_s,
+		audio_l_i		=> audio_l_s,
+		audio_r_i		=> audio_r_s,
+
+		i2s_xck_o		=> aud_xck_o,
+		i2s_bclk_o		=> aud_bclk_o,
+		i2s_adclrck_o	=> aud_adclrck_o,
+		i2s_adcdat_i	=> aud_adcdat_i,
+		i2s_daclrck_o	=> aud_daclrck_o,
+		i2s_dacdat_o	=> aud_dacdat_o,
+
+		i2c_sda_io		=> i2c_sdat_io,
+		i2c_scl_io		=> i2c_sclk_io
 	);
 
 	-- Glue logic
@@ -519,6 +542,24 @@ begin
 			-- unsigned outputs for sigma delta converters, full resolution		
 			dacleft_o		=> open,
 			dacright_o		=> open
+		);
+	end generate;
+
+	popll: if per_opll_g generate
+		-- OPLL tests
+		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
+		
+		opll1 : entity work.opll 
+		port map (
+			clock_i		=> clock_master_s,
+			clock_en_i	=> clock_3m_en_s,
+			reset_i		=> reset_s,
+			data_i		=> bus_data_to_s,
+			addr_i		=> bus_addr_s(0),
+			cs_n        => opll_cs_n_s,
+			we_n        => bus_wr_n_s,
+			melody_o		=> opll_mo_s,
+			rythm_o		=> opll_ro_s
 		);
 	end generate;
 

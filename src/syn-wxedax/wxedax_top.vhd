@@ -132,6 +132,7 @@ architecture behavior of wxedax_top is
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
+	signal clock_3m_en_s		: std_logic;
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
@@ -158,8 +159,6 @@ architecture behavior of wxedax_top is
 	signal ear_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
-	signal fir_l_s				: signed(15 downto 0);
-	signal fir_r_s				: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -243,7 +242,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> clock_3m_en_s
 	);
 
 	-- The MSX1
@@ -393,6 +393,20 @@ begin
 		mem_data_io	=> sdram_dq_io
 	);
 
+	-- VRAM
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_di_s,
+		data_o	=> vram_do_s
+	);
+
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
@@ -433,35 +447,6 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
---	-- Low-pass filter
---	lfp_l: entity work.lowpass
---	generic map (
---		inputBitNb  => 16,
---		outputBitNb => 16,
---		shiftBitNb  => 4
---	)
---	port map (
---		clock     => clock_3m_s,
---		reset     => reset_s,
---		en        => '1',
---		filterIn  => audio_l_s,
---		filterOut => fir_l_s
---	);
---
---	lfp_r: entity work.lowpass
---	generic map (
---		inputBitNb  => 16,
---		outputBitNb => 16,
---		shiftBitNb  => 4
---	)
---	port map (
---		clock     => clock_3m_s,
---		reset     => reset_s,
---		en        => '1',
---		filterIn  => audio_r_s,
---		filterOut => fir_r_s
---	);
-
 	-- Left Channel
 	audiol : entity work.dac_dsm2v
 	generic map (
@@ -484,20 +469,6 @@ begin
 		clock_i	=> clock_master_s,
 		dac_i		=> audio_r_s,
 		dac_o		=> audio_dac_r_o
-	);
-	
-	-- VRAM
-	vram: entity work.spram
-	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
-	)
-	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
 	);
 
 	-- Tape In
@@ -645,14 +616,14 @@ begin
 		opll1 : entity work.opll 
 		port map (
 			clock_i		=> clock_master_s,
-			clock_en_i        => clock_3m_s,
+			clock_en_i	=> clock_3m_en_s,
 			reset_i		=> reset_s,
-			data_i           => bus_data_to_s,
-			addr_i           => bus_addr_s(0),
-			cs_n        => opll_cs_n_s,
-			we_n        => bus_wr_n_s,
-			melody_o          => opll_mo_s,
-			rythm_o          => opll_ro_s
+			data_i		=> bus_data_to_s,
+			addr_i		=> bus_addr_s(0),
+			cs_n			=> opll_cs_n_s,
+			we_n			=> bus_wr_n_s,
+			melody_o		=> opll_mo_s,
+			rythm_o		=> opll_ro_s
 		);
 	end generate;
 

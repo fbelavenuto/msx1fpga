@@ -646,7 +646,7 @@ begin
 	ipl_cs_s			<= '1'	when slot3_exp_n_s(3) = '0'	else '0';
 
 	-- ROMs
-	iplrom_cs_s		<= '1'	when slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 13) = "000"	else '0';
+	iplrom_cs_s		<= '1'	when slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 13) = "000"	else '0';	-- 0000-1FFF
 	iplrom_addr_s	<= cpu_addr_s(12 downto 0);
 	brom_cs_s		<= '1'	when prim_slot_n_s(0) = '0' and cpu_addr_s(15) = '0'					else '0';	-- 0000-7FFF
 	extrom_cs_s		<= '1'	when slot3_exp_n_s(0) = '0' and cpu_addr_s(15 downto 14) = "01"	else '0';	-- 4000-7FFF

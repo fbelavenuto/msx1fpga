@@ -25,7 +25,7 @@
 
 set_global_assignment -name FAMILY "Cyclone IV E"
 set_global_assignment -name DEVICE EP4CE22F17C8
-set_global_assignment -name TOP_LEVEL_ENTITY multicore_top
+set_global_assignment -name TOP_LEVEL_ENTITY multicore2_top
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION "13.0 SP1"
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:43:40  NOVEMBER 03, 2016"
 set_global_assignment -name LAST_QUARTUS_VERSION "13.0 SP1"
@@ -198,26 +198,10 @@ set_location_assignment PIN_P16 -to tmds_o[2]
 set_location_assignment PIN_P14 -to tmds_o[1]
 set_location_assignment PIN_R14 -to tmds_o[0]
 
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[7]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[6]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[5]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[4]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[3]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[2]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[1]
-set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[0]
-
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_clk_io
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_data_io
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_mouse_clk_io
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_mouse_data_io
-set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_miso_i
 
 
 
-set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
-set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
 
 set_global_assignment -name OPTIMIZE_HOLD_TIMING "ALL PATHS"
 set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
@@ -226,7 +210,7 @@ set_global_assignment -name SEED 8
 set_global_assignment -name CYCLONEIII_CONFIGURATION_SCHEME "PASSIVE SERIAL"
 set_global_assignment -name GENERATE_RBF_FILE ON
 set_global_assignment -name ON_CHIP_BITSTREAM_DECOMPRESSION OFF
-set_global_assignment -name VHDL_FILE "../../src/syn-multicore2/multicore_top.vhd"
+set_global_assignment -name VHDL_FILE "../../src/syn-multicore2/multicore2_top.vhd"
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore2/pll1.vhd"
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore2/pll2.vhd"
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
@@ -240,7 +224,7 @@ set_global_assignment -name VHDL_FILE ../../src/cpu/t80.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/ipl_rom.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
-set_global_assignment -name VHDL_FILE ../../src/ram/ssdram.vhd
+set_global_assignment -name VHDL_FILE ../../src/ram/ssdram256Mb.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/YM2149.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/mixers.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/dac_dsm2v.vhd
@@ -300,4 +284,42 @@ set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_exp2lin.v
 set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_eg.v
 set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_acc.v
 set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51.v
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/OPLL.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/VoiceRom.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/VoiceMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/vm2413.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/SumMixer.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/SlotCounter.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/SineTable.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/RegisterMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/PhaseMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/PhaseGenerator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/OutputMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/OutputGenerator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/Operator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/LinearTableMul.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/LinearTable.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/InterpolateMul.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/FeedbackMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/EnvelopeMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/EnvelopeGenerator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/Controller.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/AttackTableMul.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/AttackTable.vhd
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[7]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[6]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[5]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[4]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[3]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[2]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[1]
+set_instance_assignment -name CURRENT_STRENGTH_NEW "MAXIMUM CURRENT" -to tmds_o[0]
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_clk_io
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_data_io
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_mouse_clk_io
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to ps2_mouse_data_io
+set_instance_assignment -name WEAK_PULL_UP_RESISTOR ON -to sd_miso_i
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

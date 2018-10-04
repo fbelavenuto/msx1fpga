@@ -77,6 +77,7 @@ entity qmxc6slx16_top is
 		ps2_clk_io				: inout std_logic									:= 'Z';
 		ps2_dat_io		 		: inout std_logic									:= 'Z';
 		-- Audio
+		ear_i						: in    std_logic;
 		audio_dac_l_o			: out   std_logic									:= '0';
 		audio_dac_r_o			: out   std_logic									:= '0';
 		-- SD Card
@@ -99,7 +100,6 @@ architecture behavior of qmxc6slx16_top is
 	signal por_clock_s		: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
-	signal reset_n_s			: std_logic;
 	signal soft_por_s			: std_logic;
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
@@ -112,6 +112,7 @@ architecture behavior of qmxc6slx16_top is
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
+	signal clock_3m_en_s		: std_logic;
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
@@ -206,7 +207,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> clock_3m_en_s
 	);
 
 	-- The MSX1
@@ -283,7 +285,7 @@ begin
 		-- K7
 		k7_motor_o		=> open,
 		k7_audio_o		=> open,
-		k7_audio_i		=> '0',
+		k7_audio_i		=> ear_i,
 		-- Joystick
 		joy1_up_i		=> '1',
 		joy1_down_i		=> '1',
@@ -356,6 +358,20 @@ begin
 		mem_data_io	=> sdram_dq_io
 	);
 
+	-- VRAM
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_di_s,
+		data_o	=> vram_do_s
+	);
+
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
@@ -384,7 +400,7 @@ begin
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
-		ear_i				=> '0',
+		ear_i				=> ear_i,
 		beep_i			=> beep_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
@@ -419,20 +435,6 @@ begin
 		dac_i		=> audio_r_s,
 		dac_o		=> audio_dac_r_o
 	);
-	
-	-- VRAM
-	vram: entity work.spram
-	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
-	)
-	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
-	);
 
 	-- Glue logic
 
@@ -449,7 +451,6 @@ begin
 	por_clock_s	<= '1'	when por_cnt_s /= 0																else '0';
 	por_s			<= '1'	when por_cnt_s /= 0  or soft_por_s = '1'   or keys_n_i(1) = '0'	else '0';
 	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1' or keys_n_i(0) = '0'	else '0';
-	reset_n_s	<= not reset_s;
 
 	process(clock_master_s)
 	begin
@@ -514,16 +515,15 @@ begin
 	
 	opll1 : entity work.opll 
 	port map (
-		xin         => clock_master_s,
-		xout        => open,
-		xena        => clock_3m_s,
-		d           => bus_data_to_s,
-		a           => bus_addr_s(0),
-		cs_n        => opll_cs_n_s,
-		we_n        => bus_wr_n_s,
-		ic_n        => reset_n_s,
-		mo          => opll_mo_s,
-		ro          => opll_ro_s
+		clock_i		=> clock_master_s,
+		clock_en_i	=> clock_3m_en_s,
+		reset_i		=> reset_s,
+		data_i		=> bus_data_to_s,
+		addr_i		=> bus_addr_s(0),
+		cs_n			=> opll_cs_n_s,
+		we_n			=> bus_wr_n_s,
+		melody_o		=> opll_mo_s,
+		rythm_o		=> opll_ro_s
 	);
 
 	-- DEBUG

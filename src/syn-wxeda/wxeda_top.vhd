@@ -46,9 +46,6 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.ALL;
 
 entity wxeda_top is
-	generic (
-		per_opll_g				: boolean		:= true
-	);
 	port (
 		-- Clock (48MHz)
 		clock_48M_i				: in    std_logic;
@@ -210,7 +207,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> open
 	);
 
 	-- The MSX1
@@ -458,25 +456,6 @@ begin
 	vga_b_o	<= rgb_b_s & '0';
 	vga_hs_o	<= rgb_hsync_n_s;
 	vga_vs_o	<= rgb_vsync_n_s;
-
-	-- OPLL
-	popll: if per_opll_g generate
-		-- OPLL tests
-		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
-		
-		opll1 : entity work.opll 
-		port map (
-			clock_i		=> clock_master_s,
-			clock_en_i	=> clock_3m_s,
-			reset_i		=> reset_s,
-			data_i		=> bus_data_to_s,
-			addr_i		=> bus_addr_s(0),
-			cs_n        => opll_cs_n_s,
-			we_n        => bus_wr_n_s,
-			melody_o		=> opll_mo_s,
-			rythm_o		=> opll_ro_s
-		);
-	end generate;
 
 	-- DEBUG
 

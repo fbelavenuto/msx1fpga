@@ -431,7 +431,8 @@ set_global_assignment -name VHDL_FILE ../../src/ram/ssdram.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/ipl_rom.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/seg7.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/YM2149.vhd
-set_global_assignment -name VHDL_FILE ../../src/audio/Audio_WM8731.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/mixers.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/WM8731.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/i2s_intf.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/i2c_loader.vhd
 set_global_assignment -name VHDL_FILE ../../src/video/vdp18/vdp18_core.vhd
@@ -479,4 +480,26 @@ set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_exprom.v
 set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_exp2lin.v
 set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_eg.v
 set_global_assignment -name VERILOG_FILE ../../src/audio/jt51/jt51_acc.v
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/OPLL.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/VoiceRom.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/VoiceMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/vm2413.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/SumMixer.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/SlotCounter.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/SineTable.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/RegisterMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/PhaseMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/PhaseGenerator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/OutputMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/OutputGenerator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/Operator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/LinearTableMul.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/LinearTable.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/InterpolateMul.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/FeedbackMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/EnvelopeMemory.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/EnvelopeGenerator.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/Controller.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/AttackTableMul.vhd
+set_global_assignment -name VHDL_FILE ../../src/audio/vm2413/AttackTable.vhd
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

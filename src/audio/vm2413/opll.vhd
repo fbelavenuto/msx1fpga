@@ -103,7 +103,7 @@ architecture rtl of OPLL is
 
 begin
 
-	--  CPU�A�N�Z�X���� ------------------------------------------------------
+	--  CPU ------------------------------------------------------
 	process( clock_i, reset_i )
 	begin
 		if reset_i ='1' then
@@ -112,11 +112,11 @@ begin
 		elsif rising_edge(clock_i) then
 			if clock_en_i = '1' then
 				if cs_n = '0' and we_n = '0' and addr_i = '0' then
-					--  �����W�X�^�A�h���X�w�背�W�X�^ �ւ̏�������
+					--  
 					opllptr <= data_i;
 					opllwr  <= '0';
 				elsif cs_n = '0' and we_n = '0' and addr_i = '1' then
-					--  �����W�X�^ �ւ̏�������
+					--  
 					oplldat <= data_i;
 					opllwr  <= '1';
 				end if;
@@ -124,7 +124,7 @@ begin
 		end if;
 	end process;
 
-	--  �^�C�~���O�W�F�l���[�^ -----------------------------------------------
+	--  -----------------------------------------------
 	s0: entity work.SlotCounter
 	generic map(
 		delay   => 0
@@ -176,49 +176,117 @@ begin
 	-- no delay
 	ct: entity work.Controller
 	port map (
-		clock_i,reset_i,clock_en_i, slot, stage, opllwr,opllptr,oplldat,
-		am,pm,wf,ml,tl,fb,ar,dr,sl,rr,blk,fnum,rks,key,rhythm);
+		clk		=> clock_i,
+		reset		=> reset_i,
+		clkena	=> clock_en_i,
+		slot		=> slot,
+		stage		=> stage,
+		wr			=> opllwr,
+		addr		=> opllptr,
+		data		=> oplldat,
+		-- output parameters for phasegenerator and envelopegenerator
+		am			=> am,
+		pm			=> pm,
+		wf			=> wf,
+		ml			=> ml,
+		tl			=> tl,
+		fb			=> fb,
+		ar			=> ar,
+		dr			=> dr,
+		sl			=> sl,
+		rr			=> rr,
+		blk		=> blk,
+		fnum		=> fnum,
+		rks		=> rks,
+		key		=> key,
+		rhythm	=> rhythm
+	);
 
 	-- 2 stages delay
 	eg: entity work.EnvelopeGenerator
 	port map (
-		clock_i,reset_i,clock_en_i,
-		slot2, stage2, rhythm,
-		am, tl, ar, dr, sl, rr, rks, key,
-		egout
+		clk		=> clock_i,
+		reset		=> reset_i,
+		clkena	=> clock_en_i,
+		slot		=> slot2,
+		stage		=> stage2,
+		rhythm	=> rhythm,
+		am			=> am,
+		tl			=> tl,
+		ar			=> ar,
+		dr			=> dr,
+		sl			=> sl,
+		rr			=> rr,
+		rks		=> rks,
+		key		=> key,
+		egout		=> egout
 	);
 
 	pg: entity work.PhaseGenerator
 	port map (
-		clock_i,reset_i,clock_en_i,
-		slot2, stage2, rhythm,
-		pm, ml, blk, fnum, key,
-		noise, pgout
+		clk		=> clock_i,
+		reset		=> reset_i,
+		clkena	=> clock_en_i,
+		slot		=> slot2,
+		stage		=> stage2,
+		rhythm	=> rhythm,
+		pm			=> pm,
+		ml			=> ml,
+		blk		=> blk,
+		fnum		=> fnum,
+		key		=> key,
+		noise		=> noise,
+		pgout		=> pgout
 	);
 
 	-- 5 stages delay
 	op: entity work.Operator
 	port map (
-		clock_i,reset_i,clock_en_i,
-		slot5, stage5, rhythm,
-		wf, fb, noise, pgout, egout, faddr, fdata, opout
+		clk		=> clock_i,
+		reset		=> reset_i,
+		clkena	=> clock_en_i,
+		slot		=> slot5,
+		stage		=> stage5,
+		rhythm	=> rhythm,
+		WF			=> wf,
+		FB			=> fb,
+		noise		=> noise,
+		pgout		=> pgout,
+		egout		=> egout,
+		faddr		=> faddr,
+		fdata		=> fdata,
+		opout		=> opout
 	);
 
 	-- 8 stages delay
 	og: entity work.OutputGenerator
 	port map (
-		clock_i, reset_i, clock_en_i, slot8, stage8, rhythm,
-		opout, faddr, fdata, maddr, mdata
+		clk		=> clock_i,
+		reset		=> reset_i,
+		clkena	=> clock_en_i,
+		slot		=> slot8,
+		stage		=> stage8,
+		rhythm	=> rhythm,
+		opout		=> opout,
+		faddr		=> faddr,
+		fdata		=> fdata,
+		maddr		=> maddr,
+		mdata		=> mdata
 	);
 
 	-- by Fabio Belavenuto
 	sm: entity work.SumMixer
 	port map (
-		clock_i, reset_i, clock_en_i,
-		slot, stage, rhythm,
-		maddr, mdata,
-		melody_o, rythm_o
+		clk		=> clock_i,
+		reset		=> reset_i,
+		clkena	=> clock_en_i,
+		slot		=> slot,
+		stage		=> stage,
+		rhythm	=> rhythm,
+		maddr		=> maddr,
+		mdata		=> mdata,
+		melody_o	=> melody_o,
+		rhythm_o	=> rythm_o
 	);
 
 end architecture;
-

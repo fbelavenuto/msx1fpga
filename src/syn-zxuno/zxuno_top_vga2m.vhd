@@ -122,7 +122,6 @@ architecture behavior of zxuno_top_vga2m is
 	signal por_clock_s		: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
-	signal reset_n_s			: std_logic;
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
 	signal soft_por_s			: std_logic;
@@ -134,6 +133,7 @@ architecture behavior of zxuno_top_vga2m is
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
+	signal clock_3m_en_s		: std_logic;
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
@@ -197,14 +197,14 @@ architecture behavior of zxuno_top_vga2m is
 	signal bus_sltsl2_n_s	: std_logic;
 
 	-- JT51
-	signal jt51_cs_n_s		: std_logic;
+	signal jt51_cs_n_s		: std_logic									:= '1';
 	signal jt51_left_s		: signed(15 downto 0)					:= (others => '0');
 	signal jt51_right_s		: signed(15 downto 0)					:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic						:= '1';
-	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_cs_n_s		: std_logic									:= '1';
+	signal opll_mo_s			: signed(12 downto 0)					:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)					:= (others => '0');
 
 begin
 
@@ -225,7 +225,8 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s,
+		clock_3m_en_o	=> clock_3m_en_s
 	);
 
 	-- The MSX1
@@ -451,7 +452,6 @@ begin
 	por_clock_s	<= '1'	when por_cnt_s /= 0																else '0';
 	por_s			<= '1'	when por_cnt_s /= 0 or soft_por_s = '1' or key_service_n_i = '0'	else '0';
 	reset_s		<= '1'	when por_s = '1' or soft_rst_cnt_s = X"00" or key_nmi_n_i = '0'	else '0';
-	reset_n_s	<= not reset_s;
 
 	process(reset_s, clock_master_s)
 	begin
@@ -518,16 +518,15 @@ begin
 		
 		opll1 : entity work.opll 
 		port map (
-			xin         => clock_master_s,
-			xout        => open,
-			xena        => clock_3m_s,
-			d           => bus_data_to_s,
-			a           => bus_addr_s(0),
-			cs_n        => opll_cs_n_s,
-			we_n        => bus_wr_n_s,
-			ic_n        => reset_n_s,
-			mo          => opll_mo_s,
-			ro          => opll_ro_s
+			clock_i		=> clock_master_s,
+			clock_en_i	=> clock_3m_en_s,
+			reset_i		=> reset_s,
+			data_i		=> bus_data_to_s,
+			addr_i		=> bus_addr_s(0),
+			cs_n			=> opll_cs_n_s,
+			we_n			=> bus_wr_n_s,
+			melody_o		=> opll_mo_s,
+			rythm_o		=> opll_ro_s
 		);
 	end generate;
 
