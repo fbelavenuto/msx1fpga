@@ -83,13 +83,13 @@ begin
 					when 0 =>
 						rom_addr		<= init_id;
 						rstate		<= 1;
-						ram_wr_s		<= '1';
 					when 1 =>
 						rstate		<= 2;
-						ram_wr_s		<= '0';
+						ram_wr_s		<= '1';
 					when 2 =>
 						rstate		<= 0;
 						init_id		<= init_id + 1;
+						ram_wr_s		<= '0';
 				end case;
 			end if;		 
 		end if;
