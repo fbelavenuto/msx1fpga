@@ -52,14 +52,14 @@ architecture RTL of VoiceMemory is
 	-- The following array is mapped into a Single-Clock Synchronous RAM with two-read
 	-- addresses by Altera's QuartusII compiler.
 	type VOICE_ARRAY_TYPE is array (0 to 37) of VOICE_VECTOR_TYPE;
-	signal voices : VOICE_ARRAY_TYPE;
-	signal rom_addr : integer range 0 to 37;
-	signal rom_data : VOICE_TYPE;
-	signal rstate : integer range 0 to 2;
-	signal init_id  : integer range 0 to 38;
-	signal rom_wr_s	: std_logic;
-	signal mem_addr_s	: integer;
-	signal mem_data_s	: VOICE_VECTOR_TYPE;
+	signal voices			: VOICE_ARRAY_TYPE;
+	signal rom_addr		: integer range 0 to 37;
+	signal rom_data		: VOICE_TYPE;
+	signal rstate			: integer range 0 to 2;
+	signal init_id			: integer range 0 to 38;
+	signal ram_wr_s		: std_logic;
+	signal mem_addr_s		: integer;
+	signal mem_data_s		: VOICE_VECTOR_TYPE;
 	signal mem_wr_s		: std_logic;
 
 begin
@@ -69,34 +69,35 @@ begin
 
 	mem_addr_s	<= init_id								when init_id /= 38	else rwaddr;
 	mem_data_s	<= CONV_VOICE_VECTOR(rom_data)	when init_id /= 38	else CONV_VOICE_VECTOR(idata);
-	mem_wr_s		<= rom_wr_s								when init_id /= 38	else wr;
+	mem_wr_s		<= ram_wr_s								when init_id /= 38	else wr;
 
 	process (clk, reset)
 	begin
 		if reset = '1' then
-			init_id <= 0;
-			rstate <= 0;
-		elsif clk'event and clk = '1' then
+			init_id	<= 0;
+			rstate	<= 0;
+			ram_wr_s	<= '0';
+		elsif rising_edge(clk) then
 			if init_id /= 38 then
 				case rstate is
 					when 0 =>
-						rom_wr_s <= '0';
-						rstate <= 1;
+						rom_addr		<= init_id;
+						rstate		<= 1;
+						ram_wr_s		<= '1';
 					when 1 =>
-						rstate <= 2;
+						rstate		<= 2;
+						ram_wr_s		<= '0';
 					when 2 =>
-						rom_wr_s   <= '1';
-						rstate <= 0;
-						init_id <= init_id + 1;
+						rstate		<= 0;
+						init_id		<= init_id + 1;
 				end case;
-			else
 			end if;		 
 		end if;
 	end process;
 
 	process (clk)
 	begin
-		if clk'event and clk = '1' then
+		if rising_edge(clk) then
 			if mem_wr_s = '1' then
 				voices(mem_addr_s) <= mem_data_s;
 			end if;

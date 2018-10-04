@@ -46,6 +46,9 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.ALL;
 
 entity wxeda_top is
+	generic (
+		per_opll_g				: boolean		:= true
+	);
 	port (
 		-- Clock (48MHz)
 		clock_48M_i				: in    std_logic;
@@ -139,6 +142,8 @@ architecture behavior of wxeda_top is
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
+	signal audio_l_s			: signed(15 downto 0);
+	signal audio_r_s			: signed(15 downto 0);
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -157,6 +162,27 @@ architecture behavior of wxeda_top is
 	signal keymap_addr_s		: std_logic_vector(9 downto 0);
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
+
+	-- Bus
+	signal bus_addr_s			: std_logic_vector(15 downto 0);
+	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
+	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
+	signal bus_rd_n_s			: std_logic;
+	signal bus_wr_n_s			: std_logic;
+	signal bus_m1_n_s			: std_logic;
+	signal bus_iorq_n_s		: std_logic;
+	signal bus_mreq_n_s		: std_logic;
+	signal bus_sltsl1_n_s	: std_logic;
+	signal bus_sltsl2_n_s	: std_logic;
+
+	--
+	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
+
+	-- OPLL
+	signal opll_cs_n_s		: std_logic						:= '1';
+	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
@@ -226,16 +252,16 @@ begin
 		rom_ce_o			=> open,
 		rom_oe_o			=> open,
 		-- External bus
-		bus_addr_o		=> open,
-		bus_data_i		=> (others => '1'),
-		bus_data_o		=> open,
-		bus_rd_n_o		=> open,
-		bus_wr_n_o		=> open,
-		bus_m1_n_o		=> open,
-		bus_iorq_n_o	=> open,
-		bus_mreq_n_o	=> open,
-		bus_sltsl1_n_o	=> open,
-		bus_sltsl2_n_o	=> open,
+		bus_addr_o		=> bus_addr_s,
+		bus_data_i		=> bus_data_from_s,
+		bus_data_o		=> bus_data_to_s,
+		bus_rd_n_o		=> bus_rd_n_s,
+		bus_wr_n_o		=> bus_wr_n_s,
+		bus_m1_n_o		=> bus_m1_n_s,
+		bus_iorq_n_o	=> bus_iorq_n_s,
+		bus_mreq_n_o	=> bus_mreq_n_s,
+		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
+		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
 		bus_wait_n_i	=> '1',
 		bus_nmi_n_i		=> '1',
 		bus_int_n_i		=> '1',
@@ -333,6 +359,20 @@ begin
 		mem_data_io	=> sdram_dq_io
 	);
 
+	-- VRAM
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_di_s,
+		data_o	=> vram_do_s
+	);
+
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
@@ -357,32 +397,44 @@ begin
 	);
 
 	-- Audio
-	audio: entity work.Audio_DAC
+	mixer: entity work.mixers
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
+		ear_i				=> '0',
+		beep_i			=> beep_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		beep_i			=> beep_s,
-		ear_i				=> '0',
-		jt51_left_i		=> (others => '0'),
-		jt51_right_i	=> (others => '0'),
-		dacout_l_o		=> audio_dac_l_o,
-		dacout_r_o		=> audio_dac_r_o
+		jt51_left_i		=> jt51_left_s,
+		jt51_right_i	=> jt51_right_s,
+		opll_mo_i		=> opll_mo_s,
+		opll_ro_i		=> opll_ro_s,
+		audio_mix_l_o	=> audio_l_s,
+		audio_mix_r_o	=> audio_r_s
 	);
 
-	-- VRAM
-	vram: entity work.spram
+	-- Left Channel
+	audiol : entity work.dac_dsm2v
 	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
+		nbits_g	=> 16
 	)
 	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_l_s,
+		dac_o		=> audio_dac_l_o
+	);
+
+	-- Right Channel
+	audior : entity work.dac_dsm2v
+	generic map (
+		nbits_g	=> 16
+	)
+	port map (
+		reset_i	=> reset_s,
+		clock_i	=> clock_master_s,
+		dac_i		=> audio_r_s,
+		dac_o		=> audio_dac_r_o
 	);
 
 	-- Glue logic
@@ -406,6 +458,25 @@ begin
 	vga_b_o	<= rgb_b_s & '0';
 	vga_hs_o	<= rgb_hsync_n_s;
 	vga_vs_o	<= rgb_vsync_n_s;
+
+	-- OPLL
+	popll: if per_opll_g generate
+		-- OPLL tests
+		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
+		
+		opll1 : entity work.opll 
+		port map (
+			clock_i		=> clock_master_s,
+			clock_en_i	=> clock_3m_s,
+			reset_i		=> reset_s,
+			data_i		=> bus_data_to_s,
+			addr_i		=> bus_addr_s(0),
+			cs_n        => opll_cs_n_s,
+			we_n        => bus_wr_n_s,
+			melody_o		=> opll_mo_s,
+			rythm_o		=> opll_ro_s
+		);
+	end generate;
 
 	-- DEBUG
 

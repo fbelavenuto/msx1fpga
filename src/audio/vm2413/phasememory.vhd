@@ -47,7 +47,7 @@ end PhaseMemory;
 architecture RTL of PhaseMemory is
 
 	type PHASE_ARRAY_TYPE is array (0 to 18-1) of std_logic_vector (17 downto 0);
-	signal phase_array : PHASE_ARRAY_TYPE := (others => (others => '0'));
+	signal phase_array : PHASE_ARRAY_TYPE;
 	signal init_slot : integer range 0 to 18;
 	signal mem_wr_s	: std_logic;
 	signal mem_addr_s	: integer;

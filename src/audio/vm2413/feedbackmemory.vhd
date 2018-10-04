@@ -53,7 +53,7 @@ end entity;
 architecture RTL of FeedbackMemory is
 
 	type SIGNED_LI_ARRAY_TYPE is array (0 to 9-1) of SIGNED_LI_VECTOR_TYPE;
-	signal data_array : SIGNED_LI_ARRAY_TYPE := (others => (others => '0'));
+	signal data_array : SIGNED_LI_ARRAY_TYPE;
 	signal init_ch : integer range 0 to 9;
 	signal mem_addr_s	: integer range 0 to 9-1;
 	signal mem_data_s	: SIGNED_LI_VECTOR_TYPE;

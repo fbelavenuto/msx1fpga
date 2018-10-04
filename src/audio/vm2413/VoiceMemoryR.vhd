@@ -1,5 +1,5 @@
 --
--- OutputMemory.vhd
+-- VoiceMemory.vhd
 --
 -- Copyright (c) 2006 Mitsutaka Okazaki (brezza@pokipoki.org)
 -- All rights reserved.
@@ -33,49 +33,36 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use work.vm2413.all;
 
-entity OutputMemory is
+entity VoiceMemory is
 	port (
 		clk    : in std_logic;
 		reset  : in std_logic;
+		
+		idata  : in VOICE_TYPE;
 		wr     : in std_logic;
-		addr   : in std_logic_vector( 4 downto 0 );
-		wdata  : in SIGNED_LI_TYPE;
-		rdata  : out SIGNED_LI_TYPE;
-		addr2  : in std_logic_vector( 4 downto 0 );
-		rdata2 : out SIGNED_LI_TYPE
+		rwaddr : in integer range 0 to 37; -- read/write address
+		roaddr : in integer range 0 to 37; -- read only address
+		odata  : out VOICE_TYPE;
+		rodata : out VOICE_TYPE
 	);
 end entity;
 
-architecture RTL of OutputMemory is
+architecture RTL of VoiceMemory is
 
-	type SIGNED_LI_ARRAY_TYPE is array (0 to 18) of SIGNED_LI_VECTOR_TYPE;
-	signal data_array : SIGNED_LI_ARRAY_TYPE;
-	signal init_ch : integer range 0 to 18;
-	signal mem_wr_s					: std_logic;
-	signal mem_addr_s					: integer;
-	signal mem_data_s					: SIGNED_LI_VECTOR_TYPE;
-	attribute ram_style				: string;
-	attribute ram_style of data_array : signal is "block";
+	type VOICE_ARRAY_TYPE is array (0 to 37) of VOICE_VECTOR_TYPE;
+	signal voices			: VOICE_ARRAY_TYPE;
 
 begin
 
-	mem_wr_s		<= '1'					when init_ch /= 18 else wr;
-	mem_addr_s	<= init_ch				when init_ch /= 18 else conv_integer(addr);
-	mem_data_s	<= (others => '0')	when init_ch /= 18 else CONV_SIGNED_LI_VECTOR(wdata);
+	ROM2413 : entity work.VoiceRom	port map(clk, roaddr, rodata);
 
-	process(clk, reset)
+	process (clk)
 	begin
-		if (reset = '1') then
-			init_ch <= 0;
-		elsif clk'event and clk='1' then
-			if mem_wr_s = '1' then
-				data_array(mem_addr_s) <= mem_data_s;
+		if rising_edge(clk) then
+			if wr = '1' then
+				voices(rwaddr) <= CONV_VOICE_VECTOR(idata);
 			end if;
-			rdata <= CONV_SIGNED_LI(data_array(conv_integer(addr)));
-			rdata2 <= CONV_SIGNED_LI(data_array(conv_integer(addr2)));
-			if init_ch /= 18 then
-				init_ch <= init_ch + 1;
-			end if;
+			odata <= CONV_VOICE(voices(rwaddr));
 		end if;
 	end process;
 

@@ -51,7 +51,7 @@ end entity;
 architecture rtl of registermemory is
 	--  ƒ`ƒƒƒlƒ‹î•ñ•ÛŽ—p 1read/1write ‚Ì SRAM
 	type regs_array_type is array (0 to 8) of std_logic_vector( 23 downto 0 );
-	signal regs_array			: regs_array_type := (others => (others => '0'));
+	signal regs_array			: regs_array_type;
 	signal mem_wr_s			: std_logic;
 	signal mem_addr_s			: integer;
 	signal mem_data_s			: std_logic_vector( 23 downto 0 );

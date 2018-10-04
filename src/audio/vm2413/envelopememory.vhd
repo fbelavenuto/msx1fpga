@@ -48,7 +48,7 @@ end entity;
 architecture RTL of EnvelopeMemory is
 
 	type EGDATA_ARRAY is array (0 to 18-1) of EGDATA_VECTOR_TYPE;
-	signal egdata_set : EGDATA_ARRAY := (others => (others => '1'));
+	signal egdata_set : EGDATA_ARRAY;
 	signal init_slot : integer range 0 to 18;
 	signal mem_wr_s	: std_logic;
 	signal mem_addr_s	: integer;
