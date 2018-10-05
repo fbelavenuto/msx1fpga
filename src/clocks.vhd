@@ -50,9 +50,8 @@ entity clocks is
 		clock_vdp_o		: out std_logic;
 		clock_5m_en_o	: out std_logic;
 		clock_cpu_o		: out std_logic;
-		clock_psg_en_o	: out std_logic;
-		clock_3m_o		: out std_logic;
-		clock_3m_en_o	: out std_logic
+		clock_psg_en_o	: out std_logic;				-- 3.57 clock enable
+		clock_3m_o		: out std_logic
 	);
 end entity;
 
@@ -67,7 +66,6 @@ architecture rtl of clocks is
 	signal clock_vdp_s		: std_logic								:= '0';
 	signal clock_5m_en_s		: std_logic								:= '0';
 	signal clock_3m_s			: std_logic								:= '0';
-	signal clock_3m_en_s		: std_logic								:= '0';
 	signal clock_7m_s			: std_logic								:= '0';
 	signal clock_psg_en_s	: std_logic								:= '0';
 	-- Switcher
@@ -106,11 +104,9 @@ begin
 			clk1_cnt_q		<= (others => '0');
 			clock_vdp_s		<= '0';
 			clock_3m_s		<= '0';
-			clock_3m_en_s	<= '0';
 			pos_cnt3_q		<= "00";
 		elsif rising_edge(clock_i) then
 			clock_psg_en_s	<= '0';						-- PSG clock enable
-			clock_3m_en_s	<= '0';						-- 3.57M clock enable
 			if clk1_cnt_q = 0 then
 				clk1_cnt_q <= "101";
 				clock_psg_en_s	<= '1';					-- PSG clock enable
@@ -120,7 +116,6 @@ begin
 			clock_vdp_s	<= not clock_vdp_s;			-- VDP: 10.7 MHz
 			if clk1_cnt_q = 0 or clk1_cnt_q = 3 then
 				clock_3m_s		<= not clock_3m_s;	-- 3.57 MHz
-				clock_3m_en_s	<= '1';					-- 3.57M clock enable
 			end if;
 			-- /3
 			if pos_cnt3_q = 2 then
@@ -165,7 +160,6 @@ begin
 	clock_5m_en_o	<= clock_5m_en_s;
 	clock_psg_en_o	<= clock_psg_en_s;
 	clock_3m_o		<= clock_3m_s;
-	clock_3m_en_o	<= clock_3m_en_s;
 
 	with sw_ff_q select
 		clock_cpu_o <=

@@ -112,7 +112,6 @@ architecture behavior of qmxc6slx16_top is
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
-	signal clock_3m_en_s		: std_logic;
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
@@ -207,8 +206,7 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s,
-		clock_3m_en_o	=> clock_3m_en_s
+		clock_3m_o		=> clock_3m_s
 	);
 
 	-- The MSX1
@@ -516,7 +514,7 @@ begin
 	opll1 : entity work.opll 
 	port map (
 		clock_i		=> clock_master_s,
-		clock_en_i	=> clock_3m_en_s,
+		clock_en_i	=> clock_psg_en_s,
 		reset_i		=> reset_s,
 		data_i		=> bus_data_to_s,
 		addr_i		=> bus_addr_s(0),
