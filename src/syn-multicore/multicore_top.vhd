@@ -236,8 +236,7 @@ begin
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s,
-		clock_3m_en_o	=> open
+		clock_3m_o		=> clock_3m_s
 	);
 
 	-- The MSX1
