@@ -160,6 +160,7 @@ entity msx is
 		scanline_en_o	: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
+		spi2_cs_n_o		: out std_logic;
 		spi_cs_n_o		: out std_logic;
 		spi_sclk_o		: out std_logic;
 		spi_mosi_o		: out std_logic;
@@ -490,7 +491,7 @@ begin
 		has_data_o		=> spi_hd_s,
 		-- SD card interface
 		spi_cs_n_o(2)	=> flspi_cs_n_o,
-		spi_cs_n_o(1)	=> open,
+		spi_cs_n_o(1)	=> spi2_cs_n_o,
 		spi_cs_n_o(0)	=> spi_cs_n_o,
 		spi_sclk_o		=> spi_sclk_o,
 		spi_mosi_o		=> spi_mosi_o,

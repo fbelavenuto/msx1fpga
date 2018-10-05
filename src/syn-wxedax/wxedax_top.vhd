@@ -42,6 +42,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+library unisim;
+use unisim.vcomponents.all;
 
 entity wxedax_top is
 	generic (
@@ -92,8 +94,10 @@ entity wxedax_top is
 		adc_data_i				: in    std_logic;
 		adc_cs_n_o				: out   std_logic									:= '1';
 		-- Audio
-		audio_dac_l_o			: out   std_logic									:= '0';
-		audio_dac_r_o			: out   std_logic									:= '0';
+		i2s_mclk_o				: out   std_logic									:= '0';
+		i2s_bclk_o				: out   std_logic									:= '0';
+		i2s_lrclk_o				: out   std_logic									:= '0';
+		i2s_data_o				: out   std_logic									:= '0';
 		buzzer_o					: out   std_logic									:= '1';
 		-- SD Card
 		sd_cs_n_o				: out   std_logic									:= '1';
@@ -445,28 +449,24 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
-	-- Left Channel
-	audiol : entity work.dac_dsm2v
+	-- I2S out
+	i2s : entity work.i2s_transmitter
 	generic map (
-		nbits_g	=> 16
+		mclk_rate		=> 10714500,		-- unusual values
+		sample_rate		=> 167414,
+		preamble			=> 0,
+		word_length		=> 16
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_l_s,
-		dac_o		=> audio_dac_l_o
-	);
-
-	-- Right Channel
-	audior : entity work.dac_dsm2v
-	generic map (
-		nbits_g	=> 16
-	)
-	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_r_s,
-		dac_o		=> audio_dac_r_o
+		clock_i			=> clock_master_s,	-- 21,477 MHz
+		reset_i			=> reset_s,
+		-- Parallel input
+		pcm_l_i			=> std_logic_vector(audio_l_s),
+		pcm_r_i			=> std_logic_vector(audio_r_s),
+		i2s_mclk_o		=> i2s_mclk_o,
+		i2s_lrclk_o		=> i2s_lrclk_o,
+		i2s_bclk_o		=> i2s_bclk_o,
+		i2s_d_o			=> i2s_data_o
 	);
 
 	-- Tape In

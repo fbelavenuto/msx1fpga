@@ -50,42 +50,59 @@ end tb;
 architecture testbench of tb is
 
 	-- test target
-	component clocks
-	port(
-		clock_i			: in  std_logic;				-- 21 MHz
-		por_i				: in  std_logic;
-		turbo_on_i		: in  std_logic;				-- 0 = 3.57, 1 = 7.15
-		clock_vdp_o		: out std_logic;
-		clock_5m_en_o	: out std_logic;
-		clock_cpu_o		: out std_logic;
-		clock_psg_en_o	: out std_logic;
-		clock_3m_o		: out std_logic
+	component i2s_transmitter
+	generic (
+		mclk_rate		: positive := 24576000;
+		sample_rate		: positive := 48000;
+		preamble			: integer := 0;				-- 0=Left-justified, 1=I2S
+		word_length		: positive := 16
+	);
+	port (
+		clock_i			: in  std_logic;				-- 2x MCLK in
+		reset_i			: in  std_logic;
+		-- Parallel input
+		pcm_l_i			: in  std_logic_vector(word_length - 1 downto 0);
+		pcm_r_i			: in  std_logic_vector(word_length - 1 downto 0);
+
+		i2s_mclk_o		: out std_logic;				-- MCLK is generated at half of the CLK input
+		i2s_lrclk_o		: out std_logic;				-- LRCLK is equal to the sample rate and is synchronous to MCLK.
+		i2s_bclk_o		: out std_logic;
+		i2s_d_o			: out std_logic
 	);
 	end component;
 
-	signal tb_end			: std_logic;
-	signal clock_s			: std_logic;
-	signal por_s			: std_logic;
-	signal turbo_on_s		: std_logic;
-	signal clock_vdp_s		: std_logic;
-	signal clock_5m_en_s	: std_logic;
-	signal clock_cpu_s		: std_logic;
-	signal clock_psg_en_s	: std_logic;
-	signal clock_3m_s		: std_logic;
+	signal tb_end		: std_logic;
+	signal clock_s		: std_logic;
+	signal reset_s		: std_logic;
+	signal pcm_l_s		: std_logic_vector(15 downto 0);
+	signal pcm_r_s		: std_logic_vector(15 downto 0);
+	signal i2s_mclk_s	: std_logic;
+	signal i2s_lrclk_s	: std_logic;
+	signal i2s_bclk_s	: std_logic;
+	signal i2s_d_s		: std_logic;
+
+--	constant	mclk_freq_c		: integer := 12288000;
+	constant	clk_period_c	: time := 40.69 ns;	-- 24.576
 
 begin
 
 	--  instance
-	u_target: clocks
+	u_target: i2s_transmitter
+	generic map (
+		mclk_rate		=> 12288000,
+		sample_rate		=> 96000,		-- 96000 * 16 * 2 = 3072000 * 2 => (minimum bclk = 6144000)
+		preamble		=> 0,
+		word_length		=> 16
+	)
 	port map(
 		clock_i			=> clock_s,
-		por_i			=> por_s,
-		turbo_on_i		=> turbo_on_s,
-		clock_vdp_o		=> clock_vdp_s,
-		clock_5m_en_o	=> clock_5m_en_s,
-		clock_cpu_o		=> clock_cpu_s,
-		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		reset_i			=> reset_s,
+		pcm_l_i			=> pcm_l_s,
+		pcm_r_i			=> pcm_r_s,
+		i2s_mclk_o		=> i2s_mclk_s,
+		i2s_lrclk_o		=> i2s_lrclk_s,
+		i2s_bclk_o		=> i2s_bclk_s,
+		i2s_d_o			=> i2s_d_s
 	);
 
 	-- ----------------------------------------------------- --
@@ -97,9 +114,9 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for 23.280418648974914278006471677019 ns;
+		wait for clk_period_c/2;
 		clock_s <= '1';
-		wait for 23.280418648974914278006471677019 ns;
+		wait for clk_period_c/2;
 	end process;
 
 	-- ----------------------------------------------------- --
@@ -108,22 +125,19 @@ begin
 	process
 	begin
 		-- init
-		turbo_on_s	<= '0';
+		pcm_l_s <= "1100110011110011";
+		pcm_r_s <= "0110011001100110";
 
 		-- reset
-		por_s	<= '1';
+		reset_s	<= '1';
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
-		por_s	<= '0';
+		reset_s	<= '0';
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 
-		wait for 1 us;
-		turbo_on_s <= '1';
-		wait for 1 us;
-		turbo_on_s <= '0';
-		wait for 1 us;
+		wait for 10 ms;
 
 		-- wait
 		tb_end <= '1';

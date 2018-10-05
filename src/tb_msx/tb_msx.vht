@@ -157,6 +157,7 @@ architecture testbench of tb is
 		scanline_en_o	: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
+		spi2_cs_n_o			: out std_logic;
 		spi_cs_n_o			: out std_logic;
 		spi_sclk_o			: out std_logic;
 		spi_mosi_o			: out std_logic;
@@ -358,6 +359,7 @@ begin
 		scanline_en_o		=> open,
 		-- SPI/SD
 		flspi_cs_n_o		=> open,
+		spi2_cs_n_o			=> open,
 		spi_cs_n_o			=> spi_cs_n_s,
 		spi_sclk_o			=> spi_sclk_s,
 		spi_mosi_o			=> spi_mosi_s,

@@ -100,8 +100,10 @@ NET "adc_data_i"        LOC="P59"  | IOSTANDARD = LVCMOS33;
 NET "adc_cs_n_o"        LOC="P61"  | IOSTANDARD = LVCMOS33;
 
 # Sound output
-NET "audio_dac_l_o"     LOC="P79"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
-NET "audio_dac_r_o"     LOC="P67"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
+NET "i2s_mclk_o"        LOC="P62"  | IOSTANDARD = LVCMOS33;
+NET "i2s_bclk_o"        LOC="P79"  | IOSTANDARD = LVCMOS33;
+NET "i2s_lrclk_o"       LOC="P67"  | IOSTANDARD = LVCMOS33;
+NET "i2s_data_o"        LOC="P75"  | IOSTANDARD = LVCMOS33;
 NET "buzzer_o"          LOC="P11"  | IOSTANDARD = LVCMOS33;
 
 # SD/MMC
@@ -118,7 +120,7 @@ NET "pad_latch_o"			LOC="P83"  | IOSTANDARD = LVCMOS33;
 NET "pad_data_i"			LOC="P84"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Others
-#NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;
+#NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;	* Usado como I2S MCLK
 #NET "gpio_io<0>"        LOC="P57"  | IOSTANDARD = LVCMOS33;
 #NET "gpio_io<1>"        LOC="P58"  | IOSTANDARD = LVCMOS33;
 
@@ -133,7 +135,7 @@ NET "pad_data_i"			LOC="P84"  | IOSTANDARD = LVCMOS33 | PULLUP;
 #DS_EN1 = 66 (usado)
 #DS_EN2 = 74 (usado)
 #DS_EN3 = 67 (usado)
-#DS_EN4 = 75 
+#DS_EN4 = 75 (usado)
 
 # Clock Constraints
 
