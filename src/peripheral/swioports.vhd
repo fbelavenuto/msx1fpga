@@ -160,12 +160,12 @@ begin
 			vga_en_q			<= vga_on_i;
 			scanline_en_q	<= '0';
 			-- default volumes
-			volumes_q.beep	<= std_logic_vector(to_unsigned(128, 8));
-			volumes_q.ear	<= std_logic_vector(to_unsigned(64, 8));
-			volumes_q.psg	<= std_logic_vector(to_unsigned(170, 8));
-			volumes_q.scc	<= std_logic_vector(to_unsigned(255, 8));
-			volumes_q.opll	<= std_logic_vector(to_unsigned(255, 8));
-			volumes_q.aux1	<= std_logic_vector(to_unsigned(255, 8));
+			volumes_q.beep	<= std_logic_vector(to_unsigned(default_vol_beep, 8));
+			volumes_q.ear	<= std_logic_vector(to_unsigned(default_vol_ear, 8));
+			volumes_q.psg	<= std_logic_vector(to_unsigned(default_vol_psg, 8));
+			volumes_q.scc	<= std_logic_vector(to_unsigned(default_vol_scc, 8));
+			volumes_q.opll	<= std_logic_vector(to_unsigned(default_vol_opll, 8));
+			volumes_q.aux1	<= std_logic_vector(to_unsigned(default_vol_aux1, 8));
 
 		elsif reset_i = '1' then
 			softreset_q	<= '0';

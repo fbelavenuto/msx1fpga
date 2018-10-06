@@ -54,4 +54,11 @@ package msx_pack is
 		aux1		: std_logic_vector(7 downto 0);
 	end record;
 
+	constant default_vol_beep	: integer := 128;
+	constant default_vol_ear	: integer := 60;
+	constant default_vol_psg	: integer := 240;
+	constant default_vol_scc	: integer := 255;
+	constant default_vol_opll	: integer := 255;
+	constant default_vol_aux1	: integer := 255;
+
 end package;
