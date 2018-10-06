@@ -42,8 +42,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
-library unisim;
-use unisim.vcomponents.all;
+--library unisim;
+--use unisim.vcomponents.all;
+use work.msx_pack.all;
 
 entity wxedax_top is
 	generic (
@@ -94,7 +95,6 @@ entity wxedax_top is
 		adc_data_i				: in    std_logic;
 		adc_cs_n_o				: out   std_logic									:= '1';
 		-- Audio
-		i2s_mclk_o				: out   std_logic									:= '0';
 		i2s_bclk_o				: out   std_logic									:= '0';
 		i2s_lrclk_o				: out   std_logic									:= '0';
 		i2s_data_o				: out   std_logic									:= '0';
@@ -162,6 +162,7 @@ architecture behavior of wxedax_top is
 	signal ear_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
+	signal volumes_s			: volumes_t;
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -319,6 +320,7 @@ begin
 		audio_scc_o		=> audio_scc_s,
 		audio_psg_o		=> audio_psg_s,
 		beep_o			=> beep_s,
+		volumes_o		=> volumes_s,
 		-- K7
 		k7_motor_o		=> open,
 		k7_audio_o		=> open,
@@ -437,6 +439,7 @@ begin
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
+		volumes_i		=> volumes_s,
 		ear_i				=> ear_s,
 		beep_i			=> beep_s,
 		audio_scc_i		=> audio_scc_s,
@@ -458,12 +461,12 @@ begin
 		word_length		=> 16
 	)
 	port map (
-		clock_i			=> clock_master_s,	-- 21,477 MHz
+		clock_i			=> clock_master_s,	-- 21,477 MHz (2xMCLK)
 		reset_i			=> reset_s,
 		-- Parallel input
 		pcm_l_i			=> std_logic_vector(audio_l_s),
 		pcm_r_i			=> std_logic_vector(audio_r_s),
-		i2s_mclk_o		=> i2s_mclk_o,
+		i2s_mclk_o		=> open,
 		i2s_lrclk_o		=> i2s_lrclk_o,
 		i2s_bclk_o		=> i2s_bclk_o,
 		i2s_d_o			=> i2s_data_o

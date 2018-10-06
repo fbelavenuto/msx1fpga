@@ -40,8 +40,9 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
---use ieee.textio.all;
+use work.msx_pack.all;
 
 entity swioports is
 	port (
@@ -76,7 +77,8 @@ entity swioports is
 		scanline_en_o	: out std_logic;
 		keymap_addr_o	: out std_logic_vector(9 downto 0);
 		keymap_data_o	: out std_logic_vector(7 downto 0);
-		keymap_we_o		: out std_logic
+		keymap_we_o		: out std_logic;
+		volumes_o		: out volumes_t
 	);
 end entity;
 
@@ -100,6 +102,7 @@ architecture Behavior of swioports is
 	signal keymap_we_s		: std_logic;
 	signal vga_en_q			: std_logic								:= '0';
 	signal scanline_en_q		: std_logic								:= '0';
+	signal volumes_q			: volumes_t;
 
 begin
 
@@ -156,6 +159,14 @@ begin
 			turbo_on_q		<= '0';
 			vga_en_q			<= vga_on_i;
 			scanline_en_q	<= '0';
+			-- default volumes
+			volumes_q.beep	<= std_logic_vector(to_unsigned(128, 8));
+			volumes_q.ear	<= std_logic_vector(to_unsigned(64, 8));
+			volumes_q.psg	<= std_logic_vector(to_unsigned(170, 8));
+			volumes_q.scc	<= std_logic_vector(to_unsigned(255, 8));
+			volumes_q.opll	<= std_logic_vector(to_unsigned(255, 8));
+			volumes_q.aux1	<= std_logic_vector(to_unsigned(255, 8));
+
 		elsif reset_i = '1' then
 			softreset_q	<= '0';
 			keymap_we_s	<= '0';
@@ -199,6 +210,18 @@ begin
 						mapper_q			<= data_i(1 downto 0);
 					when X"12" =>
 						turbo_on_q		<= data_i(0);
+					when X"20" =>
+						volumes_q.beep	<= data_i;
+					when X"21" =>
+						volumes_q.ear	<= data_i;
+					when X"22" =>
+						volumes_q.psg	<= data_i;
+					when X"23" =>
+						volumes_q.scc	<= data_i;
+					when X"24" =>
+						volumes_q.opll	<= data_i;
+					when X"25" =>
+						volumes_q.aux1	<= data_i;
 					when others =>
 						null;
 				end case;
@@ -286,6 +309,24 @@ begin
 					when X"12" =>
 						reg_data_s			<= "0000000" & turbo_on_q;
 						has_data_regv_s	<= '1';
+					when X"20" =>
+						reg_data_s			<= volumes_q.beep;
+						has_data_regv_s	<= '1';
+					when X"21" =>
+						reg_data_s			<= volumes_q.ear;
+						has_data_regv_s	<= '1';
+					when X"22" =>
+						reg_data_s			<= volumes_q.psg;
+						has_data_regv_s	<= '1';
+					when X"23" =>
+						reg_data_s			<= volumes_q.scc;
+						has_data_regv_s	<= '1';
+					when X"24" =>
+						reg_data_s			<= volumes_q.opll;
+						has_data_regv_s	<= '1';
+					when X"25" =>
+						reg_data_s			<= volumes_q.aux1;
+						has_data_regv_s	<= '1';
 					when others =>
 						null;
 				end case;
@@ -323,5 +364,6 @@ begin
 	keymap_we_o		<= keymap_we_s;
 	vga_en_o			<= vga_en_q;
 	scanline_en_o	<= scanline_en_q;
+	volumes_o		<= volumes_q;
 
 end architecture;

@@ -51,6 +51,7 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use work.msx_pack.all;
 
 entity msx is
 	generic (
@@ -122,6 +123,7 @@ entity msx is
 		audio_scc_o		: out signed(14 downto 0);
 		audio_psg_o		: out unsigned(7 downto 0);
 		beep_o			: out std_logic;
+		volumes_o		: out volumes_t;
 		-- K7
 		k7_motor_o		: out std_logic;
 		k7_audio_o		: out std_logic;
@@ -474,7 +476,8 @@ begin
 		scanline_en_o	=> scanline_en_s,
 		keymap_addr_o	=> keymap_addr_o,
 		keymap_data_o	=> keymap_data_o,
-		keymap_we_o		=> keymap_we_o
+		keymap_we_o		=> keymap_we_o,
+		volumes_o		=> volumes_o
 	);
 
 	-- SPI
