@@ -541,6 +541,7 @@ set_global_assignment -name SDC_FILE "../../src/syn-de2/timing.sdc"
 set_global_assignment -name VHDL_FILE "../../src/syn-de2/de2_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-de2/pll1.qip"
 set_global_assignment -name QIP_FILE "../../src/syn-de2/pll2.qip"
+set_global_assignment -name VHDL_FILE ../../src/msx_pack.vhd
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd

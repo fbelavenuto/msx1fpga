@@ -43,6 +43,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.std_logic_unsigned.all;
 --use work.vdp18_paletas_3bit_pack.all;
+use work.msx_pack.all;
 
 entity zxuno_top is
 	generic (
@@ -165,6 +166,7 @@ architecture behavior of zxuno_top is
 	signal beep_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
+	signal volumes_s			: volumes_t;
 
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
@@ -302,6 +304,7 @@ begin
 		audio_scc_o		=> audio_scc_s,
 		audio_psg_o		=> audio_psg_s,
 		beep_o			=> beep_s,
+		volumes_o		=> volumes_s,
 		-- K7
 		k7_motor_o		=> open,
 		k7_audio_o		=> open,
@@ -406,8 +409,9 @@ begin
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
-		ear_i				=> ear_i,
+		volumes_i		=> volumes_s,
 		beep_i			=> beep_s,
+		ear_i				=> ear_i,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
 		jt51_left_i		=> jt51_left_s,

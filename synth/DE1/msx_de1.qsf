@@ -416,6 +416,7 @@ set_global_assignment -name ALLOW_POWER_UP_DONT_CARE OFF
 set_global_assignment -name SYNTH_TIMING_DRIVEN_SYNTHESIS OFF
 set_global_assignment -name SDC_FILE "../../src/syn-de1/timing.sdc"
 set_global_assignment -name VHDL_FILE "../../src/syn-de1/de1_top.vhd"
+set_global_assignment -name VHDL_FILE ../../src/msx_pack.vhd
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd

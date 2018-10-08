@@ -176,6 +176,7 @@ set_instance_assignment -name CURRENT_STRENGTH_NEW 16MA -to dac_r_o
 set_global_assignment -name VHDL_FILE "../../src/syn-multicore/multicore_top.vhd"
 set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll1.qip"
 set_global_assignment -name QIP_FILE "../../src/syn-multicore/pll2.qip"
+set_global_assignment -name VHDL_FILE ../../src/msx_pack.vhd
 set_global_assignment -name VHDL_FILE ../../src/msx.vhd
 set_global_assignment -name VHDL_FILE ../../src/clocks.vhd
 set_global_assignment -name VHDL_FILE ../../src/cpu/t80a.vhd
