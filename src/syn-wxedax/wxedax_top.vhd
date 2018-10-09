@@ -48,6 +48,7 @@ use work.msx_pack.all;
 
 entity wxedax_top is
 	generic (
+		use_i2s_g				: boolean		:= false;
 		per_opll_g				: boolean		:= true;
 		per_jt51_g				: boolean		:= false
 	);
@@ -452,25 +453,53 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
-	-- I2S out
-	i2s : entity work.i2s_transmitter
-	generic map (
-		mclk_rate		=> 10714500,		-- unusual values
-		sample_rate		=> 167414,
-		preamble			=> 0,
-		word_length		=> 16
-	)
-	port map (
-		clock_i			=> clock_master_s,	-- 21,477 MHz (2xMCLK)
-		reset_i			=> reset_s,
-		-- Parallel input
-		pcm_l_i			=> std_logic_vector(audio_l_s),
-		pcm_r_i			=> std_logic_vector(audio_r_s),
-		i2s_mclk_o		=> open,
-		i2s_lrclk_o		=> i2s_lrclk_o,
-		i2s_bclk_o		=> i2s_bclk_o,
-		i2s_d_o			=> i2s_data_o
-	);
+	ui2s: if use_i2s_g generate
+		-- I2S out
+		i2s : entity work.i2s_transmitter
+		generic map (
+			mclk_rate		=> 10714500,		-- unusual values
+			sample_rate		=> 167414,
+			preamble			=> 0,
+			word_length		=> 16
+		)
+		port map (
+			clock_i			=> clock_master_s,	-- 21.477 MHz (2xMCLK)
+			reset_i			=> reset_s,
+			-- Parallel input
+			pcm_l_i			=> std_logic_vector(audio_l_s),
+			pcm_r_i			=> std_logic_vector(audio_r_s),
+			i2s_mclk_o		=> open,
+			i2s_lrclk_o		=> i2s_lrclk_o,
+			i2s_bclk_o		=> i2s_bclk_o,
+			i2s_d_o			=> i2s_data_o
+		);
+	end generate;
+
+	nui2s: if not use_i2s_g generate
+		-- Left Channel
+		audiol : entity work.dac_dsm2v
+		generic map (
+			nbits_g	=> 16
+		)
+		port map (
+			reset_i	=> reset_s,
+			clock_i	=> clock_master_s,
+			dac_i		=> audio_l_s,
+			dac_o		=> i2s_lrclk_o
+		);
+
+		-- Right Channel
+		audior : entity work.dac_dsm2v
+		generic map (
+			nbits_g	=> 16
+		)
+		port map (
+			reset_i	=> reset_s,
+			clock_i	=> clock_master_s,
+			dac_i		=> audio_r_s,
+			dac_o		=> i2s_bclk_o
+		);
+	end generate;
 
 	-- Tape In
 	tapein: entity work.tlc549

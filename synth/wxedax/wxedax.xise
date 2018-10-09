@@ -17,7 +17,7 @@
   <files>
     <file xil_pn:name="../../src/syn-wxedax/wxedax_top.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="82"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="90"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="91"/>
     </file>
     <file xil_pn:name="ipcore_dir/pll1.xco" xil_pn:type="FILE_COREGEN">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="88"/>
@@ -381,6 +381,10 @@
     <file xil_pn:name="../../src/msx_pack.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="152"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="36"/>
+    </file>
+    <file xil_pn:name="../../src/audio/dac_dsm2v.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="153"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="90"/>
     </file>
     <file xil_pn:name="ipcore_dir/pll1.xise" xil_pn:type="FILE_COREGENISE">
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
