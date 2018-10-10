@@ -47,10 +47,6 @@ use ieee.std_logic_unsigned.all;
 use work.msx_pack.all;
 
 entity multicore2_top is
-	generic (
-		per_opll_g				: boolean		:= true;
-		per_jt51_g				: boolean		:= true
-	);
 	port (
 		-- Clocks
 		clock_50_i			: in    std_logic;
@@ -282,7 +278,7 @@ begin
 	generic map (
 		hw_id_g			=> 8,
 		hw_txt_g			=> "Multicore2 Board",
-		hw_version_g	=> X"12",
+		hw_version_g	=> X"13",
 		video_opt_g		=> 3,							-- No dblscan and external palette (Color in rgb_r_o)
 		ramsize_g		=> 8192,
 		hw_hashwds_g	=> '0'
@@ -682,54 +678,50 @@ begin
 	vga_hsync_n_o	<= vga_hsync_n_s;
 	vga_vsync_n_o	<= vga_vsync_n_s;
 
-	ptjt: if per_jt51_g generate
-		-- JT51 tests
-		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
+	-- JT51
+	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
-		jt51: entity work.jt51_wrapper
-		port map (
-			clock_i			=> clock_3m_s,
-			reset_i			=> reset_s,
-			addr_i			=> bus_addr_s(0),
-			cs_n_i			=> jt51_cs_n_s,
-			wr_n_i			=> bus_wr_n_s,
-			rd_n_i			=> bus_rd_n_s,
-			data_i			=> bus_data_to_s,
-			data_o			=> bus_data_from_s,
-			ct1_o				=> open,
-			ct2_o				=> open,
-			irq_n_o			=> open,
-			p1_o				=> open,
-			-- Low resolution output (same as real chip)
-			sample_o			=> open,
-			left_o			=> open,
-			right_o			=> open,
-			-- Full resolution output
-			xleft_o			=> jt51_left_s,
-			xright_o			=> jt51_right_s,
-			-- unsigned outputs for sigma delta converters, full resolution		
-			dacleft_o		=> open,
-			dacright_o		=> open
-		);
-	end generate;
+	jt51: entity work.jt51_wrapper
+	port map (
+		clock_i			=> clock_3m_s,
+		reset_i			=> reset_s,
+		addr_i			=> bus_addr_s(0),
+		cs_n_i			=> jt51_cs_n_s,
+		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
+		data_i			=> bus_data_to_s,
+		data_o			=> bus_data_from_s,
+		ct1_o				=> open,
+		ct2_o				=> open,
+		irq_n_o			=> open,
+		p1_o				=> open,
+		-- Low resolution output (same as real chip)
+		sample_o			=> open,
+		left_o			=> open,
+		right_o			=> open,
+		-- Full resolution output
+		xleft_o			=> jt51_left_s,
+		xright_o			=> jt51_right_s,
+		-- unsigned outputs for sigma delta converters, full resolution		
+		dacleft_o		=> open,
+		dacright_o		=> open
+	);
 
-	popll: if per_opll_g generate
-		-- OPLL tests
-		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
+	-- OPLL
+	opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
 
-		opll1 : entity work.opll 
-		port map (
-			clock_i		=> clock_master_s,
-			clock_en_i	=> clock_psg_en_s,
-			reset_i		=> reset_s,
-			data_i		=> bus_data_to_s,
-			addr_i		=> bus_addr_s(0),
-			cs_n        => opll_cs_n_s,
-			we_n        => bus_wr_n_s,
-			melody_o		=> opll_mo_s,
-			rythm_o		=> opll_ro_s
-		);
-	end generate;
+	opll1 : entity work.opll 
+	port map (
+		clock_i		=> clock_master_s,
+		clock_en_i	=> clock_psg_en_s,
+		reset_i		=> reset_s,
+		data_i		=> bus_data_to_s,
+		addr_i		=> bus_addr_s(0),
+		cs_n        => opll_cs_n_s,
+		we_n        => bus_wr_n_s,
+		melody_o		=> opll_mo_s,
+		rythm_o		=> opll_ro_s
+	);
 
 	-- DEBUG
 --	leds_n_o(0)		<= not turbo_on_s;

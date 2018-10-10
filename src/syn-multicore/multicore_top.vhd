@@ -46,7 +46,7 @@ use work.msx_pack.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= false
+		hdmi_output_g		: boolean	:= true
 	);
 	port (
 		-- Clocks
@@ -246,7 +246,7 @@ begin
 	generic map (
 		hw_id_g			=> 5,
 		hw_txt_g			=> "Multicore Board",
-		hw_version_g	=> X"12",
+		hw_version_g	=> X"13",
 		video_opt_g		=> 3,							-- No dblscan and external palette (Color in rgb_r_o)
 		ramsize_g		=> 512,
 		hw_hashwds_g	=> '0'

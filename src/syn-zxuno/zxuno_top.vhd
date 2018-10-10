@@ -47,8 +47,7 @@ use work.msx_pack.all;
 
 entity zxuno_top is
 	generic (
-		ramsize_g			: integer		:= 512;			-- 512 or 2048
-		per_jt51_g			: boolean		:= true
+		ramsize_g			: integer		:= 2048			-- 512 or 2048
 	);
 	port (
 		-- Clocks
@@ -210,6 +209,11 @@ architecture behavior of zxuno_top is
 	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
 	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
 
+	-- OPLL
+	signal opll_cs_n_s		: std_logic									:= '1';
+	signal opll_mo_s			: signed(12 downto 0)					:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)					:= (others => '0');
+
 begin
 
 	-- PLL
@@ -239,7 +243,7 @@ begin
 	generic map (
 		hw_id_g			=> 6,
 		hw_txt_g			=> "ZX-Uno Board",
-		hw_version_g	=> X"12",				-- Version 1.2
+		hw_version_g	=> X"13",				-- Version 1.3
 		video_opt_g		=> 1,						-- 1 = dblscan configurable
 		ramsize_g		=> ramsize_g
 	)
@@ -416,8 +420,8 @@ begin
 		audio_psg_i		=> audio_psg_s,
 		jt51_left_i		=> jt51_left_s,
 		jt51_right_i	=> jt51_right_s,
-		opll_mo_i		=> (others => '0'),
-		opll_ro_i		=> (others => '0'),
+		opll_mo_i		=> opll_mo_s,
+		opll_ro_i		=> opll_ro_s,
 		audio_mix_l_o	=> audio_l_s,
 		audio_mix_r_o	=> audio_r_s
 	);
@@ -511,7 +515,7 @@ begin
 	vga_ntsc_o		<= not ntsc_pal_s;
 	vga_pal_o		<= ntsc_pal_s;
 
-	ptjt: if per_jt51_g generate
+	ptjt: if ramsize_g = 512 generate
 		-- JT51 tests
 		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
@@ -539,6 +543,24 @@ begin
 			-- unsigned outputs for sigma delta converters, full resolution		
 			dacleft_o		=> open,
 			dacright_o		=> open
+		);
+	end generate;
+
+	popll: if ramsize_g = 2048 generate
+		-- OPLL tests
+		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
+		
+		opll1 : entity work.opll 
+		port map (
+			clock_i		=> clock_master_s,
+			clock_en_i	=> clock_psg_en_s,
+			reset_i		=> reset_s,
+			data_i		=> bus_data_to_s,
+			addr_i		=> bus_addr_s(0),
+			cs_n			=> opll_cs_n_s,
+			we_n			=> bus_wr_n_s,
+			melody_o		=> opll_mo_s,
+			rythm_o		=> opll_ro_s
 		);
 	end generate;
 
