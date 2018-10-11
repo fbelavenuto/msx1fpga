@@ -255,7 +255,7 @@ begin
 	generic map (
 		hw_id_g			=> 4,
 		hw_txt_g			=> "WXEDAX Board",
-		hw_version_g	=> X"12",
+		hw_version_g	=> actual_version,
 		video_opt_g		=> 1,						-- dblscan configurable
 		ramsize_g		=> 8192,
 		hw_hashwds_g	=> '1'

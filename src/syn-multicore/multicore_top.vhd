@@ -246,7 +246,7 @@ begin
 	generic map (
 		hw_id_g			=> 5,
 		hw_txt_g			=> "Multicore Board",
-		hw_version_g	=> X"13",
+		hw_version_g	=> actual_version,
 		video_opt_g		=> 3,							-- No dblscan and external palette (Color in rgb_r_o)
 		ramsize_g		=> 512,
 		hw_hashwds_g	=> '0'

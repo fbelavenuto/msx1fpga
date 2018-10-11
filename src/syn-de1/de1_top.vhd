@@ -267,7 +267,7 @@ begin
 	generic map (
 		hw_id_g			=> 1,
 		hw_txt_g			=> "DE-1 Board",
-		hw_version_g	=> X"12",
+		hw_version_g	=> actual_version,
 		video_opt_g		=> 0,						-- No dblscan
 		ramsize_g		=> 8192
 	)
@@ -429,7 +429,9 @@ begin
 	-- RAM
 	ram: entity work.ssdram
 	generic map (
-		freq_g		=> 86
+		freq_g			=> 86,
+		rfsh_cycles_g	=> 4096,
+		rfsh_period_g	=> 64
 	)
 	port map (
 		clock_i		=> clock_sdram_s,
@@ -450,7 +452,7 @@ begin
 		mem_we_n_o	=> dram_we_n_o,
 		mem_udq_o	=> dram_udqm_o,
 		mem_ldq_o	=> dram_ldqm_o,
-		mem_ba_o	=> dram_ba_o,
+		mem_ba_o		=> dram_ba_o,
 		mem_addr_o	=> dram_addr_o,
 		mem_data_io	=> dram_data_io
 	);

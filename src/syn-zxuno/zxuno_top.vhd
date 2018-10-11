@@ -243,7 +243,7 @@ begin
 	generic map (
 		hw_id_g			=> 6,
 		hw_txt_g			=> "ZX-Uno Board",
-		hw_version_g	=> X"13",				-- Version 1.3
+		hw_version_g	=> actual_version,
 		video_opt_g		=> 1,						-- 1 = dblscan configurable
 		ramsize_g		=> ramsize_g
 	)

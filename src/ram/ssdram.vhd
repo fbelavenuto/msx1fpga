@@ -45,7 +45,9 @@ use ieee.numeric_std.all;
 
 entity ssdram is
 	generic (
-		freq_g			: integer := 100
+		freq_g			: integer	:= 100;
+		rfsh_cycles_g	: integer	:= 4096;
+		rfsh_period_g	: integer	:= 64
 	);
 	port (
 		clock_i		: in    std_logic;
@@ -195,7 +197,7 @@ begin
 						else
 							SdrRoutine_v := SdrRoutine_ReadOne;
 						end if;
-					elsif SdrRefreshCounter_v < 4096 and refresh_i = '1' then
+					elsif SdrRefreshCounter_v < rfsh_cycles_g and refresh_i = '1' then
 						SdrRoutine_v			:= SdrRoutine_RefreshAll;
 						SdrRefreshCounter_v	:= SdrRefreshCounter_v + 1;
 					end if;
@@ -272,7 +274,7 @@ begin
 			
 			refreshDelayCounter_v := refreshDelayCounter_v + 1;
 			
-			if refreshDelayCounter_v >= ( freq_g * 1000 * 64 ) then
+			if refreshDelayCounter_v >= ( freq_g * 1000 * rfsh_period_g ) then
 				refreshDelayCounter_v	:= x"000000";
 				SdrRefreshCounter_v		:= x"0000";
 			end if;

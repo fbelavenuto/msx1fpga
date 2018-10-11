@@ -45,6 +45,9 @@ use ieee.numeric_std.all;
 
 package msx_pack is
 
+	-- Actual version
+	constant actual_version	: std_logic_vector(7 downto 0)	:= X"13";
+
 	type volumes_t is record
 		beep		: std_logic_vector(7 downto 0);
 		ear		: std_logic_vector(7 downto 0);
