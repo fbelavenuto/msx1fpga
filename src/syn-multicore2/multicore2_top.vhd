@@ -167,13 +167,20 @@ architecture behavior of multicore2_top is
 
 	-- VRAM memory
 	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
+	signal vram_do_s			: std_logic_vector( 7 downto 0);
+	signal vram_di_s			: std_logic_vector( 7 downto 0);
+--	signal vram_ce_s			: std_logic;
+--	signal vram_oe_s			: std_logic;
+	signal vram_we_s			: std_logic;
 
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned( 7 downto 0);
 	signal beep_s				: std_logic;
-	signal audio_l_s			: signed(15 downto 0);
-	signal audio_r_s			: signed(15 downto 0);
+	signal audio_l_s			: unsigned(15 downto 0);
+	signal audio_r_s			: unsigned(15 downto 0);
+	signal audio_l_amp_s		: unsigned(15 downto 0);
+	signal audio_r_amp_s		: unsigned(15 downto 0);
 	signal volumes_s			: volumes_t;
 
 	-- Video
@@ -223,12 +230,6 @@ architecture behavior of multicore2_top is
 	signal bus_mreq_n_s		: std_logic;
 	signal bus_sltsl1_n_s	: std_logic;
 	signal bus_sltsl2_n_s	: std_logic;
-
-	--
-	signal addr_wr				: std_logic_vector(15 downto 0);
-	signal wren					: std_logic;
-	signal addr_rd				: std_logic_vector(15 downto 0);
-	signal pixel_out			: std_logic_vector(3 downto 0);
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
@@ -328,11 +329,11 @@ begin
 		bus_int_n_i		=> '1',
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
-		vram_data_i		=> sram_data_io,
-		vram_data_o		=> sram_data_io,
-		vram_ce_o		=> open,
-		vram_oe_o		=> sram_oe_n_o,
-		vram_we_o		=> sram_we_n_o,
+		vram_data_i		=> vram_do_s,
+		vram_data_o		=> vram_di_s,
+		vram_ce_o		=> open,--vram_ce_s,
+		vram_oe_o		=> open,--vram_oe_s,
+		vram_we_o		=> vram_we_s,
 		-- Keyboard
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
@@ -418,15 +419,26 @@ begin
 		mem_ras_n_o	=> sdram_ras_o,
 		mem_cas_n_o	=> sdram_cas_o,
 		mem_we_n_o	=> sdram_we_o,
-		mem_udq_o	=> sdram_dqm_o(0),
-		mem_ldq_o	=> sdram_dqm_o(1),
+		mem_udq_o	=> sdram_dqm_o(1),
+		mem_ldq_o	=> sdram_dqm_o(0),
 		mem_ba_o		=> sdram_ba_o,
 		mem_addr_o	=> sdram_ad_o,
 		mem_data_io	=> sdram_da_io
 	);
 
 	-- VRAM
-	sram_addr_o		<= "00000" & vram_addr_s;
+	vram: entity work.spram
+	generic map (
+		addr_width_g => 14,
+		data_width_g => 8
+	)
+	port map (
+		clk_i		=> clock_master_s,
+		we_i		=> vram_we_s,
+		addr_i	=> vram_addr_s,
+		data_i	=> vram_di_s,
+		data_o	=> vram_do_s
+	);
 
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
@@ -452,7 +464,7 @@ begin
 	);
 
 	-- Audio
-	mixer: entity work.mixers
+	mixer: entity work.mixeru
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
@@ -469,27 +481,30 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
+	audio_l_amp_s	<= audio_l_s(15) & audio_l_s(13 downto 0) & "0";
+	audio_r_amp_s	<= audio_r_s(15) & audio_r_s(13 downto 0) & "0";
+
 	-- Left Channel
-	audiol : entity work.dac_dsm2v
+	audiol : entity work.dac
 	generic map (
 		nbits_g	=> 16
 	)
 	port map (
 		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_l_s,
+		clock_i	=> clock_3m_s,
+		dac_i		=> audio_l_amp_s,
 		dac_o		=> dac_l_o
 	);
 
 	-- Right Channel
-	audior : entity work.dac_dsm2v
+	audior : entity work.dac
 	generic map (
 		nbits_g	=> 16
 	)
 	port map (
 		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_r_s,
+		clock_i	=> clock_3m_s,
+		dac_i		=> audio_r_amp_s,
 		dac_o		=> dac_r_o
 	);
 
@@ -622,8 +637,8 @@ begin
 	end process;
 
 
-	sound_hdmi_l_s <= '0' & std_logic_vector(audio_l_s(15 downto 1));
-	sound_hdmi_r_s <= '0' & std_logic_vector(audio_r_s(15 downto 1));
+	sound_hdmi_l_s <= '0' & std_logic_vector(audio_l_amp_s(15 downto 1));
+	sound_hdmi_r_s <= '0' & std_logic_vector(audio_r_amp_s(15 downto 1));
 
 	-- HDMI
 	hdmi: entity work.hdmi

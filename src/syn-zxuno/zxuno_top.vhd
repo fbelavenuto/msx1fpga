@@ -364,12 +364,18 @@ begin
 	joy_fire3_o <= not joy_out1_s;		-- for Sega Genesis joypad
 
 	-- ROM
-	rom: entity work.mainrom
-	port map (
-		clk		=> clock_master_s,
-		addr		=> rom_addr_s,
-		data		=> rom_data_s
-	);
+	irom: if ramsize_g = 512 generate
+		rom: entity work.mainrom
+		port map (
+			clk		=> clock_master_s,
+			addr		=> rom_addr_s,
+			data		=> rom_data_s
+		);
+	end generate;
+	
+	erom: if ramsize_g = 2048 generate
+		rom_data_s	<= ram_data_from_s;
+	end generate;
 	
 	-- VRAM
 	vram: entity work.spram

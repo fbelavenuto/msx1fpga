@@ -18,16 +18,18 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
 
 entity dac is
 
 	generic (
-		msbi_g	: integer := 7
+		nbits_g	: integer := 16
 	);
 	port (
-		clk_i		: in  std_logic;
-		res_i		: in  std_logic;
-		dac_i		: in  std_logic_vector(msbi_g downto 0);
+		reset_i	: in  std_logic;
+		clock_i	: in  std_logic;
+		dac_i		: in  unsigned((nbits_g-1) downto 0);
 		dac_o		: out std_logic
 	);
 
@@ -42,27 +44,27 @@ architecture rtl of dac is
   signal DeltaAdder_s,
          SigmaAdder_s,
          SigmaLatch_q,
-         DeltaB_s      : unsigned(msbi_g+2 downto 0);
+         DeltaB_s      : unsigned(nbits_g+1 downto 0);
 
 begin
 
-  DeltaB_s(msbi_g+2 downto msbi_g+1) <= SigmaLatch_q(msbi_g+2) &
-                                        SigmaLatch_q(msbi_g+2);
-  DeltaB_s(msbi_g   downto        0) <= (others => '0');
+  DeltaB_s(nbits_g+1 downto nbits_g) <= SigmaLatch_q(nbits_g+1) &
+                                        SigmaLatch_q(nbits_g+1);
+  DeltaB_s(nbits_g-1 downto       0) <= (others => '0');
 
   DeltaAdder_s <= unsigned('0' & '0' & dac_i) + DeltaB_s;
 
   SigmaAdder_s <= DeltaAdder_s + SigmaLatch_q;
 
-  seq: process (clk_i, res_i)
+  seq: process (clock_i, reset_i)
   begin
-    if res_i = '1' then
-      SigmaLatch_q <= to_unsigned(2**(msbi_g+1), SigmaLatch_q'length);
+    if reset_i = '1' then
+      SigmaLatch_q <= to_unsigned(2**nbits_g, SigmaLatch_q'length);
       DACout_q     <= '0';
 
-    elsif clk_i'event and clk_i = '1' then
+    elsif rising_edge(clock_i) then
       SigmaLatch_q <= SigmaAdder_s;
-      DACout_q     <= SigmaLatch_q(msbi_g+2);
+      DACout_q     <= SigmaLatch_q(nbits_g+1);
     end if;
   end process seq;
 

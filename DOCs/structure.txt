@@ -55,8 +55,8 @@ Registers:
 (RW)	12 =>
 			bit 0 = Turbo
 (RW)	20 => beep volume (default = 128)
-(RW)	21 => ear feedback volume (default = 64)
-(RW)	22 => psg volume (default = 170)
+(RW)	21 => ear feedback volume (default = 20)
+(RW)	22 => psg volume (default = 240)
 (RW)	23 => scc volume (default = 255)
 (RW)	24 => opll volume (default = 255)
 (RW)	25 => aux1 volume (default = 255)

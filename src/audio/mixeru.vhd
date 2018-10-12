@@ -42,19 +42,23 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+use work.msx_pack.all;
 
 entity mixeru is
 	port (
 		clock_i			: in  std_logic;
 		reset_i			: in  std_logic;
+		volumes_i		: in  volumes_t;
+		beep_i			: in  std_logic;
+		ear_i				: in  std_logic;
 		audio_scc_i		: in  signed(14 downto 0);
 		audio_psg_i		: in  unsigned(7 downto 0);
-		ear_i				: in  std_logic;
 		jt51_left_i		: in  signed(15 downto 0);
 		jt51_right_i	: in  signed(15 downto 0);
-		beep_i			: in  std_logic;
-		audio_mix_l_o	: out std_logic_vector(15 downto 0);
-		audio_mix_r_o	: out std_logic_vector(15 downto 0)
+		opll_mo_i		: in  signed(12 downto 0)		:= (others => '0');
+		opll_ro_i		: in  signed(12 downto 0)		:= (others => '0');
+		audio_mix_l_o	: out unsigned(15 downto 0);
+		audio_mix_r_o	: out unsigned(15 downto 0)
 	);
 end mixeru;
 
@@ -68,40 +72,51 @@ end mixeru;
 
 architecture Behavioral of mixeru is
 
-	constant beep_vol_c	: std_logic_vector(15 downto 0) := "0111000000000000";
-	constant ear_vol_c	: std_logic_vector(15 downto 0) := "0111000000000000";
+	constant beep_con_c	: unsigned(15 downto 0) := to_unsigned(16383, 16);
+	constant ear_con_c	: unsigned(15 downto 0) := to_unsigned(16383, 16);
 
-	signal pcm_l_s			: std_logic_vector(15 downto 0);
-	signal pcm_r_s			: std_logic_vector(15 downto 0);
-	signal beep_s			: std_logic_vector(15 downto 0);
-	signal ear_s			: std_logic_vector(15 downto 0);
-	signal scc_uns_s		: unsigned(15 downto 0);
-	signal jt51_l_uns_s	: unsigned(15 downto 0);
-	signal jt51_r_uns_s	: unsigned(15 downto 0);
+	signal pcm_l_s			: unsigned(15 downto 0);
+	signal pcm_r_s			: unsigned(15 downto 0);
+	signal beep_con_s		: unsigned(15 downto 0);
+	signal ear_con_s		: unsigned(15 downto 0);
+
+	signal opll_sum_s		: signed(12 downto 0);
+
+	signal beep_uns_s		: unsigned(16 + volumes_i.beep'length downto 0);
+	signal ear_uns_s		: unsigned(16 + volumes_i.ear'length downto 0);
+	signal psg_uns_s		: unsigned(16 + volumes_i.psg'length downto 0);
+	signal scc_uns_s		: unsigned(16 + volumes_i.scc'length downto 0);
+	signal opll_uns_s		: unsigned(16 + volumes_i.opll'length downto 0);
+	signal jt51_l_uns_s	: unsigned(16 + volumes_i.aux1'length downto 0);
+	signal jt51_r_uns_s	: unsigned(16 + volumes_i.aux1'length downto 0);
 
 begin
 
-	beep_s			<= beep_vol_c when beep_i = '1'		else (others => '0');
-	ear_s				<= ear_vol_c  when ear_i = '1'		else (others => '0');
-	scc_uns_s		<= '0' & not audio_scc_i(14)  & unsigned(audio_scc_i (13 downto 0));
-	jt51_l_uns_s	<= '0' & not jt51_left_i(15)  & unsigned(jt51_left_i (14 downto 1));
-	jt51_r_uns_s	<= '0' & not jt51_right_i(15) & unsigned(jt51_right_i(14 downto 1));
+	beep_con_s		<= beep_con_c when beep_i = '1'		else (others => '0');
+	ear_con_s		<= ear_con_c  when ear_i = '1'		else (others => '0');
+	opll_sum_s		<= opll_mo_i + opll_ro_i;
 
-	pcm_l_s 	<= std_logic_vector(
-						unsigned(beep_s) + 
-						unsigned(ear_s) + 
-						unsigned("0" & audio_psg_i & "0000000") +
-						scc_uns_s +
-						jt51_l_uns_s
-	);
+	beep_uns_s		<= beep_con_s																							* ('0' & unsigned(volumes_i.beep));
+	ear_uns_s		<= ear_con_s																							* ('0' & unsigned(volumes_i.ear));
+	psg_uns_s		<= ("00" & audio_psg_i & "000000")																* ('0' & unsigned(volumes_i.psg));
+	scc_uns_s		<= ('0' & not audio_scc_i(14)  & unsigned(audio_scc_i (13 downto 0)))				* ('0' & unsigned(volumes_i.scc));
+	opll_uns_s		<= ('0' & not opll_sum_s(12)   & unsigned(opll_sum_s  (11 downto 0)) & "00")		* ('0' & unsigned(volumes_i.opll));
+	jt51_l_uns_s	<= ('0' & not jt51_left_i(15)  & unsigned(jt51_left_i (14 downto 1)))				* ('0' & unsigned(volumes_i.aux1));
+	jt51_r_uns_s	<= ('0' & not jt51_right_i(15) & unsigned(jt51_right_i(14 downto 1)))				* ('0' & unsigned(volumes_i.aux1));
 
-	pcm_r_s 	<= std_logic_vector(
-						unsigned(beep_s) + 
-						unsigned(ear_s) + 
-						unsigned("0" & audio_psg_i & "0000000") +
-						scc_uns_s +
-						jt51_r_uns_s
-	);
+	pcm_l_s 	<= beep_uns_s(beep_uns_s'high     downto beep_uns_s'high-15) + 
+					ear_uns_s(ear_uns_s'high       downto ear_uns_s'high-15) + 
+					psg_uns_s(psg_uns_s'high       downto psg_uns_s'high-15) + 
+					scc_uns_s(scc_uns_s'high       downto scc_uns_s'high-15) + 
+					opll_uns_s(opll_uns_s'high     downto opll_uns_s'high-15) +
+					jt51_l_uns_s(jt51_l_uns_s'high downto jt51_l_uns_s'high-15);
+	--
+	pcm_r_s 	<= beep_uns_s(beep_uns_s'high     downto beep_uns_s'high-15) + 
+					ear_uns_s(ear_uns_s'high       downto ear_uns_s'high-15) + 
+					psg_uns_s(psg_uns_s'high       downto psg_uns_s'high-15) + 
+					scc_uns_s(scc_uns_s'high       downto scc_uns_s'high-15) + 
+					opll_uns_s(opll_uns_s'high     downto opll_uns_s'high-15) +
+					jt51_r_uns_s(jt51_r_uns_s'high downto jt51_r_uns_s'high-15);
 
 	audio_mix_l_o <= pcm_l_s;
 	audio_mix_r_o <= pcm_r_s;

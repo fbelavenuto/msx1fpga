@@ -157,8 +157,10 @@ architecture behavior of multicore_top is
 	signal audio_scc_s		: signed(14 downto 0);
 	signal audio_psg_s		: unsigned( 7 downto 0);
 	signal beep_s				: std_logic;
-	signal audio_l_s			: signed(15 downto 0);
-	signal audio_r_s			: signed(15 downto 0);
+	signal audio_l_s			: unsigned(15 downto 0);
+	signal audio_r_s			: unsigned(15 downto 0);
+	signal audio_l_amp_s		: unsigned(15 downto 0);
+	signal audio_r_amp_s		: unsigned(15 downto 0);
 	signal volumes_s			: volumes_t;
 
 	-- Video
@@ -415,7 +417,7 @@ begin
 	);
 
 	-- Audio
-	mixer: entity work.mixers
+	mixer: entity work.mixeru
 	port map (
 		clock_i			=> clock_master_s,
 		reset_i			=> reset_s,
@@ -432,27 +434,30 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
+	audio_l_amp_s	<= audio_l_s(15) & audio_l_s(13 downto 0) & "0";
+	audio_r_amp_s	<= audio_r_s(15) & audio_r_s(13 downto 0) & "0";
+
 	-- Left Channel
-	audiol : entity work.dac_dsm2v
+	audiol : entity work.dac
 	generic map (
 		nbits_g	=> 16
 	)
 	port map (
 		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_l_s,
+		clock_i	=> clock_3m_s,
+		dac_i		=> audio_l_amp_s,
 		dac_o		=> dac_l_o
 	);
 
 	-- Right Channel
-	audior : entity work.dac_dsm2v
+	audior : entity work.dac
 	generic map (
 		nbits_g	=> 16
 	)
 	port map (
 		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_r_s,
+		clock_i	=> clock_3m_s,
+		dac_i		=> audio_r_amp_s,
 		dac_o		=> dac_r_o
 	);
 
@@ -586,8 +591,8 @@ begin
 
 	uh: if hdmi_output_g generate
 
-		sound_hdmi_l_s <= '0' & std_logic_vector(audio_l_s(15 downto 1));
-		sound_hdmi_r_s <= '0' & std_logic_vector(audio_r_s(15 downto 1));
+		sound_hdmi_l_s <= '0' & std_logic_vector(audio_l_amp_s(15 downto 1));
+		sound_hdmi_r_s <= '0' & std_logic_vector(audio_r_amp_s(15 downto 1));
 
 		-- HDMI
 		hdmi: entity work.hdmi
