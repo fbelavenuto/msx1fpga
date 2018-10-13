@@ -48,7 +48,7 @@ use work.msx_pack.all;
 
 entity wxedax_top is
 	generic (
-		use_i2s_g				: boolean		:= false;
+		use_i2s_g				: boolean		:= true;
 		per_opll_g				: boolean		:= true;
 		per_jt51_g				: boolean		:= false
 	);
@@ -580,13 +580,15 @@ begin
 
 	-- Tape In (via ADC)
 	process (clock_master_s)
-		constant HYST_C  : integer := 4;
-		constant LEVEL_C : integer := 40;
+		constant HYST_C  : integer := 20;
+		constant LEVEL_C : integer := 128;
+		variable tapein_v	: std_logic_vector(8 downto 0);
 	begin
 		if rising_edge(clock_master_s) then
-			if    ear_s = '1' and tapein_s < LEVEL_C - HYST_C then
+			tapein_v := '0' & tapein_s;
+			if    tapein_v < (LEVEL_C - HYST_C) then
 				ear_s <= '0';
-			elsif ear_s = '0' and tapein_s > LEVEL_C + HYST_C then
+			elsif tapein_v > (LEVEL_C + HYST_C) then
 				ear_s <= '1';
 			end if;
 		end if;
