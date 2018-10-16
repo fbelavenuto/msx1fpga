@@ -40,8 +40,11 @@
 
 -- Slots:
 -- 0 = Primary: BIOS+BASIC
--- 1 = External
--- 2 = External
+-- 1 = Expanded:
+-- 1.0 = XBASIC2
+-- 1.1 = External slot 1
+-- 1.2 = External slot 2
+-- 2 = ESCCI
 -- 3 = Expanded:
 -- 3.0 = ExtROM from $4000-$7FFF
 -- 3.1 = RAM Mapper
@@ -217,11 +220,18 @@ architecture Behavior of msx is
 	-- Memory
 	signal prim_slot_n_s		: std_logic_vector( 3 downto 0)		:= "1111";
 	signal pslot_s				: std_logic_vector( 1 downto 0)		:= "00";
-	signal d_from_exp_s		: std_logic_vector( 7 downto 0);
+
+	signal d_from_exp1_s		: std_logic_vector( 7 downto 0);
+	signal slot1_exp_n_s		: std_logic_vector( 3 downto 0)		:= "1111";
+	signal exp1_has_data_s	: std_logic;
+
+	signal d_from_exp3_s		: std_logic_vector( 7 downto 0);
 	signal slot3_exp_n_s		: std_logic_vector( 3 downto 0)		:= "1111";
-	signal exp_has_data_s	: std_logic;
+	signal exp3_has_data_s	: std_logic;
+
 	signal brom_cs_s			: std_logic;
 	signal extrom_cs_s		: std_logic;
+	signal xb2rom_cs_s		: std_logic;
 	signal ram_cs_s			: std_logic;
 	signal use_rom_in_ram_s	: std_logic;
 	signal hw_memsize_s		: std_logic_vector( 7 downto 0);
@@ -420,15 +430,30 @@ begin
 		port_c_o			=> pio_port_c_s
 	);
 
-	-- Slot expander
-	exp: entity work.exp_slot
+	-- Slot expander prim slot 1
+	exp1: entity work.exp_slot
+	port map (
+		reset_i			=> reset_i,
+		ipl_en_i			=> '0',
+		addr_i			=> cpu_addr_s,
+		data_i			=> d_from_cpu_s,
+		data_o			=> d_from_exp1_s,
+		has_data_o		=> exp1_has_data_s,
+		sltsl_n_i		=> prim_slot_n_s(1),
+		rd_n_i			=> rd_n_s,
+		wr_n_i			=> wr_n_s,
+		expsltsl_n_o	=> slot1_exp_n_s
+	);
+	
+	-- Slot expander prim slot 3
+	exp3: entity work.exp_slot
 	port map (
 		reset_i			=> reset_i,
 		ipl_en_i			=> ipl_en_s,
 		addr_i			=> cpu_addr_s,
 		data_i			=> d_from_cpu_s,
-		data_o			=> d_from_exp_s,
-		has_data_o		=> exp_has_data_s,
+		data_o			=> d_from_exp3_s,
+		has_data_o		=> exp3_has_data_s,
 		sltsl_n_i		=> prim_slot_n_s(3),
 		rd_n_i			=> rd_n_s,
 		wr_n_i			=> wr_n_s,
@@ -619,10 +644,12 @@ begin
 			d_from_iplrom_s			when iplrom_cs_s = '1'		else
 			ram_data_i					when iplram_cs_s = '1'		else
 			rom_data_i					when brom_cs_s = '1'			else
-			rom_data_i					when extrom_cs_s = '1'		else
+			ram_data_i					when extrom_cs_s = '1'		else
+			ram_data_i					when xb2rom_cs_s = '1'		else
 			ram_data_i					when ram_cs_s = '1'			else
 			ram_data_i					when nxt_rom_cs_s = '1'		else
-			d_from_exp_s				when exp_has_data_s = '1'	else
+			d_from_exp1_s				when exp1_has_data_s = '1'	else
+			d_from_exp3_s				when exp3_has_data_s = '1'	else
 			d_from_mram_s				when mram_cs_s = '1'			else
 			-- I/O
 			d_from_vdp_s				when vdp_rd_n_s = '0'		else
@@ -654,6 +681,7 @@ begin
 	iplrom_addr_s	<= cpu_addr_s(12 downto 0);
 	brom_cs_s		<= '1'	when prim_slot_n_s(0) = '0' and cpu_addr_s(15) = '0'					else '0';	-- 0000-7FFF
 	extrom_cs_s		<= '1'	when slot3_exp_n_s(0) = '0' and cpu_addr_s(15 downto 14) = "01"	else '0';	-- 4000-7FFF
+	xb2rom_cs_s		<= '1'	when slot1_exp_n_s(0) = '0' and cpu_addr_s(15 downto 14) = "01"	else '0';	-- 4000-7FFF
 
 	-- Mapper
 	process(reset_i, clock_cpu_i)
@@ -692,7 +720,9 @@ begin
 	-- RAM
 	ram_data_o	<= d_from_cpu_s;
 	ram_ce_o		<= ram_cs_s or iplram_cs_s or nxt_rom_cs_s or mr_ram_ce_s or 
-						(use_rom_in_ram_s and brom_cs_s) or (use_rom_in_ram_s and extrom_cs_s);
+						(use_rom_in_ram_s and brom_cs_s) or
+						(use_rom_in_ram_s and extrom_cs_s) or
+						(use_rom_in_ram_s and xb2rom_cs_s);
 
 	ram_oe_o		<= not rd_n_s;
 	ram_we_o		<= '1' when wr_n_s = '0' and (ram_cs_s = '1' or mr_ram_ce_s = '1')	else
@@ -726,6 +756,7 @@ begin
 		--
 		rom_cs_i					=> brom_cs_s,
 		extrom_cs_i				=> extrom_cs_s,
+		xb2rom_cs_i				=> xb2rom_cs_s,
 		nxt_rom_cs_i			=> nxt_rom_cs_s,
 		nxt_rom_page_i			=> nxt_rom_page_s,
 		ipl_cs_i					=> ipl_cs_s,
@@ -771,8 +802,8 @@ begin
 	bus_m1_n_o		<= m1_n_s;
 	bus_iorq_n_o	<= iorq_n_s;
 	bus_mreq_n_o	<= mreq_n_s;
-	bus_sltsl1_n_o	<= prim_slot_n_s(1);
-	bus_sltsl2_n_o	<= prim_slot_n_s(2);
+	bus_sltsl1_n_o	<= slot1_exp_n_s(1);
+	bus_sltsl2_n_o	<= slot1_exp_n_s(2);
 
 	wait_n_s			<= m1_wait_n_s and bus_wait_n_i and not vdp_wait_s;
 	int_n_s			<= bus_int_n_i and vdp_int_n_s;

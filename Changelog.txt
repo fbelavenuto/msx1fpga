@@ -26,3 +26,15 @@
 	- Implemented RAM size configurable (512K, 2M ou 8M bytes)
 	- Added support to update flash by the MSX itself (WXEDAX board)
 	- Added SNES controller (WXEDAX board)
+
+1.3:
+	- Separated mixer from audio output
+	- New audio mixer with adjustable volume, via SWIO Ports. Standard mixer levels fixed.
+	- Added K7 input feedback
+	- Added I2S audio output to the WXEDAX board (chip PCM5102A)
+	- Added OPLL from the OCM project. OPLL code compiles in Xilinx FPGAs without troubles.
+	- Added support to the loader loads MSX BIOS and two additional 16K ROMs to the boards more than 512K RAM
+	- Expanded the slot 1, added XBASIC2 ROM in slot 1.1
+	- Added synth to the Multicore2 board, with the OPLL and YT51
+	- Added alternative Spanish keymap (thanks to desUBIKado)
+	- Added experimental Japanese keymap (thanks to tanam (tms9918))

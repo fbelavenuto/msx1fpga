@@ -52,6 +52,7 @@ entity memoryctl is
 		--
 		rom_cs_i					: in  std_logic;
 		extrom_cs_i				: in  std_logic;
+		xb2rom_cs_i				: in  std_logic;
 		nxt_rom_cs_i			: in  std_logic;
 		nxt_rom_page_i			: in  std_logic_vector( 2 downto 0);
 		ipl_cs_i					: in  std_logic;
@@ -119,7 +120,7 @@ begin
 		-- Address Range		System			Size	A22-A14		IPL Pages range
 		-- 00 0000-00 7FFF	ROM BIOS			32K	00 000000x	000-001
 		-- 00 8000-00 BFFF	EXT ROM			16K	00 0000010	002-002
-		-- 00 C000-00 FFFF	(empty)			16K	00 0000011	003-003
+		-- 00 C000-00 FFFF	XBASIC2 ROM		16K	00 0000011	003-003
 		-- 01 0000-01 FFFF	(empty)			64K	00 00001xx	004-007
 		-- 02 0000-03 FFFF	Nextor ROM		128K	00 0001xxx	008-00F
 		-- 04 0000-07 FFFF	(empty)			256K	00 001xxxx	010-01F
@@ -128,7 +129,8 @@ begin
 
 		process (nxt_rom_cs_i, ipl_cs_i, cpu_addr_i, nxt_rom_page_i,
 					ram_page_i, ipl_rampage_i, ram_cs_i, mr_ram_addr_i,
-					use_rom_in_ram_i, mr_ram_cs_i, rom_cs_i, extrom_cs_i)
+					use_rom_in_ram_i, mr_ram_cs_i, rom_cs_i, extrom_cs_i,
+					xb2rom_cs_i)
 		begin
 			ram_addr_o <= (others => '0');
 
@@ -136,6 +138,8 @@ begin
 				ram_addr_o <= "00000000" & cpu_addr_i(14 downto 0);
 			elsif extrom_cs_i = '1' then															-- Extension ROM
 				ram_addr_o <= "000000010" & cpu_addr_i(13 downto 0);
+			elsif xb2rom_cs_i = '1' then															-- XBASIC2 ROM
+				ram_addr_o <= "000000011" & cpu_addr_i(13 downto 0);
 			elsif nxt_rom_cs_i = '1' then															-- Nextor
 				ram_addr_o <= "000001" & nxt_rom_page_i & cpu_addr_i(13 downto 0);
 			elsif mr_ram_cs_i = '1' then															-- SCC/Megaram (only 512K)
@@ -162,7 +166,7 @@ begin
 		-- Address Range		System			Size	A22-A14		IPL Pages range
 		-- 00 0000-00 7FFF	ROM BIOS			32K	00 000000x	000-001
 		-- 00 8000-00 BFFF	EXT ROM			16K	00 0000010	002-002
-		-- 00 C000-00 FFFF	(empty)			16K	00 0000011	003-003
+		-- 00 C000-00 FFFF	XBASIC2 ROM		16K	00 0000011	003-003
 		-- 01 0000-01 FFFF	(empty)			64K	00 00001xx	004-007
 		-- 02 0000-03 FFFF	Nextor ROM		128K	00 0001xxx	008-00F
 		-- 04 0000-07 FFFF	(empty)			256K	00 001xxxx	010-01F
@@ -173,7 +177,7 @@ begin
 
 		process (nxt_rom_cs_i, ipl_cs_i, cpu_addr_i, nxt_rom_page_i,
 					ram_page_i, ipl_rampage_i, ram_cs_i, mr_ram_addr_i,
-					mr_ram_cs_i, rom_cs_i, extrom_cs_i)
+					mr_ram_cs_i, rom_cs_i, extrom_cs_i, xb2rom_cs_i)
 		begin
 			ram_addr_o <= (others => '0');
 
@@ -181,6 +185,8 @@ begin
 				ram_addr_o <= "00000000" & cpu_addr_i(14 downto 0);
 			elsif extrom_cs_i = '1' then															-- Extension ROM
 				ram_addr_o <= "000000010" & cpu_addr_i(13 downto 0);
+			elsif xb2rom_cs_i = '1' then															-- XBASIC2 ROM
+				ram_addr_o <= "000000011" & cpu_addr_i(13 downto 0);
 			elsif nxt_rom_cs_i = '1' then															-- Nextor
 				ram_addr_o <= "000001" & nxt_rom_page_i & cpu_addr_i(13 downto 0);
 			elsif mr_ram_cs_i = '1' then															-- SCC/Megaram
