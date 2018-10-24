@@ -587,7 +587,7 @@ begin
 	-- K7 and Joystick
 	k7_motor_o		<= pio_motoron_a;
 	k7_audio_o		<= pio_k7out_a;
-	psg_port_a_s	<= k7_audio_i & '1' & joy_sigs_s;
+	psg_port_a_s	<= k7_audio_i & '0' & joy_sigs_s;	-- bit 6: Keyboard layout (1=JIS, 0=ANSI)
 	joy_sigs_s		<= joy1_btn2_i & joy1_btn1_i & joy1_right_i & joy1_left_i & joy1_down_i & joy1_up_i	when joy_sel_a = '0' else
 							joy2_btn2_i & joy2_btn1_i & joy2_right_i & joy2_left_i & joy2_down_i & joy2_up_i;
 	joy1_btn1_o		<= '0' when psg_port_b_s(0) = '0'	else 'Z';

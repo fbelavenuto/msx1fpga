@@ -96,6 +96,7 @@ entity wxedax_top is
 		adc_data_i				: in    std_logic;
 		adc_cs_n_o				: out   std_logic									:= '1';
 		-- Audio
+		i2s_mclk_o				: out   std_logic									:= '0';
 		i2s_bclk_o				: out   std_logic									:= '0';
 		i2s_lrclk_o				: out   std_logic									:= '0';
 		i2s_data_o				: out   std_logic									:= '0';
@@ -468,7 +469,7 @@ begin
 			-- Parallel input
 			pcm_l_i			=> std_logic_vector(audio_l_s),
 			pcm_r_i			=> std_logic_vector(audio_r_s),
-			i2s_mclk_o		=> open,
+			i2s_mclk_o		=> i2s_mclk_o,
 			i2s_lrclk_o		=> i2s_lrclk_o,
 			i2s_bclk_o		=> i2s_bclk_o,
 			i2s_d_o			=> i2s_data_o
