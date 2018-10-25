@@ -1,5 +1,6 @@
 *.bak
 greybox_tmp
+/SD
 /_bak
 /DOCs/hdmi
 /synth/DE1/db
