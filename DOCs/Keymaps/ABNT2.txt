@@ -152,11 +152,11 @@ $00,$00,$90,$00,$00,$00,$00,$00
 051,4,2	; / ?
 059,0,6	; RSHIFT
 014,1,6	; LCTRL
-11F,8,8	; LWIN (mapped to SPACE key)
+11F,0,8	; LWIN (mapped to SPACE key)
 011,2,6	; LALT
-029,8,8	; SPACE
+029,0,8	; SPACE
 111,2,6	; RALT
-127,8,8	; RWIN (mapped to SPACE key)
+127,0,8	; RWIN (mapped to SPACE key)
 12F,F,F	; RMENU
 114,1,6	; RCTRL
 170,2,8	; INS
@@ -185,6 +185,7 @@ $00,$00,$90,$00,$00,$00,$00,$00
 07A,6,9	; NUMPAD 3
 070,3,9	; NUMPAD 0
 071,6,A	; NUMPAD ,
+15A,7,7	; NUMPAD ENTER
 137,F,F	; POWER
 13F,F,F	; SLEEP
 15E,F,F	; WAKE
