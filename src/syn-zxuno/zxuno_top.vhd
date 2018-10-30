@@ -47,7 +47,7 @@ use work.msx_pack.all;
 
 entity zxuno_top is
 	generic (
-		ramsize_g			: integer		:= 2048			-- 512 or 2048
+		ramsize_g			: integer		:= 512			-- 512 or 2048
 	);
 	port (
 		-- Clocks
@@ -165,6 +165,8 @@ architecture behavior of zxuno_top is
 	signal beep_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
+	signal audio_l_amp_s		: signed(14 downto 0);
+	signal audio_r_amp_s		: signed(14 downto 0);
 	signal volumes_s			: volumes_t;
 
 	-- Video
@@ -432,27 +434,30 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
+	audio_l_amp_s	<= audio_l_s(15) & audio_l_s(13 downto 0);
+	audio_r_amp_s	<= audio_r_s(15) & audio_r_s(13 downto 0);
+
 	-- Left Channel
 	audiol : entity work.dac_dsm2v
 	generic map (
-		nbits_g	=> 16
+		nbits_g	=> 15
 	)
 	port map (
 		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_l_s,
+		clock_i	=> clock_3m_s,
+		dac_i		=> audio_l_amp_s,
 		dac_o		=> dac_l_o
 	);
 
 	-- Right Channel
 	audior : entity work.dac_dsm2v
 	generic map (
-		nbits_g	=> 16
+		nbits_g	=> 15
 	)
 	port map (
 		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_r_s,
+		clock_i	=> clock_3m_s,
+		dac_i		=> audio_r_amp_s,
 		dac_o		=> dac_r_o
 	);
 

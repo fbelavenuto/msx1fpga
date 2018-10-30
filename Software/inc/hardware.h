@@ -43,6 +43,12 @@ static const unsigned char mymkid = 40;
 #define REG_OPTIONS		0x10
 #define REG_MAPPER		0x11
 #define REG_TURBO		0x12
+#define REG_VOLBEEP		0x20
+#define REG_VOLEAR		0x21
+#define REG_VOLPSG		0x22
+#define REG_VOLSCC		0x23
+#define REG_VOLOPLL		0x24
+#define REG_VOLAUX1		0x25
 
 // Reg config
 #define CFG_NEXTOR		0x01
