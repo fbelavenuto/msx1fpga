@@ -30,7 +30,7 @@ My ports (hex):
 48 = register number
 49 = register value
 
-Registers:
+Registers (hex):
 
 (R )	00 => Machine ID number
 (R )	01 => Machine name (text), read to receive a null character.

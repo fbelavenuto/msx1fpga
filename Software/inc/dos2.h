@@ -20,6 +20,7 @@
 #define  O_INHERIT  0x04
 
 /* creat attributes */
+#define  ATTR_NONE    0x00
 #define  ATTR_RDONLY  0x01
 #define  ATTR_HIDDEN  0x02
 #define  ATTR_SYSTEM  0x04

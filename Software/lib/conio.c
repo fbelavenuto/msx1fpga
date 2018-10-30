@@ -37,11 +37,18 @@ void puthex16(uint16_t v) {
 
 
 void putdec(int16_t digits, uint16_t v) {
+	uint8_t fz = 0;
 	while (digits > 0) {
 		uint16_t aux = v / digits;
 		uint8_t n = aux % 10;
-		putchar('0' + n);
+		if (n != 0 || fz != 0) {
+			putchar('0' + n);
+			fz = 1;
+		}
 		digits /= 10;
+		if (digits == 1) {
+			fz = 1;
+		}
 	}
 }
 
