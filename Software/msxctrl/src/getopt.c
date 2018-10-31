@@ -25,10 +25,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef _
-# define _(msgid)	(msgid)
-#endif
-
 /* This version of `getopt' appears to the caller like standard Unix `getopt'
    but it behaves differently for the user, since it allows the user
    to intersperse the options with the other arguments.
@@ -120,8 +116,6 @@ static enum
 } ordering;
 
 
-#define	my_index	strchr
-
 
 /* Handle permutation of arguments.  */
 
@@ -203,7 +197,7 @@ static const char *_getopt_initialize (const char *optstring)
      is the program name); the sequence of previously skipped
      non-option ARGV-elements is empty.  */
 
-  first_nonopt = last_nonopt = optind = 1;
+  first_nonopt = last_nonopt = optind = 0;
 
   nextchar = NULL;
 
@@ -282,7 +276,7 @@ static const char *_getopt_initialize (const char *optstring)
    If LONG_ONLY is nonzero, '-' as well as '--' can introduce
    long-named options.  */
 
-int _getopt_internal (int argc, char *const *argv, const char *optstring,
+unsigned char getoptex(int argc, char **argv, const char *optstring,
 	 const struct option *longopts, int *longind, int long_only)
 {
   optarg = NULL;
@@ -290,7 +284,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
   if (optind == 0)
     {
       optstring = _getopt_initialize (optstring);
-      optind = 1;		/* Don't scan ARGV[0], the program name.  */
+//      optind = 1;		/* Don't scan ARGV[0], the program name.  */
     }
 
   if (nextchar == NULL || *nextchar == '\0')
@@ -343,7 +337,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
 	     that we previously skipped, so the caller will digest them.  */
 	  if (first_nonopt != last_nonopt)
 	    optind = first_nonopt;
-	  return EOF;
+	  return 255;
 	}
 
       /* If we have come to a non-option and did not permute it,
@@ -352,7 +346,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
       if ((argv[optind][0] != '-' || argv[optind][1] == '\0'))
 	{
 	  if (ordering == REQUIRE_ORDER)
-	    return EOF;
+	    return 255;
 	  optarg = argv[optind++];
 	  return 1;
 	}
@@ -382,7 +376,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
   if (longopts != NULL
       && (argv[optind][1] == '-'
 	  || (long_only && (argv[optind][2]
-			    || !my_index (optstring, argv[optind][1])))))
+			    || !strchr (optstring, argv[optind][1])))))
     {
       char *nameend;
       const struct option *p;
@@ -395,9 +389,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
       for (nameend = nextchar; *nameend && *nameend != '='; nameend++)
 	/* Do nothing.  */ ;
 
-#ifdef lint
       indfound = 0;  /* Avoid spurious compiler warning.  */
-#endif
 
       /* Test all long options for either exact match
 	 or abbreviated matches.  */
@@ -492,7 +484,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
 	 option, then it's an error.
 	 Otherwise interpret it as a short option.  */
       if (!long_only || argv[optind][1] == '-'
-	  || my_index (optstring, *nextchar) == NULL)
+	  || strchr (optstring, *nextchar) == NULL)
 	{/*
 	  if (opterr)
 	    {
@@ -516,7 +508,7 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
 
   {
     char c = *nextchar++;
-    char *temp = my_index (optstring, c);
+    char *temp = strchr (optstring, c);
 
     /* Increment `optind' when we start to process its last character.  */
     if (*nextchar == '\0')
@@ -585,10 +577,10 @@ int _getopt_internal (int argc, char *const *argv, const char *optstring,
   }
 }
 
-int getopt (int argc, char *const *argv, const char *optstring)
+unsigned char getopt(int argc, char **argv, const char *optstring)
 {
-  return _getopt_internal (argc, argv, optstring,
-			   (const struct option *) 0,
-			   (int *) 0,
-			   0);
+	return getoptex(argc, argv, optstring,
+			(const struct option *) 0,
+			(int *) 0,
+			0);
 }

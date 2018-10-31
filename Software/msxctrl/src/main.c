@@ -25,11 +25,16 @@ http://msx.atlantes.org/index_en.html#sdccmsxdos
 #include "hardware.h"
 #include "conio.h"
 #include "dos2.h"
+#include "getopt.h"
+
+/* Defines */
+typedef unsigned char bool;
+#define false 0
+#define true 1
 
 /* Constants */
-const char CONFFILE[] = "MSX1FPGA.REG";
-const unsigned char REGS[] = {REG_VOLBEEP, REG_VOLEAR, REG_VOLPSG,
-							REG_VOLSCC, REG_VOLOPLL, REG_VOLAUX1};
+const unsigned char REGS[] = {REG_MAPPER, REG_TURBO, REG_VOLBEEP, REG_VOLEAR,
+							 REG_VOLPSG, REG_VOLSCC, REG_VOLOPLL, REG_VOLAUX1};
 
 /* Structures */
 struct tRegValPair {
@@ -43,23 +48,125 @@ unsigned char c;
 unsigned int  i;
 int fhandle;
 struct tRegValPair rvp;
+bool chg50 = false, chg60 = false;
+bool reset = false;
+bool saveregs = false;
+bool loadregs = false;
+bool chgmapper = false;
+unsigned char newmapper;
+bool chgturbo = false;
+unsigned char newturbo;
+bool chgvolbeep = false;
+unsigned char newvolbeep;
+bool chgvolear = false;
+unsigned char newvolear;
+bool chgvolpsg = false;
+unsigned char newvolpsg;
+bool chgvolscc = false;
+unsigned char newvolscc;
+bool chgvolopll = false;
+unsigned char newvolopll;
+bool chgvolaux = false;
+unsigned char newvolaux;
 
 /******************************************************************************/
 void use()
 {
-	puts("MSXCTRL.COM - Utility to manipulate MSX1FPGA core.\r\n");
+	//             1111111111222222222233333333334 
+	//    1234567890123456789012345678901234567890
+	puts("MSXCTRL.COM - Utility to manipulate\r\nMSX1FPGA core.\r\n");
 	puts("Use:\r\n");
 	puts("\r\n");
-	puts("MSXCTRL <options>\r\n");
-	
-	return 1;
+	//             1111111111222222222233333333334 
+	//    1234567890123456789012345678901234567890
+	puts("MSXCTRL -56r -m<0-2> -t<0-1>\r\n");
+	puts("        -g<filename> -l<filename>\r\n");
+	puts("        -b<0-255> -e<0-255> -p<0-255>\r\n");
+	puts("        -s<0-255> -o<0-255> -a<0-255>\r\n");
+	puts(" -5       Enable 50 Hz\r\n");
+	puts(" -6       Enable 60 Hz\r\n");
+	puts(" -r       Resets the machine\r\n");
+	puts(" -g fn    Save the all registers to\r\n");
+	puts("          file <fn>\r\n");
+	puts(" -l fn    Restore the all registers\r\n");
+	puts("          from file <fn>\r\n");
+	puts(" -m 0-2   ESCCI Mapper type (0=SCCI,\r\n");
+	puts("          1=ASCII8, 2=ASCII16)\r\n");
+	//             1111111111222222222233333333334 
+	//    1234567890123456789012345678901234567890
+	puts(" -t 0-1   Turbo (0=OFF, 1=ON)\r\n");
+	puts(" -b 0-255 Keyboard Beep volume (0-255)\r\n");
+	puts(" -e 0-255 EAR feedback volume (0-255)\r\n");
+	puts(" -p 0-255 PSG volume (0-255)\r\n");
+	puts(" -s 0-255 SCC volume (0-255)\r\n");
+	puts(" -o 0-255 OPLL volume (0-255)\r\n");
+	puts(" -a 0-255 AUX1 volume (0-255)\r\n");
+	exit(1);
+}
 
+/******************************************************************************/
+void readRegs(char *filename)
+{
+	// Try open file
+	fhandle = open(filename, O_RDONLY);
+	if (fhandle == -1) {
+		puts("Error opening file '");
+		puts(filename);
+		puts("'.\r\n");
+		exit(2);
+	}
+	close(fhandle);
+	puts("Not implemented yet!\r\n");
+	exit(3);
+/*
+	r = read(fhandle, &reg, 1);
+	if (r == -1) {
+		if (last_error == EEOF) {
+			puts("End of file!\r\n");
+			close(fhandle);
+			return;
+		} else {
+			puts("Reading error: ");
+			puthex8(last_error);
+			puts("!\r\n");
+			close(fhandle);
+			return;
+		}
+	}
+	close(fhandle);
+*/
+}
+
+/******************************************************************************/
+void writeRegs(char *filename)
+{
+	// write
+	// Try open file
+	fhandle = creat(filename, O_WRONLY, ATTR_NONE);
+	if (fhandle == -1) {
+		puts("Error opening file '");
+		puts(filename);
+		puts("'.\r\n");
+		exit(2);
+	}
+	for (i = 0; i < sizeof(REGS); i++) {
+		rvp.reg = REGS[i];
+		SWIOP_REGNUM = rvp.reg;
+		rvp.value = SWIOP_REGVAL;
+		if (-1 == write(fhandle, &rvp, sizeof(rvp))) {
+			puts("Error writing file.\r\n");
+			close(fhandle);
+			exit(4);
+		}
+	}
+	puts("Regs write sucessful!\r\n");
+	close(fhandle);
 }
 
 /******************************************************************************/
 int main(char** argv, int argc)
 {
-
+/*
 	// Init SWIO
 	SWIOP_MKID = mymkid;
 	if ((unsigned char)SWIOP_MKID != (unsigned char)~mymkid) {
@@ -95,65 +202,36 @@ int main(char** argv, int argc)
 	puts("\r\nHas HWDS = ");
 	puthex8(hwds);
 	puts("\r\n\r\n");
-
-	if (argc != 1) {
-		use();
-	}
-	c = argv[0][0] | 0x20;
-	if (c != 'r' && c != 'w') {
-		use();
-	}
-	if (c == 'r') {
-		// Try open file
-		fhandle = open(CONFFILE, O_RDONLY);
-		if (fhandle == -1) {
-			puts("Error opening file '");
-			puts(CONFFILE);
-			puts("'.\r\n");
-			return 2;
-		}
-		close(fhandle);
-		puts("Not implemented yet!\r\n");
-		return 3;
-/*
-		r = read(fhandle, &reg, 1);
-		if (r == -1) {
-			if (last_error == EEOF) {
-				puts("End of file!\r\n");
-				goto exit;
-			} else {
-				puts("Reading error: ");
-				puthex8(last_error);
-				puts("!\r\n");
-				goto exit;
-			}
-		}
-		goto exit;
 */
+	if (argc < 1) {
+		use();
 	}
-	// write
-	// Try open file
-	fhandle = creat(CONFFILE, O_WRONLY, ATTR_NONE);
-	if (fhandle == -1) {
-		puts("Error opening file '");
-		puts(CONFFILE);
-		puts("'.\r\n");
-		return 2;
-	}
-	for (i = 0; i < sizeof(REGS); i++) {
-		rvp.reg = REGS[i];
-		SWIOP_REGNUM = rvp.reg;
-		rvp.value = SWIOP_REGVAL;
-		if (-1 == write(fhandle, &rvp, sizeof(rvp))) {
-			puts("Error writing file.\r\n");
-			close(fhandle);
-			return 4;
+
+	while ((c = getopt(argc, argv, "56rm:t:g:l:b:e:p:s:o:a:")) != 255) {
+		puthex8(c);
+		puts("\r\n");
+		switch (c) {
+			case '5':
+				chg50 = true;
+			break;
+
+			case '6':
+				chg60 = true;
+			break;
+
+			case 'r':
+				reset = true;
+			break;
+
+			case '?':
+				puts("Error in parameters.\r\n");
+				return 1;
+		
+			default:
+				puts("Error in parameters.\r\n");
+				return 1;
 		}
 	}
-	puts("Regs write sucessful!\r\n");
-
-exit:
-	close(fhandle);
 
 	return 0;
 }

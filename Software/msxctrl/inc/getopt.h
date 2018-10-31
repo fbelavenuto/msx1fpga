@@ -90,17 +90,12 @@ struct option
 #define required_argument	1
 #define optional_argument	2
 
-#if defined (__STDC__) && __STDC__
-/* Many other libraries have conflicting prototypes for getopt, with
-   differences in the consts, in stdlib.h.  To avoid compilation
-   errors, only prototype getopt for the GNU C library.  */
-extern int getopt (int argc, char *const *argv, const char *shortopts);
-/* Internal only.  Users should not call this directly.  */
-extern int _getopt_internal (int argc, char *const *argv,
-			     const char *shortopts,
-		             const struct option *longopts, int *longind,
-			     int long_only);
-#endif /* __STDC__ */
+unsigned char getoptex(int argc, char **argv,
+			const char *shortopts,
+			const struct option *longopts, int *longind,
+			int long_only);
+
+unsigned char getopt(int argc, char **argv, const char *optstring);
 
 #ifdef	__cplusplus
 }
