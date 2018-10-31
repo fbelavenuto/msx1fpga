@@ -9,13 +9,13 @@ t = f.readlines()
 f.close
 
 kmp = []
-for i in range(288):
-	kmp.append(0)
 for i in range(512):
 	kmp.append(255)
+for i in range(420):
+	kmp.append(0)
 
 mode = 0
-count = 0;
+count = 512;
 
 for i in t:
 	if i[0] != ';' and i[0] != '\n':
@@ -31,7 +31,7 @@ for i in t:
 			continue
 		if mode == 1:
 			d = l.split(',')
-			if len(d) != 8:
+			if len(d) < 6 and len(d) > 8:
 				raise Exception('Error in section [ROM]: ', d)
 			for c in d:
 				v = 0;
@@ -55,9 +55,9 @@ for i in t:
 				raise Exception('Col range error: ', d[0])
 			if row < 0 or row > 15:
 				raise Exception('Row range error: ', d[0])
-			kmp[288+scancode] = col * 16 + row
+			kmp[scancode] = col * 16 + row
 
 f = open(sys.argv[2], 'wb')
-f.write(struct.pack("800B", *kmp))
+f.write(struct.pack("932B", *kmp))
 f.close
 print "File generated with no errors.\n"

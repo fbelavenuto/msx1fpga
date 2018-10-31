@@ -1,1 +1,2 @@
-python makeKmp.py ABNT2.txt PTBR.kmp
+..\..\Utils\makeKmp.py ABNT2.txt PTBR.kmp
+pause
