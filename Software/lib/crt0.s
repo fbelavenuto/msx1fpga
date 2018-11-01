@@ -2,14 +2,17 @@
 	;    Advanced version: allows "int main(char** argv, int argc)",
 	;    the returned value will be passed to _TERM on DOS 2,
 	;    argv is always 0x100 (the startup code memory is recycled).
-        ;    Overhead: 112 bytes.
+	;    Overhead: 112 bytes.
 	;
-        ;    Compile programs with --code-loc 0x170 --data-loc X
-        ;    X=0  -> global vars will be placed immediately after code
-        ;    X!=0 -> global vars will be placed at address X
-        ;            (make sure that X>0x100+code size)
+	;    Compile programs with --code-loc 0x170 --data-loc X
+	;    X=0  -> global vars will be placed immediately after code
+	;    X!=0 -> global vars will be placed at address X
+	;            (make sure that X>0x100+code size)
 
 	.globl	_main
+	.globl  l__INITIALIZER
+	.globl  s__INITIALIZED
+	.globl  s__INITIALIZER
 
 	.area _HEADER (ABS)
 
@@ -142,6 +145,14 @@ _heap_top::
 	.dw 0
 
 gsinit: .area   _GSINIT
+	ld		bc, #l__INITIALIZER
+	ld		a, b
+	or		a, c
+	jr z,	gsinit_next
+	ld		de, #s__INITIALIZED
+	ld		hl, #s__INITIALIZER
+	ldir
+gsinit_next:
 
         .area   _GSFINAL
         ret
