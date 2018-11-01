@@ -80,38 +80,41 @@ bool chgvolaux = false;
 unsigned char newvolaux;
 
 /******************************************************************************/
-void use()
+void use(bool all)
 {
 	//             1111111111222222222233333333334 
 	//    1234567890123456789012345678901234567890
 	puts("Use:\r\n");
 	puts("\r\n");
-	//             1111111111222222222233333333334 
-	//    1234567890123456789012345678901234567890
-	puts("MSXCTRL -r -[5|6] -m<0-2> -t<0-1>\r\n");
-	puts("        [-g<filename> | -l<filename>]\r\n");
+	puts("MSXCTRL -h -g -r -[5|6] -m<0-2> \r\n");
+	puts("        -c<0-1> -d<0-1> -t<0-1>\r\n");
+	puts("        [-w<filename> | -l<filename>]\r\n");
 	puts("        -b<0-255> -e<0-255> -p<0-255>\r\n");
 	puts("        -s<0-255> -o<0-255> -a<0-255>\r\n");
-	puts(" -r       Resets the machine\r\n");
-	puts(" -5       Enable 50 Hz\r\n");
-	puts(" -6       Enable 60 Hz\r\n");
-	puts(" -g fn    Save the all registers to\r\n");
-	puts("          file <fn>\r\n");
-	puts(" -l fn    Restore the all registers\r\n");
-	puts("          from file <fn>\r\n");
-	puts(" -m 0-2   ESCCI Mapper type (0=SCCI,\r\n");
-	puts("          1=ASCII8, 2=ASCII16)\r\n");
-	//             1111111111222222222233333333334 
-	//    1234567890123456789012345678901234567890
-	puts(" -c 0-1   Scanlines (0=OFF, 1=ON)\r\n");
-	puts(" -d 0-1   Scandoubler (0=OFF, 1=ON)\r\n");
-	puts(" -t 0-1   Turbo (0=OFF, 1=ON)\r\n");
-	puts(" -b 0-255 Keyboard Beep volume (0-255)\r\n");
-	puts(" -e 0-255 EAR feedback volume (0-255)\r\n");
-	puts(" -p 0-255 PSG volume (0-255)\r\n");
-	puts(" -s 0-255 SCC volume (0-255)\r\n");
-	puts(" -o 0-255 OPLL volume (0-255)\r\n");
-	puts(" -a 0-255 AUX1 volume (0-255)\r\n");
+	if (all) {
+		//             1111111111222222222233333333334 
+		//    1234567890123456789012345678901234567890
+		puts(" -h       Show this help\r\n");
+		puts(" -g       Show register values\r\n");
+		puts(" -r       Resets the machine\r\n");
+		puts(" -5       Enable 50 Hz\r\n");
+		puts(" -6       Enable 60 Hz\r\n");
+		puts(" -w fn    Write the all registers to\r\n");
+		puts("          file <fn>\r\n");
+		puts(" -l fn    Load the all registers\r\n");
+		puts("          from file <fn>\r\n");
+		puts(" -m 0-2   ESCCI Mapper type (0=SCCI,\r\n");
+		puts("          1=ASCII8, 2=ASCII16)\r\n");
+		puts(" -c 0-1   Scanlines (0=OFF, 1=ON)\r\n");
+		puts(" -d 0-1   Scandoubler (0=OFF, 1=ON)\r\n");
+		puts(" -t 0-1   Turbo (0=OFF, 1=ON)\r\n");
+		puts(" -b 0-255 Keyboard Beep vol. (0-255)\r\n");
+		puts(" -e 0-255 EAR feedback volume (0-255)\r\n");
+		puts(" -p 0-255 PSG volume (0-255)\r\n");
+		puts(" -s 0-255 SCC volume (0-255)\r\n");
+		puts(" -o 0-255 OPLL volume (0-255)\r\n");
+		puts(" -a 0-255 AUX1 volume (0-255)\r\n");
+	}
 	exit(1);
 }
 
@@ -174,10 +177,24 @@ void writeRegs()
 }
 
 /******************************************************************************/
+void showRegs()
+{
+	for (i = 0; i < sizeof(REGS); i++) {
+		puts("Reg 0x");
+		puthex8(REGS[i]);
+		puts(" = 0x");
+		SWIOP_REGNUM = REGS[i];
+		puthex8(SWIOP_REGVAL);
+		puts("\r\n");
+	}
+	exit(0);
+}
+
+/******************************************************************************/
 int main(char *argv[], int argc)
 {
 	puts("MSXCTRL.COM - Utility to manipulate\r\nMSX1FPGA core.\r\n");
-/*
+
 	// Init SWIO
 	SWIOP_MKID = mymkid;
 	if ((unsigned char)SWIOP_MKID != (unsigned char)~mymkid) {
@@ -213,13 +230,21 @@ int main(char *argv[], int argc)
 	puts("\r\nHas HWDS = ");
 	puthex8(hwds);
 	puts("\r\n\r\n");
-*/
+
 	if (argc < 1) {
-		use();
+		use(false);
 	}
 
-	while ((c = getopt(argc, argv, "r56g:l:m:c:d:t:b:e:p:s:o:a:")) != 255) {
+	while ((c = getopt(argc, argv, "hgr56w:l:m:c:d:t:b:e:p:s:o:a:")) != 255) {
 		switch (c) {
+			case 'h':
+				use(true);
+			break;
+
+			case 'g':
+				showRegs();
+			break;
+
 			case 'r':
 				reset = true;
 			break;
@@ -232,7 +257,7 @@ int main(char *argv[], int argc)
 				chg60 = true;
 			break;
 
-			case 'g':
+			case 'w':
 				saveregs = true;
 				filename = optarg;
 			break;
@@ -247,7 +272,7 @@ int main(char *argv[], int argc)
 				newmapper = atoi(optarg);
 				if (newmapper > 2) {
 					puts("Mapper type unknown.\r\n");
-					use();
+					use(false);
 				}
 			break;
 
@@ -256,7 +281,7 @@ int main(char *argv[], int argc)
 				newsline = atoi(optarg);
 				if (newsline > 1) {
 					puts("Scanlines unknown.\r\n");
-					use();
+					use(false);
 				}
 			break;
 
@@ -265,7 +290,7 @@ int main(char *argv[], int argc)
 				newsdoubler = atoi(optarg);
 				if (newsdoubler > 1) {
 					puts("Scandoubler unknown.\r\n");
-					use();
+					use(false);
 				}
 			break;
 
@@ -274,7 +299,7 @@ int main(char *argv[], int argc)
 				newturbo = atoi(optarg);
 				if (newturbo > 1) {
 					puts("Turbo unknown.\r\n");
-					use();
+					use(false);
 				}
 			break;
 
@@ -310,7 +335,7 @@ int main(char *argv[], int argc)
 
 			default:
 				puts("Error in parameters.\r\n");
-				use();
+				use(false);
 		}
 	}
 
