@@ -162,6 +162,7 @@ entity msx is
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
 		scanline_on_k_i: in  std_logic;
+		vertfreq_on_k_i: in  std_logic;
 		scanline_en_o	: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
@@ -381,6 +382,7 @@ begin
 		rgb_b_o			=> rgb_b_o,
 		hsync_n_o		=> hsync_n_o,
 		vsync_n_o		=> vsync_n_o,
+		vertfreq_on_k_i=> vertfreq_on_k_i,
 		ntsc_pal_o		=> ntsc_pal_o
 	);
 

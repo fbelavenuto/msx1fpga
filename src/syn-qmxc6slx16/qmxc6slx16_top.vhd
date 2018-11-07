@@ -314,8 +314,10 @@ begin
 		vsync_n_o		=> rgb_vsync_n_s,
 		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
-		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
 		vga_en_o			=> vga_en_s,
+		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
+		scanline_en_o	=> open,
+		vertfreq_on_k_i=> extra_keys_s(0),		-- Pause/Break
 		-- SPI/SD
 		flspi_cs_n_o	=> flspi_cs_n_s,
 		spi_cs_n_o		=> sdspi_cs_n_s,
