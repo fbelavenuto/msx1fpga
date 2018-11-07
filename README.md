@@ -1,4 +1,4 @@
-# msx1fpga
+# MSX1FPGA
 MSX1 cloned in FPGA
 
 This project is an MSX1 cloned in FPGA, with some parts of the OCM project.
@@ -23,6 +23,7 @@ The "CONFIG.TXT" configuration file is self-explanatory.
 ## Use instructions
 
 Format an SD Card in FAT16 (max 4GB), unzip the file 'msx1_sd_files.zip' in the root directory from SD Card.
+
 PS: Due to a Nextor bug, FAT16 partitions with ID 0x0E are not recognized, only with ID 0x06.
 
 ### IMPORTANT NOTE 2018.05.12: When you unzip the file 'msx1_sd_files.zip' the folder MSX1FPGA is created, and inside it is the file SPA.KMP with the definition of the keys for the Spanish keyboard. This definition contains numerous errors, for example, the quotes are not in place or it is impossible to get the closing parenthesis. You can get an alternative definition of the Spanish keyboard without those errors from this post (http://www.zxuno.com/forum/viewtopic.php?f=53&t=2087).
@@ -40,8 +41,10 @@ Some keys and their functions:
  - ALT = MSX GRAPH key;
  - END = MSX STOP key.
  
-The joystick port is mapped as JoyMega, and configured to use a SEGA Genesis / Megadrive joypad.
+The joystick port is mapped as JoyMega, and configured to use a SEGA Genesis/Megadrive joypad.
+
 To go to the BASIC from the MSX-DOS you must execute the BASIC command.
+
 To go to MSX-DOS from BASIC, CALL SYSTEM must be executed.
 
 
@@ -63,17 +66,19 @@ You can download version 0.4 from here (http://msxbanzai.tni.nl/dev/software.htm
 
 For .ROM files larger than 48K, use the command **ROMLOAD**. It can be used in two ways:
 
- 1™ ROMLOAD file.ROM  /S  ("/S" force to the execution of the program),
- 2™ file /S  (the name of the .ROM file without the extension)
+ *1st*: "ROMLOAD file.ROM /S"  ("/S" force to the execution of the program),
+
+ *2nd*: "file /S"  (the name of the .ROM file without the extension)
 
 If the /S is not set it is necessary to carry out a Soft Reset (CTRL + ALT + DEL) in order to execute the program.
+
 By default, the memory mapping system used is that of Konami5(SCC). In the case of non-Konami games, such as "Golvellius" or "el Abu Simbel Profanation", add a "/A" or "/1" switch - mapper ASCII8 and ASCII16 respectively - (one or the other is tested until finding the one that works). For example: ROMLOAD ascii8.rom /A /S
 
 Anyway, in the folder "\util" of the SD there are 2 files: ROMLOAD.TXT with instructions on how to use this command, and ROMLOAD.LST with a list of games and the options that have to be used to load them.
 
 ### B.- .DSK files
 
-There are two ways to do this, using the **EMUFILE** command or the **MAPDRV** command. Suppose that the disk of the program [i] Human Body: Circulatory System [/i] is called "CH-CIRCU.DSK", we can load it in these two ways:
+There are two ways to do this, using the **EMUFILE** command or the **MAPDRV** command. Suppose that the disk of the program *Human Body: Circulatory System* is called "CH-CIRCU.DSK", we can load it in these two ways:
 
 #### 1st - EMUFILE
 
@@ -98,7 +103,7 @@ MAPDRV B: CH-CIRCU.DSK
 Now we can go to unit B: and see the files. We see that there is an AUTOEXEC.BAS file, which we can simply run with AUTOEXEC, and the program already starts.
 
 
-#### Important note 2018.05.13: There are diskette images that sometimes do not work, and it is possible that the same game has several versions. For example, in (http://www.planetemu.net/roms/msx-various-dsk?page=A) you will see up to 4 versions in .dsk of the game "La AbadÌa del Crimen". Only the one labeled "Abadia del Crimen, La (1988)(Opera Soft)(es)[a3]" has worked for me. A simple way to check if the .dsk image has any problem is to use the online MSX emulator WebMSX (http://webmsx.org), set it up as MSX 1, European or American, depending on what you want, and drag the .dsk file to test it. In the previous case, none of the other 3 versions of "La AbadÌa" worked for me, and only the one that worked on the WebMSX also worked on the ZX-Uno.
+#### Important note 2018.05.13: There are diskette images that sometimes do not work, and it is possible that the same game has several versions. For example, in (http://www.planetemu.net/roms/msx-various-dsk?page=A) you will see up to 4 versions in .dsk of the game "La Abad√≠a del Crimen". Only the one labeled "Abadia del Crimen, La (1988)(Opera Soft)(es)[a3]" has worked for me. A simple way to check if the .dsk image has any problem is to use the online MSX emulator WebMSX (http://webmsx.org), set it up as MSX 1, European or American, depending on what you want, and drag the .dsk file to test it. In the previous case, none of the other 3 versions of "La Abad√≠a" worked for me, and only the one that worked on the WebMSX also worked on the ZX-Uno.
 
 ### C.- .CAS files
 
@@ -132,15 +137,15 @@ To load a .BAS file from Nextor-DOS, simply write its name with or without exten
 The core allows the loading of programs by audio. The way to do it is from BASIC with the commands:
 
 ```
-RUNîCAS:î
+RUN‚ÄùCAS:‚Äù
 ```
 or well:
 ```
-BLOADîCAS:î,R
+BLOAD‚ÄùCAS:‚Äù,R
 ```
 or well:
 ```
-LOADîCAS:î,R
+LOAD‚ÄùCAS:‚Äù,R
 ```
 
 It is perfectly explained in the article How to load programs in MSX (https://programbytes48k.wordpress.com/2012/01/04/como-cargar-programas-en-msx/).
