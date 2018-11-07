@@ -350,3 +350,5 @@ greybox_tmp
 /src/cpu/tb_im2/transcript
 /src/cpu/tb_im2/vsim.wlf
 /src/cpu/tb_im2/work
+/synth/wxedax/*.tcl
+/synth/qmxc6slx16/*.xst

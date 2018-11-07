@@ -178,7 +178,7 @@ begin
 						skip_count_v	:= "110";									-- Skip the next 6 sequences
 						extended_v		:= "00";
 						shift_v			:= '0';
-						extra_keys_s(0) <= not extra_keys_s(0);
+						extra_keys_s(0) <= not break_v;
 					end if;
 				elsif keyb_data_s = X"7C" and extended_v = "01" then		-- PRINT SCREEN E0,12,E0,7C  E0,F0,7C,E0,F0,12
 					if break_v = '0' then

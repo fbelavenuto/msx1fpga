@@ -88,6 +88,7 @@ entity vdp18_cpuio is
 		palette_idx_o	: out std_logic_vector(0 to  3);
 		palette_val_o	: out std_logic_vector(0 to 15);
 		palette_wr_o	: out std_logic;
+		vertfreq_on_k_i: in  std_logic						:= '0';
 		ntsc_pal_o		: out std_logic;
 		irq_i				: in  boolean;
 		int_n_o			: out std_logic
@@ -296,6 +297,7 @@ begin
 	reg_if: process (clock_i, reset_i)
 		variable reg_addr_v : unsigned(0 to 2);
 		variable incr_palidx_v : boolean := false;
+		variable vf_on_de_v	: std_logic_vector(1 downto 0) := "00";
 	begin
 		if reset_i then
 			tmp_q            <= (others => '0');
@@ -320,7 +322,7 @@ begin
 					tmp_q      <= cd_i;
 				end if;
 
-				-- Registers 0 to 7 and 16 ---------------------------------------------------
+				-- Registers 0 to 7, 9 and 16 ---------------------------------------------------
 				if write_reg_s then
 					if    cd_i(3 to 7) = "10000" then				-- 16
 						palette_idx_s <= unsigned(tmp_q(4 to 7));
@@ -359,6 +361,13 @@ begin
 			elsif destr_rd_status_s then
 				int_n_q <= '1';
 			end if;
+
+			-- by Fabio : 50/60Hz change by key
+			vf_on_de_v	:= vf_on_de_v(0) & vertfreq_on_k_i;
+			if vf_on_de_v = "01" then
+				ntsc_pal_s <= not ntsc_pal_s;
+			end if;
+
 		end if;
 	end process reg_if;
 	--

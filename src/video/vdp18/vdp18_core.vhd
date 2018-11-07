@@ -116,6 +116,7 @@ entity vdp18_core is
 		rgb_b_o			: out std_logic_vector(0 to 3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
+		vertfreq_on_k_i: in  std_logic								:= '0';
 		ntsc_pal_o		: out std_logic
 	);
 end vdp18_core;
@@ -304,6 +305,7 @@ begin
 		palette_idx_o	=> palette_idx_s,
 		palette_val_o	=> palette_val_s,
 		palette_wr_o	=> palette_wr_s,
+		vertfreq_on_k_i=> vertfreq_on_k_i,
 		ntsc_pal_o		=> ntsc_pal_i_s,
 		irq_i				=> irq_s,
 		int_n_o			=> int_n_o
