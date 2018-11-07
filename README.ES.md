@@ -65,8 +65,8 @@ Podéis descargaros la versión 0.4 desde aqui (http://msxbanzai.tni.nl/dev/soft
 
 Para ficheros .ROM de más de 48K, usar el comando **ROMLOAD**. Se puede usar de dos formas:
 
- 1ª ROMLOAD fichero.ROM  /S  (el "/S" fuerza a la ejecución del programa), o
- 2ª fichero /S  (el nombre del fichero .ROM sin la extensión)
+ *1ª*: ROMLOAD fichero.ROM  /S  (el "/S" fuerza a la ejecución del programa), o
+ *2ª*: fichero /S  (el nombre del fichero .ROM sin la extensión)
 
 Si no se pone el /S es necesario realizar un Soft Reset (CTRL+ALT+DEL/Supr) para que se ejecute el programa. 
 Por defecto el sistema de mapeo de memoria que utiliza es el de Konami. Si se trata de juegos que no son de Konami, como Golvellius o el Abu Simbel Profanation, hay que cambiar el "/S" por "/A"  o "/1" - mapper ASCII8 y ASCII16 respectivamente - (se prueba uno u otro hasta encontrar el que funcione). Por ejemplo:  ROMLOAD ascii8.rom /A /S
@@ -76,7 +76,7 @@ De todas formas, en la carpeta "\util" de la SD hay 2 ficheros: ROMLOAD.TXT con 
 
 ### B.- FICHEROS .DSK
 
-Para ello hay dos formas, usando el comando **EMUFILE** o el comando **MAPDRV**. Supongamos que el disco del programa [i]Cuerpo Humano: Sistema Circulatorio[/i] se llama CH-CIRCU.DSK, lo podremos cargar de estas dos formas:
+Para ello hay dos formas, usando el comando **EMUFILE** o el comando **MAPDRV**. Supongamos que el disco del programa *Cuerpo Humano: Sistema Circulatorio* se llama CH-CIRCU.DSK, lo podremos cargar de estas dos formas:
 
 #### 1ª FORMA. EMUFILE
 
