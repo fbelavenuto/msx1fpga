@@ -35,8 +35,8 @@ typedef unsigned char bool;
 #define true 1
 
 /* Constants */
-const unsigned char REGS[] = {REG_MAPPER, REG_TURBO, REG_VOLBEEP, REG_VOLEAR,
-							 REG_VOLPSG, REG_VOLSCC, REG_VOLOPLL, REG_VOLAUX1};
+const unsigned char REGS[] = {REG_OPTIONS, REG_MAPPER, REG_TURBO, REG_VOLBEEP,
+							  REG_VOLEAR, REG_VOLPSG, REG_VOLSCC, REG_VOLOPLL, REG_VOLAUX1};
 const unsigned char *ONOFFSTR[] = {"OFF", "ON"};
 const unsigned char SCCMAPTYPEVAL[] = {0, 1, 3};
 const unsigned char *SCCMAPTYPESTR[] = {"SCC-I", "ASCII 8", "ASCII 16"};
@@ -55,9 +55,9 @@ int fhandle;
 struct tRegValPair rvp;
 bool reset = false;
 bool chg50 = false, chg60 = false;
-bool saveregs = false;
+bool wregs = false;
 char *filename = NULL;
-bool loadregs = false;
+bool lregs = false;
 bool chgmapper = false;
 unsigned char newmapper;
 bool chgturbo = false;
@@ -86,16 +86,16 @@ void use(bool all)
 	//    1234567890123456789012345678901234567890
 	puts("Use:\r\n");
 	puts("\r\n");
-	puts("MSXCTRL -h -g -r -[5|6] -m<0-2> \r\n");
+	puts("MSXCTRL -h -i -r -[5|6] -m<0-2> \r\n");
 	puts("        -c<0-1> -d<0-1> -t<0-1>\r\n");
 	puts("        [-w<filename> | -l<filename>]\r\n");
-	puts("        -b<0-255> -e<0-255> -p<0-255>\r\n");
+	puts("        -k<0-255> -e<0-255> -p<0-255>\r\n");
 	puts("        -s<0-255> -o<0-255> -a<0-255>\r\n");
 	if (all) {
 		//             1111111111222222222233333333334 
 		//    1234567890123456789012345678901234567890
 		puts(" -h       Show this help\r\n");
-		puts(" -g       Show register values\r\n");
+		puts(" -i       Show raw info of reg. values\r\n");
 		puts(" -r       Resets the machine\r\n");
 		puts(" -5       Enable 50 Hz\r\n");
 		puts(" -6       Enable 60 Hz\r\n");
@@ -108,12 +108,12 @@ void use(bool all)
 		puts(" -c 0-1   Scanlines (0=OFF, 1=ON)\r\n");
 		puts(" -d 0-1   Scandoubler (0=OFF, 1=ON)\r\n");
 		puts(" -t 0-1   Turbo (0=OFF, 1=ON)\r\n");
-		puts(" -b 0-255 Keyboard Beep vol. (0-255)\r\n");
-		puts(" -e 0-255 EAR feedback volume (0-255)\r\n");
-		puts(" -p 0-255 PSG volume (0-255)\r\n");
-		puts(" -s 0-255 SCC volume (0-255)\r\n");
-		puts(" -o 0-255 OPLL volume (0-255)\r\n");
-		puts(" -a 0-255 AUX1 volume (0-255)\r\n");
+		puts(" -k 0-255 Keyboard Beep vol. (def=128)\r\n");
+		puts(" -e 0-255 EAR feedback volume (def=20)\r\n");
+		puts(" -p 0-255 PSG volume (def=240)\r\n");
+		puts(" -s 0-255 SCC volume (def=255)\r\n");
+		puts(" -o 0-255 OPLL volume (def=255)\r\n");
+		puts(" -a 0-255 AUX1 volume (def=255)\r\n");
 	}
 	exit(1);
 }
@@ -235,13 +235,13 @@ int main(char *argv[], int argc)
 		use(false);
 	}
 
-	while ((c = getopt(argc, argv, "hgr56w:l:m:c:d:t:b:e:p:s:o:a:")) != 255) {
+	while ((c = getopt(argc, argv, "hir56w:l:m:c:d:t:k:e:p:s:o:a:")) != 255) {
 		switch (c) {
 			case 'h':
 				use(true);
 			break;
 
-			case 'g':
+			case 'i':
 				showRegs();
 			break;
 
@@ -258,12 +258,12 @@ int main(char *argv[], int argc)
 			break;
 
 			case 'w':
-				saveregs = true;
+				wregs = true;
 				filename = optarg;
 			break;
 
 			case 'l':
-				loadregs = true;
+				lregs = true;
 				filename = optarg;
 			break;
 
@@ -303,7 +303,7 @@ int main(char *argv[], int argc)
 				}
 			break;
 
-			case 'b':
+			case 'k':
 				chgvolbeep = true;
 				newvolbeep = atoi(optarg);
 			break;
@@ -344,7 +344,7 @@ int main(char *argv[], int argc)
 		return 1;
 	}
 	if (saveregs && loadregs) {
-		puts("Choice only save or load regs!.");
+		puts("Choice only write or load regs!.");
 		return 1;
 	}
 
@@ -366,9 +366,9 @@ int main(char *argv[], int argc)
 		puts("60 Hz selected.\r\n");
 	}
 
-	if (loadregs) {
+	if (lregs) {
 		readRegs();
-	} else if (saveregs) {
+	} else if (wregs) {
 		writeRegs();
 	}
 
