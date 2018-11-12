@@ -1,5 +1,4 @@
 import sys
-import struct
 
 if len(sys.argv) != 3:
 	raise Exception('Error in parameters, see README.TXT')
@@ -58,6 +57,6 @@ for i in t:
 			kmp[scancode] = col * 16 + row
 
 f = open(sys.argv[2], 'wb')
-f.write(struct.pack("932B", *kmp))
+f.write("".join(chr(i) for i in kmp))
 f.close
 print "File generated with no errors.\n"

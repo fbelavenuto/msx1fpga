@@ -116,11 +116,11 @@ entity msx is
 		vram_oe_o		: out std_logic;
 		vram_we_o		: out std_logic;
 		-- Keyboard
-		rows_o			: out std_logic_vector(3 downto 0);
-		cols_i			: in  std_logic_vector(7 downto 0)		:= (others => '1');
+		rows_o			: out std_logic_vector( 3 downto 0);
+		cols_i			: in  std_logic_vector( 7 downto 0)		:= (others => '1');
 		caps_en_o		: out std_logic;
-		keymap_addr_o	: out std_logic_vector(9 downto 0);
-		keymap_data_o	: out std_logic_vector(7 downto 0);
+		keymap_addr_o	: out std_logic_vector( 8 downto 0);
+		keymap_data_o	: out std_logic_vector( 7 downto 0);
 		keymap_we_o		: out std_logic;
 		-- Audio
 		audio_scc_o		: out signed(14 downto 0);
@@ -162,7 +162,7 @@ entity msx is
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
 		scanline_on_k_i: in  std_logic;
-		vertfreq_on_k_i: in  std_logic;
+		vertfreq_on_k_i: in  std_logic								:= '0';
 		scanline_en_o	: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;

@@ -27,19 +27,11 @@ ROMGEN = romgen
 SRCAT = srec_cat
 FILL = fillfile
 
-EXPORTDIR="exports"		# Directory for the exported files
-BINDIR="bin"			# Directory for the binary files
-SRCDIR="src"			# Directory where are the source files
-INCDIR="inc"			# Directory where are the include files
-OBJDIR="obj"			# Directory for the object files
-BKPDIR="bkp"			# Directory where are the backup files
-ORIDIR="original"		# Directory where are the original files
-
 SDIR = src
 IDIR = inc
 ODIR = obj
 
-CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -I..
+CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -I../inc
 LDFLAGS = -mz80 --code-loc 0x0100 --data-loc 0x4000 --no-std-crt0
 
 _OBJS = crt0.rel main.rel mmc.rel fat.rel vdp.rel
