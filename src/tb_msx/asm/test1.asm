@@ -17,16 +17,22 @@
 
 	output	"test1.bin"
 
-	org		0
+	org	0
 	
 	di
-	ld		a, 0
-	out		($99), a
-	ld		a, $40
-	out		($99), a
+	ld	a, #28
+	out	(#40), a
+	ld	a, #13
+	out	(#48), a
+	ld	a, 0
+	out	(#49), a
+	ld	a, 0
+	out	(#99), a
+	ld	a, #40
+	out	(#99), a
 	nop
-	ld		a, $00
+	xor	a
 loop:
-	out		($98), a
-	inc		a
-	jr		loop
+	out	(#98), a
+	inc	a
+	jr	loop

@@ -42,6 +42,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
+use work.msx_pack.all;
 use std.textio.all;
 
 entity tb is
@@ -56,7 +57,8 @@ architecture testbench of tb is
 		hw_txt_g			: string 								:= "NONE";
 		hw_version_g	: std_logic_vector(7 downto 0)	:= X"00";
 		video_opt_g		: integer								:= 0;		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
-		ramsize_g		: integer								:= 512	-- 512, 2048 or 8192
+		ramsize_g		: integer								:= 512;	-- 512, 2048 or 8192
+		hw_hashwds_g	: std_logic								:= '0'	-- 0 = Software disk-change, 1 = Hardware disk-change
 	);
 	port(
 		-- clocks
@@ -119,6 +121,7 @@ architecture testbench of tb is
 		audio_scc_o		: out signed(14 downto 0);
 		audio_psg_o		: out unsigned(7 downto 0);
 		beep_o				: out std_logic;
+		volumes_o		: out volumes_t;
 		-- K7
 		k7_motor_o			: out std_logic;
 		k7_audio_o			: out std_logic;
@@ -154,6 +157,7 @@ architecture testbench of tb is
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
 		scanline_on_k_i: in  std_logic;
+		vertfreq_on_k_i: in  std_logic;
 		scanline_en_o	: out std_logic;
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
@@ -162,6 +166,8 @@ architecture testbench of tb is
 		spi_sclk_o			: out std_logic;
 		spi_mosi_o			: out std_logic;
 		spi_miso_i			: in  std_logic								:= '0';
+		sd_pres_n_i		: in  std_logic								:= '0';
+		sd_wp_i			: in  std_logic								:= '0';
 		-- DEBUG
 		D_wait_o			: out std_logic;
 		D_slots_o		: out std_logic_vector( 7 downto 0);
@@ -232,6 +238,7 @@ architecture testbench of tb is
 	signal audio_scc_s			: signed(14 downto 0);
 	signal audio_psg_s			: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
+	signal volumes_s			: volumes_t;
 	signal k7_motor_s			: std_logic;
 	signal k7_audio_o_s			: std_logic;
 	signal k7_audio_i_s			: std_logic;
@@ -258,7 +265,8 @@ begin
 		hw_txt_g			=> "SIMUL",
 		hw_version_g	=> X"10",
 		video_opt_g		=> 0,
-		ramsize_g		=> 512
+		ramsize_g		=> 512,
+		hw_hashwds_g	=> '0'
 	)
 	port map(
 		-- clocks
@@ -321,6 +329,7 @@ begin
 		audio_scc_o			=> audio_scc_s,
 		audio_psg_o			=> audio_psg_s,
 		beep_o				=> beep_s,
+		volumes_o			=> volumes_s,
 		-- K7
 		k7_motor_o			=> k7_motor_s,
 		k7_audio_o			=> k7_audio_o_s,
@@ -356,6 +365,7 @@ begin
 		vga_on_k_i			=> '0',
 		vga_en_o			=> open,
 		scanline_on_k_i		=> '0',
+		vertfreq_on_k_i		=> '0',
 		scanline_en_o		=> open,
 		-- SPI/SD
 		flspi_cs_n_o		=> open,
@@ -427,9 +437,9 @@ begin
 		wait until( rising_edge(clock_s) );
 
 		-- Liga turbo
-		turbo_on_k_s <= '1';
-		wait for 1 us;
-		turbo_on_k_s <= '0';
+--		turbo_on_k_s <= '1';
+--		wait for 1 us;
+--		turbo_on_k_s <= '0';
 
 		wait for 16 ms;
 

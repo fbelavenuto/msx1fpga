@@ -600,9 +600,9 @@ begin
 	joy2_out_o	 	<= psg_port_b_s(5);
 
 	-- M1 Wait-state
-	process (reset_i, clock_cpu_i)
+	process (mreq_n_s, rfsh_n_s, clock_cpu_i)
 	begin
-		if reset_i = '1' then
+		if mreq_n_s = '1' or rfsh_n_s = '0' then
 			m1_wait_ff_s	<= "10";
 		elsif rising_edge(clock_cpu_i) then
 			if turbo_on_s = '0' then
@@ -614,7 +614,7 @@ begin
 		end if;
 	end process;
 
-	m1_wait_n_s		<= m1_wait_ff_s(1) or m1_n_s;
+	m1_wait_n_s		<= m1_wait_ff_s(1);
 
 	-- Address decoding
 	io_access_s		<= '1'	when iorq_n_s = '0' and m1_n_s = '1'							else '0';

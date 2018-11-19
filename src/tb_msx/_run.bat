@@ -1,6 +1,11 @@
+goto pula
 
 vlib work
 IF ERRORLEVEL 1 GOTO error
+
+vcom ..\msx_pack.vhd
+IF ERRORLEVEL 1 GOTO error
+
 vcom ..\clocks.vhd
 IF ERRORLEVEL 1 GOTO error
 
