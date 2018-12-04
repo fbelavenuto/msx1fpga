@@ -27,14 +27,6 @@ ROMGEN = romgen
 SRCAT = srec_cat
 FILL = fillfile
 
-EXPORTDIR="exports"		# Directory for the exported files
-BINDIR="bin"			# Directory for the binary files
-SRCDIR="src"			# Directory where are the source files
-INCDIR="inc"			# Directory where are the include files
-OBJDIR="obj"			# Directory for the object files
-BKPDIR="bkp"			# Directory where are the backup files
-ORIDIR="original"		# Directory where are the original files
-
 SDIR = src
 IDIR = inc
 ODIR = obj

@@ -24,21 +24,10 @@ http://msx.atlantes.org/index_en.html#sdccmsxdos
 
 #include "spi.h"
 #include "conio.h"
-#include "dos2.h"
+#include "msxdos.h"
 
 /* Constants */
 
-// Flash SPI commands
-const unsigned char cmd_write_enable	= 0x06;
-const unsigned char cmd_write_disable	= 0x04;
-const unsigned char cmd_read_status		= 0x05;
-const unsigned char cmd_read_bytes		= 0x03;
-const unsigned char cmd_read_id			= 0xAB;
-const unsigned char cmd_fast_read		= 0x0B;
-const unsigned char cmd_write_status	= 0x01;
-const unsigned char cmd_write_bytes		= 0x02;
-const unsigned char cmd_erase_bulk		= 0xC7;
-const unsigned char cmd_erase_block64	= 0xD8;		// Block Erase 64K
 const char ce[5] = "\\|/-";
 
 /* Global vars */

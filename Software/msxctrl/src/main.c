@@ -24,10 +24,10 @@ http://msx.atlantes.org/index_en.html#sdccmsxdos
 
 #include <stdlib.h>
 #include "hardware.h"
-#include "bios.h"
-#include "conio.h"
-#include "msxdos.h"
-#include "getopt.h"
+#include <bios.h>
+#include <conio.h>
+#include <msxdos.h>
+#include <getopt.h>
 
 /* Defines */
 typedef unsigned char bool;
@@ -343,7 +343,7 @@ int main(char *argv[], int argc)
 		puts("Choice only one vertical frequency!.");
 		return 1;
 	}
-	if (saveregs && loadregs) {
+	if (wregs && lregs) {
 		puts("Choice only write or load regs!.");
 		return 1;
 	}

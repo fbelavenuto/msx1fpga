@@ -17,20 +17,22 @@
 
 CP = cp
 RM = rm -f
+MD = mkdir
 CC = sdcc
 AS = sdasz80
 LD = sdcc
 H2B = hex2bin
 
 SDIR = src
-LDIR = ../lib
-IDIR = inc
+LDIR = ../../msxclib/lib
+IDIR = ../../msxclib/inc
 ODIR = obj
 
-CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -I../inc
+CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -Iinc -I..
+ASFLAGS = -Iinc -I..
 LDFLAGS = -mz80 --code-loc 0x0180 --data-loc 0 --no-std-crt0
 
-_OBJS = crt0.rel dos2.rel getchar.rel putchar.rel conio.rel mem.rel heap.rel spi.rel main.rel
+_OBJS = crt0.rel msxdos.rel getchar.rel putchar.rel conio.rel mem.rel heap.rel spi.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 all: dir msx1upd.com
@@ -46,16 +48,16 @@ clean:
 	$(RM) $(ODIR)/* *.map *.lk *.noi *.com *.ihx
 
 dir:
-	if not exist obj mkdir obj
+	-$(MD) $(ODIR)
 
 $(ODIR)/%.rel: $(SDIR)/%.S
-	$(AS) -o $@ $<
+	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ODIR)/%.rel: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/%.rel: $(LDIR)/%.S
-	$(AS) -o $@ $<
+	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ODIR)/%.rel: $(LDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
