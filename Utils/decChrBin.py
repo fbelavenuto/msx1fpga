@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sys
 from struct import pack, unpack
 from PIL import Image, ImageDraw
