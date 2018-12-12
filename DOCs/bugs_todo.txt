@@ -6,7 +6,7 @@ OK Adicionar scanlines
 OK Adicionar saída HDMI para ZX-Uno
 OK Adicionar controlador de memória para usar toda a memória de cada placa
 OK Fazer atualizador para o FPGA
-Consertar bug do teclado, refazer toda a lógica e dar suporte ao mapa pela ROM
+OK Consertar bug do teclado, refazer toda a lógica e dar suporte ao mapa pela ROM
 
 Bugs:
 OK Jevilon e jsj tendo problemas com boot do Nextor!
@@ -15,5 +15,5 @@ OK Vanfanel reclamou que o chefe do penguim adventure nao aparece as bolas de fo
 OK	https://youtu.be/05kTZArlAtI?t=5m46s
 OK	https://www.youtube.com/watch?v=EoDIlTr_Y5w&feature=youtu.be
 OK Bug com Hard-reset: Loader não é executado para reconfigurar parâmetros.
-Vanfanel reportou que há bugs relacionados com o teclado, em teclas com SHIFT (olhar TODO)
+OK Vanfanel reportou que há bugs relacionados com o teclado, em teclas com SHIFT (olhar TODO)
 desUBIKado: Jogo HUNCHBACK via LOADCAX não carrega, em um MSX1 real funciona 

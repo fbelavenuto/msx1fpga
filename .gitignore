@@ -352,3 +352,6 @@ greybox_tmp
 /src/cpu/tb_im2/work
 /synth/wxedax/*.tcl
 /synth/qmxc6slx16/*.xst
+/src/audio/i2st_tb/transcript
+/src/audio/i2st_tb/vsim.wlf
+/src/audio/i2st_tb/work
