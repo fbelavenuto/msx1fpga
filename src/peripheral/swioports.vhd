@@ -49,34 +49,34 @@ entity swioports is
 		por_i				: in  std_logic;
 		reset_i			: in  std_logic;
 		clock_i			: in  std_logic;
-		addr_i			: in  std_logic_vector(7 downto 0);
+		addr_i			: in  std_logic_vector( 7 downto 0);
 		cs_i				: in  std_logic;
 		rd_i				: in  std_logic;
 		wr_i				: in  std_logic;
-		data_i			: in  std_logic_vector(7 downto 0);
-		data_o			: out std_logic_vector(7 downto 0);
+		data_i			: in  std_logic_vector( 7 downto 0);
+		data_o			: out std_logic_vector( 7 downto 0);
 		has_data_o		: out std_logic;
 		--
-		hw_id_i			: in  std_logic_vector(7 downto 0);
+		hw_id_i			: in  std_logic_vector( 7 downto 0);
 		hw_txt_i			: in  string;
-		hw_version_i	: in  std_logic_vector(7 downto 0);
-		hw_memsize_i	: in  std_logic_vector(7 downto 0);
+		hw_version_i	: in  std_logic_vector( 7 downto 0);
+		hw_memsize_i	: in  std_logic_vector( 7 downto 0);
 		hw_hashwds_i	: in  std_logic;
 		nextor_en_i		: in  std_logic;
-		mr_type_i		: in  std_logic_vector(1 downto 0);
+		mr_type_i		: in  std_logic_vector( 1 downto 0);
 		vga_on_i			: in  std_logic;
 		turbo_on_k_i	: in  std_logic;
 		vga_on_k_i		: in  std_logic;
 		scanline_on_k_i: in  std_logic;
 		--
 		nextor_en_o		: out std_logic;
-		mr_type_o		: out std_logic_vector(1 downto 0);
+		mr_type_o		: out std_logic_vector( 1 downto 0);
 		turbo_on_o		: out std_logic;
 		softreset_o		: out std_logic;
 		vga_en_o			: out std_logic;
 		scanline_en_o	: out std_logic;
-		keymap_addr_o	: out std_logic_vector(9 downto 0);
-		keymap_data_o	: out std_logic_vector(7 downto 0);
+		keymap_addr_o	: out std_logic_vector( 8 downto 0);
+		keymap_data_o	: out std_logic_vector( 7 downto 0);
 		keymap_we_o		: out std_logic;
 		volumes_o		: out volumes_t
 	);
@@ -97,7 +97,7 @@ architecture Behavior of swioports is
 	signal mapper_q			: std_logic_vector(1 downto 0);
 	signal turbo_on_q			: std_logic								:= '0';
 	signal softreset_q		: std_logic								:= '0';
-	signal keymap_addr_q		: unsigned(9 downto 0);
+	signal keymap_addr_q		: unsigned(8 downto 0);
 	signal keymap_data_q		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
 	signal vga_en_q			: std_logic								:= '0';
@@ -198,7 +198,7 @@ begin
 					when X"0D" =>
 						keymap_addr_q(7 downto 0) <= unsigned(data_i);
 					when X"0E" =>
-						keymap_addr_q(9 downto 8) <= unsigned(data_i(1 downto 0));
+						keymap_addr_q(8 downto 8) <= unsigned(data_i(0 downto 0));
 					when X"0F" =>
 						keymap_data_q	<= data_i;
 						keymap_we_s		<= '1';

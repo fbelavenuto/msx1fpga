@@ -50,7 +50,7 @@ entity keyboard is
 		-- MSX
 		rows_coded_i	: in    std_logic_vector(3 downto 0);
 		cols_o			: out   std_logic_vector(7 downto 0);
-		keymap_addr_i	: in    std_logic_vector(9 downto 0);
+		keymap_addr_i	: in    std_logic_vector(8 downto 0);
 		keymap_data_i	: in    std_logic_vector(7 downto 0);
 		keymap_we_i		: in    std_logic;
 		-- LEDs
@@ -81,13 +81,12 @@ architecture Behavior of Keyboard is
 	signal break_s				: std_logic;
 	signal extended_s			: std_logic_vector(1 downto 0);
 	signal shift_s				: std_logic;
-	signal virt_shift_s		: std_logic;
 	signal has_keycode_s		: std_logic;
-	signal keymap_addr_s		: std_logic_vector(9 downto 0);
+	signal keymap_addr_s		: std_logic_vector(8 downto 0);
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
 	signal extra_keys_s		: std_logic_vector(3 downto 0);
 
-	type keymap_seq_t is (KM_IDLE, KM_CLEAN, KM_WRITE, KM_READ, KM_END);
+	type keymap_seq_t is (KM_IDLE, KM_READ, KM_END);
 	signal keymap_seq_s		: keymap_seq_t;
 
 begin
@@ -251,7 +250,6 @@ begin
 			matrix_s			<= (others => (others => '0'));
 			keymap_addr_s	<= (others => '0');
 			keymap_seq_s	<= KM_IDLE;
-			virt_shift_s	<= '0';
 			cols_o			<= (others => '1');
 		elsif rising_edge(clock_i) then
 			case keymap_seq_s is
@@ -259,33 +257,15 @@ begin
 					if has_keycode_s = '1' then 
 						cols_o			<= (others => '1');
 						keyid_v			:= extended_s(0) & keyb_data_s;
-						keymap_addr_s	<= not shift_s & keyid_v;
-						keymap_seq_s	<= KM_CLEAN;
+						keymap_addr_s	<= keyid_v;
+						keymap_seq_s	<= KM_READ;
 					else
 						cols_o			<= not matrix_s(conv_integer(rows_coded_i));
-						if rows_coded_i = X"6" then
-							cols_o(0) <= not virt_shift_s;
-						end if;
 					end if;
-
-				when KM_CLEAN =>
-					row_v				:= keymap_data_s(3 downto 0);
-					col_v				:= keymap_data_s(6 downto 4);
-					keymap_seq_s	<= KM_WRITE;
-
-				when KM_WRITE =>
-					matrix_s(conv_integer(row_v))(conv_integer(col_v)) <= '0';
-					keymap_addr_s	<= shift_s & keyid_v;
-					keymap_seq_s	<= KM_READ;
 
 				when KM_READ =>
 					row_v				:= keymap_data_s(3 downto 0);
 					col_v				:= keymap_data_s(6 downto 4);
-					if break_s = '0' then
-						virt_shift_s <= keymap_data_s(7);
-					else
-						virt_shift_s <= shift_s;
-					end if;
 					keymap_seq_s	<= KM_END;
 
 				when KM_END =>

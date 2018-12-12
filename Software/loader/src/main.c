@@ -47,6 +47,7 @@ static char *km_files[5] = {
 //                    12345678901234567890123456789012
 const char TITLE[] = "        MSX1FPGA LOADER         ";
 
+unsigned int  romKeymapOffset = 0x0DA5;
 unsigned int  *prampage = (unsigned int *)0x3FFE;
 unsigned char *pramrom;
 unsigned char i;
@@ -328,26 +329,35 @@ void main()
 		//     12345678901234567890123456789012
 		error("Keymap file not found!");
 	}
-	if (file.size != 1024) {
+	if (file.size != 932) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
-		error("Keymap file size must be 1024!");
+		error("Keymap file size must be 932B!");
 	}
 	SWIOP_REGNUM = REG_KMLOWADDR;
 	SWIOP_REGVAL = 0;
 	SWIOP_REGNUM = REG_KMHIGHADDR;
 	SWIOP_REGVAL = 0;
 	SWIOP_REGNUM = REG_KMBYTE;
-	for (i = 0; i < 2; i++) {
-		if (!fat_bread(&file, buffer)) {
-			//              11111111112222222222333
-			//     12345678901234567890123456789012
-			error("Error reading Keymap file!");
-		}
-		for (k = 0; k < 512; k++) {
-			SWIOP_REGVAL = buffer[k];
-		}
-		vdp_putchar('.');
+	if (!fat_bread(&file, buffer)) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Error reading Keymap file!");
+	}
+	for (k = 0; k < 512; k++) {
+		SWIOP_REGVAL = buffer[k];
+	}
+	vdp_putchar('.');
+	if (!fat_bread(&file, buffer)) {
+		//              11111111112222222222333
+		//     12345678901234567890123456789012
+		error("Error reading Keymap file!");
+	}
+	vdp_putchar('.');
+	*prampage = pn_rom;
+	pramrom  = (unsigned char *)(0x8000 + romKeymapOffset);
+	for (k = 0; k < 420; k++) {
+		*pramrom++ = buffer[k];
 	}
 	vdp_putstring(" OK\n");
 	SPI_CTRL = 0xFF;
