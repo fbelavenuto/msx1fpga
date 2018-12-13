@@ -157,9 +157,9 @@ architecture behavior of wxeda_top is
 	signal rows_s				: std_logic_vector( 3 downto 0);
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector(3 downto 0);
-	signal keymap_addr_s		: std_logic_vector(9 downto 0);
-	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal extra_keys_s		: std_logic_vector( 3 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
+	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
 
 	-- Bus
@@ -175,13 +175,13 @@ architecture behavior of wxeda_top is
 	signal bus_sltsl2_n_s	: std_logic;
 
 	--
-	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
+	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic						:= '1';
-	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_cs_n_s		: std_logic							:= '1';
+	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);

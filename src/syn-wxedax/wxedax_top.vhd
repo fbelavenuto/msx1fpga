@@ -218,14 +218,14 @@ architecture behavior of wxedax_top is
 	signal bus_sltsl2_n_s	: std_logic;
 
 	-- JT51
-	signal jt51_cs_n_s		: std_logic						:= '1';
-	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
+	signal jt51_cs_n_s		: std_logic							:= '1';
+	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic						:= '1';
-	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_cs_n_s		: std_logic							:= '1';
+	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
 
 begin
 

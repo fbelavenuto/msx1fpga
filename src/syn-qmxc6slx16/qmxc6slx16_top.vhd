@@ -154,7 +154,7 @@ architecture behavior of qmxc6slx16_top is
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector( 3 downto 0);
-	signal keymap_addr_s		: std_logic_vector( 9 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
 	
@@ -179,13 +179,13 @@ architecture behavior of qmxc6slx16_top is
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: signed(15 downto 0)		:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)		:= (others => '0');
+	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
 
 	--- OPLL
 	signal opll_cs_n_s		: std_logic := '1';
-	signal opll_mo_s			: signed(12 downto 0);
-	signal opll_ro_s			: signed(12 downto 0);
+	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
 
 begin
 

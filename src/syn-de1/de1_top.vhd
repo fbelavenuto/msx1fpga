@@ -192,25 +192,25 @@ architecture behavior of de1_top is
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector( 3 downto 0);
-	signal keymap_addr_s		: std_logic_vector( 9 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
 
 	-- Joystick (Minimig Standard)
-	alias J0_UP					: std_logic						is gpio1_io(34);	-- Pin 1
-	alias J0_DOWN				: std_logic						is gpio1_io(32);	-- Pin 2
-	alias J0_LEFT				: std_logic						is gpio1_io(30);	-- Pin 3
-	alias J0_RIGHT				: std_logic						is gpio1_io(28);	-- Pin 4
-	alias J0_MMB				: std_logic						is gpio1_io(26);	-- Pin 5
-	alias J0_BTN				: std_logic						is gpio1_io(35);	-- Pin 6
-	alias J0_BTN2				: std_logic						is gpio1_io(29);	-- Pin 9
-	alias J1_UP					: std_logic						is gpio1_io(24);
-	alias J1_DOWN				: std_logic						is gpio1_io(22);
-	alias J1_LEFT				: std_logic						is gpio1_io(20);
-	alias J1_RIGHT				: std_logic						is gpio1_io(23);
-	alias J1_MMB				: std_logic						is gpio1_io(27);
-	alias J1_BTN				: std_logic						is gpio1_io(25);
-	alias J1_BTN2				: std_logic						is gpio1_io(21);
+	alias J0_UP					: std_logic					is gpio1_io(34);	-- Pin 1
+	alias J0_DOWN				: std_logic					is gpio1_io(32);	-- Pin 2
+	alias J0_LEFT				: std_logic					is gpio1_io(30);	-- Pin 3
+	alias J0_RIGHT				: std_logic					is gpio1_io(28);	-- Pin 4
+	alias J0_MMB				: std_logic					is gpio1_io(26);	-- Pin 5
+	alias J0_BTN				: std_logic					is gpio1_io(35);	-- Pin 6
+	alias J0_BTN2				: std_logic					is gpio1_io(29);	-- Pin 9
+	alias J1_UP					: std_logic					is gpio1_io(24);
+	alias J1_DOWN				: std_logic					is gpio1_io(22);
+	alias J1_LEFT				: std_logic					is gpio1_io(20);
+	alias J1_RIGHT				: std_logic					is gpio1_io(23);
+	alias J1_MMB				: std_logic					is gpio1_io(27);
+	alias J1_BTN				: std_logic					is gpio1_io(25);
+	alias J1_BTN2				: std_logic					is gpio1_io(21);
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
@@ -230,9 +230,9 @@ architecture behavior of de1_top is
 	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic						:= '1';
-	signal opll_mo_s			: signed(12 downto 0)		:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)		:= (others => '0');
+	signal opll_cs_n_s		: std_logic								:= '1';
+	signal opll_mo_s			: signed(12 downto 0)				:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)				:= (others => '0');
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);

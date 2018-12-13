@@ -80,7 +80,6 @@ architecture Behavior of Keyboard is
 	signal keyb_valid_s		: std_logic;
 	signal break_s				: std_logic;
 	signal extended_s			: std_logic_vector(1 downto 0);
-	signal shift_s				: std_logic;
 	signal has_keycode_s		: std_logic;
 	signal keymap_addr_s		: std_logic_vector(8 downto 0);
 	signal keymap_data_s		: std_logic_vector(7 downto 0);
@@ -124,7 +123,6 @@ begin
 		variable skip_count_v		: std_logic_vector(2 downto 0);
 		variable break_v				: std_logic;
 		variable extended_v			: std_logic_vector(1 downto 0);
-		variable shift_v				: std_logic;
 		variable ctrl_v				: std_logic;
 		variable alt_v					: std_logic;
 		variable led_caps_v			: std_logic						:= '0';
@@ -140,13 +138,11 @@ begin
 			ed_resp_v			:= '0';
 			break_v 				:= '0';
 			extended_v 			:= "00";
-			shift_v				:= '0';
 			ctrl_v				:= '0';
 			alt_v					:= '0';
 			has_keycode_s		<= '0';
 			break_s				<= '0';
 			extended_s			<= "00";
-			shift_s				<= '0';
 
 		elsif rising_edge(clock_i) then
 
@@ -176,7 +172,6 @@ begin
 					if break_v = '0' then
 						skip_count_v	:= "100";									-- Skip the next 4 sequences
 						extended_v		:= "00";
-						shift_v			:= '0';
 					end if;
 					extra_keys_s(0) <= '1';
 				elsif keyb_data_s = X"77" and extended_v = "00" then		-- PAUSE/BREAK release (F0 77)
@@ -187,9 +182,7 @@ begin
 					end if;
 					extra_keys_s(2) <= not break_v;
 				else
-					if (keyb_data_s = X"12" or keyb_data_s = X"59") and extended_v = "00" then		-- SHIFT
-						shift_v		:= not break_v;
-					elsif keyb_data_s = X"11" and extended_v(1) = '0' then								-- LAlt and RAlt
+					if    keyb_data_s = X"11" and extended_v(1) = '0' then								-- LAlt and RAlt
 						alt_v			:= not break_v;
 					elsif keyb_data_s = X"14" and extended_v(1) = '0' then								-- LCtrl and RCtrl
 						ctrl_v		:= not break_v;
@@ -215,7 +208,6 @@ begin
 					end if;
 					break_s			<= break_v;
 					extended_s		<= extended_v;
-					shift_s			<= shift_v;
 					break_v			:= '0';
 					extended_v		:= "00";
 					has_keycode_s	<= '1';

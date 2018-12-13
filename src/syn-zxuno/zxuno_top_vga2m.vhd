@@ -170,13 +170,13 @@ architecture behavior of zxuno_top_vga2m is
 	signal vga_en_s			: std_logic;
 
 	-- Keyboard
-	signal rows_s				: std_logic_vector(3 downto 0);
-	signal cols_s				: std_logic_vector(7 downto 0);
+	signal rows_s				: std_logic_vector( 3 downto 0);
+	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector(3 downto 0);
+	signal extra_keys_s		: std_logic_vector( 3 downto 0);
 	signal reload_core_s		: std_logic;
-	signal keymap_addr_s		: std_logic_vector(9 downto 0);
-	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
+	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
 
 	-- SD

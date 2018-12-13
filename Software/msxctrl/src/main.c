@@ -40,7 +40,7 @@ const unsigned char REGS[] = {REG_OPTIONS, REG_MAPPER, REG_TURBO, REG_VOLBEEP,
 const unsigned char *ONOFFSTR[] = {"OFF", "ON"};
 const unsigned char *TRUEFALSESTR[] = {"FALSE", "TRUE"};
 const unsigned char SCCMAPTYPEVAL[] = {0, 1, 3};
-const unsigned char *SCCMAPTYPESTR[] = {"SCC-I", "ASCII 8", "ASCII 16"};
+const unsigned char *SCCMAPTYPESTR[] = {"SCC-I", "ASCII 8", "ASCII 16", "ASCII 16"};
 
 /* Structures */
 struct tRegValPair {
@@ -81,7 +81,7 @@ bool chgvolaux = false;
 unsigned char newvolaux;
 
 /******************************************************************************/
-void use(bool all)
+void use(const bool all)
 {
 	//             1111111111222222222233333333334 
 	//    1234567890123456789012345678901234567890
@@ -117,6 +117,68 @@ void use(bool all)
 		puts(" -a 0-255 AUX1 volume (def=255)\r\n");
 	}
 	exit(1);
+}
+
+/******************************************************************************/
+void regInfo(const unsigned char reg, const unsigned char value)
+{
+	puts("Reg 0x");
+	puthex8(reg);
+	puts(" = 0x");
+	puthex8(value);
+	putchar(' ');
+	switch(reg) {
+		case REG_OPTIONS:
+			if (value & CFG_NTSC_PAL) {
+				puts("PAL,");
+			} else {
+				puts("NTSC,");
+			}
+			if (value & CFG_SCANLINES) {
+				puts("Scanlines,");
+			} else {
+				puts("No scanlines,");
+			}
+			if (value & CFG_SCANDBL) {
+				puts("Scandoubler,");
+			} else {
+				puts("No scandoubler,");
+			}
+			if (value & CFG_NEXTOR) {
+				puts("Nextor active");
+			} else {
+				puts("Nextor inactive");
+			}
+			break;
+		case REG_MAPPER:
+			puts("ESE-RAM mapper ");
+			puts(SCCMAPTYPESTR[value]);
+			puts("\r\n");
+			break;
+		case REG_TURBO:
+			puts("Turbo ");
+			puts(ONOFFSTR[value]);
+			break;
+		case REG_VOLBEEP:
+			puts("Beep Volume");
+			break;
+		case REG_VOLEAR:
+			puts("Ear Volume");
+			break;
+		case REG_VOLPSG:
+			puts("PSG Volume");
+			break;
+		case REG_VOLSCC:
+			puts("SCC Volume");
+			break;
+		case REG_VOLOPLL:
+			puts("OPLL Volume");
+			break;
+		case REG_VOLAUX1:
+			puts("Aux1 Volume");
+			break;
+	}
+	puts("\r\n");
 }
 
 /******************************************************************************/
@@ -189,12 +251,8 @@ void writeRegs()
 void showRegs()
 {
 	for (i = 0; i < sizeof(REGS); i++) {
-		puts("Reg 0x");
-		puthex8(REGS[i]);
-		puts(" = 0x");
 		SWIOP_REGNUM = REGS[i];
-		puthex8(SWIOP_REGVAL);
-		puts("\r\n");
+		regInfo(REGS[i], SWIOP_REGVAL);
 	}
 	exit(0);
 }

@@ -1,0 +1,702 @@
+-------------------------------------------------------------------------
+ExecROM vr. 1.2f
+for the MSX system
+
+(c) 1996-1999,2001-2009 A&L Software
+-------------------------------------------------------------------------
+
+        00. Index
+            -----
+
+            01. What is ExecROM
+            02. Why ExecROM
+            03. Why ROM files
+            04. What you need to run ROM files
+            05. What is the MegaRAM cartridge
+            06. How to use ExecROM
+            07. Patching ROM files with ExecROM
+            08. The patchfile
+            09. ExecROM troubleshooting
+            10. Credits, use, copy and thanks
+        
+
+        01. What is ExecROM
+            ---------------
+
+        ExecROM is a program that allow you to execute ROM files on  your
+MSX1, MSX2, MSX2+ or MSX Turbo R.It can execute 4, 8, 16, 32, 48, 64, 96,
+112, 128, 256, 512, 768, 1024 and 2048Kb ROM files.
+        A ROM file is just a raw image of  MSX  cartridges   and  can  be
+found at various sites on Internet. A ROM image file can be just a 16k or
+32k cartridge or even a 512k MegaROM cartridge.
+        The ROM files were originally for use on MSX emulators, but  with
+ExecROM you can run them now on your REAL MSX (that's much better than an
+emulator :)!
+
+
+        02. Why ExecROM
+            -----------
+
+        Why using ExecROM? Here are some good reasons:
+
+a) ExecROM runs any type of ROM, normal or MegaROM, with 8k or 16k pages.
+
+b) The loading and execution of ROM files is tottaly  automatic,  without
+   needing the user to inform about his MSX type or his configuration.
+
+c) The identification of MegaROM files is automatic, without needing  any
+   input from the user. Anyway, it's possible to force a specific  mapper
+   in the same way  of  the   fMSX  emulator,  don't  obligating  you  to
+   relearn the MegaROM mapper types.
+
+d) ExecROM allow the full utilization of Konami's  Game  Masters  if  you
+   have a MegaRAM, for Game Master I, or a minimum of 128k Memory  Mapper
+   for Game Master II.
+
+e) ExecROM allows you to utilize patches for infinite lives, imunity,etc,
+   on the ROM files. So, you don't loose your games tricks and hints.
+
+f) ExecROM allows  you  to  utilize  a  patch  file  for  more elaborated
+   modifications on ROM files.
+
+g) ExecROM allows you to load ROM files that are resident programs, don't
+   being just another "game loader".
+
+h) ExecROM can cheat ROM files, making them detect your MSX as a japanese
+   machine or not. With this you can see secret  levels  and  screens  of
+   some games, see in english the programs  that  display  only  japanese
+   messages on your Turbo-R or even see in  japanese  the  programs  that
+   display only english on your MSX.
+
+i) The MSX1 games runned  on  MSX2  or  above  in  the  CoolColors  mode,
+   exclusive of ExecROM,  have  such a incredible visual,  becoming  much
+   more beautiful and funny.
+
+j) Support   to  MSXDOS1  and  MSXDOS2.  Under  this  one,  you  can  use
+   subdirectories, HD, ZIP drive, CDROM or any other peripheral.
+
+k) Support to BASIC ROM cartridges. You can run original BASIC ROM  dumps
+   like any other ROM files. You don't have to convert  the  contents  of
+   the ROM file to a BASIC program to run it.
+
+l) SCC support for all Konami  games.  Even  if  you  don't  have  a  SCC
+   cartridge piggybacked with your MegaRAM, you can run Konami games with
+   full SCC music.
+
+
+        03. Why ROM files
+            -------------
+
+        The use of ROM files, despite the fact of they were  created  for
+emulators, is good for MSX. See some advantages:
+
+a) A ROM file is the true image of the original cartridge and  don't have
+   any code of an inexperient programmer. It will be loaded and runned by
+   ExecROM or another similar program. If there are some  imcompatibility
+   problem with the loader, just get a fixed version and  all  your  .ROM
+   files will work. In the .BIN files it would be necessary to edit  each
+   files one by one to fix the loader of them.
+
+b) The .ROM files are more portable, i.e., is possible to support them on
+   MSX-DOS1, MSX-DOS2, WiOS or any other operational system that will  be
+   created for MSX.
+
+c) Compared to MegaRAM games, it's loaded more faster, because it's  only
+   one file, and the drive head don't need to walk  throught  the  entire
+   disk.
+
+d) Is independent of the hardware. So,  a  ROM  file  can  be  loaded  on
+   emulators, MegaRAM or any other future hardware that emulate a MegaROM
+   by software or hardware.
+
+e) Patches for existing bugs on .ROM files are more easy  to  do.  Either
+   for infinite lives. It's because the standard of  ROM  files.  In  the
+   MegaRAM games you never know if the file ".000" is the  first  or  the
+   last block or if there is a loader on its beginning or end. That's why
+   some patches work for some people and not for others.
+
+f) When you compress a .ROM file you get a better compression  rate  than
+   compressing many blocks of normal games or MegaRAM games.
+
+g) By separating the loader of the cartridge code, you avoid  replicating
+   redundant  code,  economizing  disk  space   and   getting many  other
+   advantages with this.
+
+h) A .ROM file can be seen as a "executable" file. It has   a  header,  a
+   start and execution address and some others important informations. An
+   operational system that recognizes files by their header, not by their
+   extension, can treat them right.
+
+
+        04. What you need to run ROM files
+            ------------------------------
+
+        To run ROM files you will need:
+        
+        * the ExecROM program;
+        * a MSX-DOS operational system;
+        * a MSX computer;
+        * a MegaRAM cartridge;
+
+        If you want to run MegaROM cartridges or use Game Master  I,  you
+will REALLY need a MegaRAM.If you want to use Game Master II, you'll need
+also a minimum of 128k Memory Mapper in your MSX. But if you only want to
+run 16k or 32k cartridges, without using Game Master I or II, only a MSX,
+the MSX-DOS and ExecROM are necessary.
+        ExecROM is an MSX-DOS COM file, and need it  to  run.  You  can't
+execute ExecROM under BASIC.
+        Originally written to be run on an MSX computer, ExecROM  can  be
+executed with relative sucess on emulators  (of  course,  you  can't  run
+MegaROM games or use Game Masters with the ones  that  don't  emulate the
+MegaRAM) and was sucessfully tested with the CJS MSX  Emulator vr.  0.99b
+and 1.0b,with fMSX vr. 1.4 and 1.6 for MS-DOS  and  with  BrMSX  (version
+1.101 and above).
+
+
+        05. What is a MegaRAM cartridge
+            ---------------------------
+        
+        A MegaRAM is a memory  cartridge with  the  same  layout  of  the  
+MegaROM cartridges. The difference between the MegaRAM  and  the  MegaROM
+is obvious: while the MegaROM cartridge can be only read, the MegaRAM can 
+be read and written. You can find MegaRAMs with  size  of  256,  512  and 
+768Kb.
+        You can also find the MegaRAM Disk, that is a MegaRAM with a Disk
+ROM inside, using the MegaRAM like a RAM DISK. You can  use  the  MegaRAM
+Disk like a disk and like a normal MegaRAM (also called MegaRAM Game).
+        The MegaRAM is a brazilian creation,  and is  almost  unknown  on
+Europe, Japan and other countries. On the contrary of Memory Mapper,  the  
+MegaRAM is not recognized as the real MSX memory expansion.
+
+
+        06. How to use ExecROM
+            ------------------
+
+        It's too easy to use ExecROM. To just run a ROM file on your MSX,
+type, at the DOS prompt,
+
+        ExecROM file
+
+        where 'file' is the ROM file name you want to run. The  extension
+'.ROM' can be omited.
+        If the ROM file is on another drive, specify it before the  name,
+just like in any MSX-DOS command.If you are running ExecROM under MSXDOS2
+you can also specify the path of the ROM file.
+        Just wait a few seconds and the cartridge will be  executed.  All
+the actions (detect, analyze, load,  etc), including  MegaRAM  detection, 
+are automatic.      
+        ExecROM have some options, that can be selected before  the  file 
+name. They are listed below:
+
+option /B: don't execute the file directly, but reset MSX to do it.  Some
+           games and resident programs need this feature.
+
+option /C: change a byte on the cartridge. It's useful for patching games
+           and getting infinite lives, immortality, etc. The syntax is:
+           /Cpp,xxxx,yy
+           where: pp - is the page to be patched. It's only necessary for
+                       MegaROM games, that are divided in pages (0 to 0Fh
+                       for 128k cartridges, 0 to 1Fh for 256k  cartridges
+                       and  0  to  3Fh  for  512k  cartridges).
+                  xxxx - is the address to be patched. The address is the
+                         relative dislocation to the cartridge beginning.
+                         On MegaROM images the address  is  the  relative
+                         dislocation to the page beggining. The cartridge 
+                         and the page beginning are assumed as address 0.
+                  yy - is the byte to put on the address.
+
+option /D: allow you to change the disk  between  ExecROM  load  and  ROM
+           load. So, you can run ExecROM on a disk and load the ROM  file
+           of another disk.
+
+option /E: don't set CoolColors palette. If your MSX is  MSX2  or  above,
+           ExecROM automaticly sets the MSX1 palette to CoolColors  mode,
+           giving to MSX1 games an amazing visual. With  option  /E  this
+           mode is not set automatically.
+
+option /F: fill a cartridge area. It's useful for patching games too. The
+           syntax is:
+           /Fpp,qq,xxxx,yy,zz
+           where: pp - is the  initial  page  to  be  filled.  It's  only 
+                       necessary for MegaROM games. 
+                  qq - is  the  final  page  to  be   filled.  It's  only 
+                       necessary for MegaROM games. 
+                  xxxx - is the initial address to be filled. The address 
+                         is the relative dislocation   to  the  cartridge
+                         beginning (on MegaROMs is relative to  the  page
+                         eginning). The cartridge and page beginning  are 
+                         assumed as address 0.
+                  yyyy - is the final address to be filled.  The  address 
+                         is the relative dislocation   to  the  cartridge
+                         beginning (on MegaROMs is relative to  the  page
+                         eginning). The cartridge and page beginning  are 
+                         assumed as address 0.
+                  zz - is the byte to fill with the area.
+
+           Important note: on the /F option,the MegaROM image is treated,
+                           despite of the pages division, as linear.Thus,
+                           if you request /F1,2,7,10,8 the page 1 will be
+                           filled from address 7 to end with  byte  8 and
+                           the page 2 will be filled from address 0 to 10
+                           with byte 8. If you put 5 in place of  2,  the
+                           pages 2,3 and 4 will be completely filled with
+                           byte 8.
+
+                           Hipotetic representation of option/F1,2,7,10,8
+                           ... page 1                       page 2    ...
+                           |--------------------|------------------------
+                           |??888888888888888888|8888????????????????????
+                           ||-|-----------------||--|--------------------
+                            0 7                  0  10        (addresses)
+
+                           Hipotetic representation of option/F1,5,7,10,8
+                           ... page 1 ... pages 2,3 and 4 ... page 5  ...
+                           |-----------|-----|------|------|-------------
+                           |??888888888|88888|888888|888888|8888?????????
+                           ||-|--------|-----|------|------||--|---------
+                            0 7              (addresses)    0  10        
+
+option /G1:loads Konami's Game Master I with the ROM  file.  This  option
+           only works if you have a MegaRAM. The  GameMaster  I  ROM file
+           must be called GMASTER.ROM and be in the same drive of ExecROM
+           if you are using MSXDOS1. If you are using MSXDOS2,  the  Game
+           Master can be in the  ROM  file  directory  or  in  the  local
+           directory.
+           ATTENTION: the Konami's Game Master I only works  with  Konami
+                      games (that can be any size, including 16 and 32k).
+
+option /G2:loads Konami's Game Master II with the ROM  file. This  option
+           only works if you have a MegaRAM and a minimum of 128k  Memory
+           Mapper. To use the disk functions of  Game  Master  II  you'll
+           need at least 160k Memory Mapper, or these functions  will  be
+           disabled.  The  Game Master   II   ROM  file  must  be  called
+           GMASTER2.ROM and must be in the same drive of ExecROM  if  you
+           are using MSXDOS1. If  you  are using MSXDOS2, the Game Master
+           can be in the ROM file directory or in the local directory.
+           ATTENTION: the Konami's Game Master II only works  with Konami
+                      games (that can be any size, including 16 and 32k).
+
+option /H: show a little help of the program.
+
+option /I: disable the autoload of the patchfile. The section 08  of  this
+           manual gives more information about the patchfile.
+
+option /K: disable the autoload of an external palette. Without this
+           option, execrom will load a file with the same name as the ROM
+           but with the PLT extension if it is present in the same
+           directory.
+
+option /M: clear MSXDOS from memory and reinitialize all MSX hooks before
+           executing the cartridge. Some games require this option.
+
+option /N: load 16k and 32k ROMs in MegaRAM (if detected), and not in the
+           RAM.
+
+option /P: load the patchfile identified after the  option.  For  further
+           details, see section 08.
+
+option /R: select the MegaROM type that will be loaded (from 0 to 5). The
+           identification of the MegaROM mapper by ExecROM is  automatic,
+           but if you, by any reason, want to specify  another  one,  use
+           this option. The identification is after the option.  Obvious,
+           it's only for MegaROM files. The default type is  type 0, from
+           the following list:
+
+                                   0 - Konami 8kb        1 - Konami4/16kb
+                                   2 - Konami4/8kb       3 - Konami5/8kb
+                                   4 - ASCII/8kb         5 - ASCII/16kb
+
+           The MegaROM identification is equal to the  fMSX  emulator  by
+           Marat Fayzullin.
+
+option /S: put cartridge ID signature on ROM. If  you  are  loading BASIC
+           expansion cartridges, resident programs (Eddy2,  HotAsm,  Mega
+           Assembler, Logo,  etc), or even some games, you must  use  the
+           /S  option.  It's  because  ExecROM  disables  the   cartridge
+           signature of the ROM file when loading it.The non existence of
+           the cartridge ID signature allows you to warm reboot your  MSX
+           and not backing to the game.
+
+option /T: patch the ROM file, causing it to identify you MSX as  another
+           type than not the truth. The desired type must  be  after  the 
+           option and can be one of the following:
+
+                I - International MSX           J - Japanese MSX
+                1 - MSX1                        2 - MSX2
+                + - MSX2+                       T - MSX Turbo-R
+
+           Option /T doesn't have effect in ROM files that aren't MegaROM
+           WARNING: ExecROM CAN'T do hardware changes on your MSX. If you
+                    execute on your MSX1 an MSX2 cart with option /T2,the
+                    ROM program will probably crash, because hardware  is 
+                    different between MSX1 and MSX2.
+
+option /U: this option makes  ExecROM  not  enabling  SCC  even  if  it's
+           connected to your MSX and the ROM being loaded is a Konami SCC
+           game.
+
+option /X: this option makes ExecROM returning to  MSXDOS  after  loading
+           the ROM file in memory.
+
+option /Y: accept automaticaly all the patches contained on any patchfile
+           loaded.
+
+option /Z: runs the ROM file in R800 DRAM mode if your MSX is a  Turbo-R.
+           By default, ExecROM runs the ROM files in Z80 mode on Turbo-R.
+
+OBSERVATIONS: the pages, addresses and bytes MUST be given in hexadecimal
+              format. They don't need to be a exactly  two  or  four byte
+              value (for example: 0Dh can be 0D or D; 12Fh can be 12F  or
+              012F).
+
+              only give page indication on MegaROM games. Cartridges with
+              16k or 32k don't request page indication,  because they are
+              treated as linear.
+
+Examples
+
+* to run the MegaROM game GAME01.ROM on drive B,  changing  the  byte  on 
+  address 3Eh to 64h, filling the area from 1850h to  18A0h  of  page  5h 
+  with byte 40h and patching the game to detect you MSX as japanese:
+         
+  ExecROM /c3e,64 /f5,5,1850,18a0,40 /tj b:game01
+
+* to run the 32Kb GAME02.ROM on the actual drive, changing  the  byte  on 
+  address 21h  to 0Fh and filling the area from 2320h to 30A0h with  byte
+  10h:  
+
+  ExecROM /c21,f /f2320,30a0,10 game02
+
+* to load the 16kb application UTIL01.ROM that is in another disk,without
+  erasing it's ID ROM signature and reseting MSX to execute the cartridge
+
+  ExecROM /d /s /b util01
+
+* to load the Konami MegaROM game GAME03.ROM, type Konami4/16kb, on drive
+  C, activating GameMaster I, erasing MSXDOS from memory before executing
+  game and patching the game to identify  your  MSX  as  an international
+  MSX2:
+
+  ExecROM /g1 /m /r1 /ti /t2 c:game03
+
+* to load the Konami  MegaROM  game  GAME04.ROM,  patching  the  game  to 
+  identify   your   MSX   as   japanese   and   loading   the  patch file 
+  PATCH01.XPC:
+
+  ExecROM /tj /ppatch01 /r0 game04
+
+        
+        07. Patching ROM cartridges with ExecROM
+            ------------------------------------
+
+        It was showed that ExecROM  can patch  ROM  games   for   getting 
+infinite lives, immunity, etc.But most of the existent patchs are for the 
+binary format of games, that are  different  of  the  ROM format.
+        To use this patchs on ExecROM you have to  do  a  little  address
+conversion. The following example if for a 32k  game,  and  contains  the 
+basic procedures for the conversion.
+        Supose you have a 32k game in binary format, and its BASIC loader
+is listed below. Supose that lines 30 and 40  patches the game for giving 
+you immunity. And supose you  have  this  game in ROM format.
+                
+        10 cls:print"Loading game..."
+        20 bload"game-1.bin"
+        25 ' * Immunity patch begining
+        30 poke &ha320,&h30
+        40 defusr=peek(&hfcbf)+256*peek(&hfcc0):a=usr(0)
+        42 ' The line 40 just execute the block 1
+        45 ' * Immunity patch end
+        50 bload"game-2.bin",r
+
+        If the game is a 16k or 32k cartridge, first you  must  find  the 
+cartridge ID bytes ("AB") on memory. Its what the line below  do.
+
+        bload"game-1.bin":for i=&h8000 to &hc000:if peek(i)=&h41 and
+        peek(i+1)=&h42 then print"Begin:&h";hex$(i):end else next
+
+        Supose that the  routine  give  you  the  address  &h9000.   Just
+subtract this address from the patch address to get  the  ExecROM address 
+for patch. In this  example:  &hA320-&h9000=&h1320.  Just type at BASIC:
+
+        print hex$(&hA320-&h9000)
+
+        Now, type at DOS:
+
+        ExecROM /p1320,30 game.rom
+
+        But if the  patch were  after  the  second  block  loading,  like
+below?
+
+        10 cls:print"Loading game..."
+        20 bload"game-1.bin",r
+        30 bload"game-2.bin"
+        35 ' * Immunity patch begining
+        40 poke &ha320,&h30
+        45 ' * Immunity patch end
+        50 defusr=peek(&hfcbf)+256*peek(&hfcc0):a=usr(0)
+        52 ' The line 50 just execute the block 2
+        
+        In this case,the most common procedure is to subtract &h8000 from
+the patch address. In this example we would obtain &h2320.
+        If it doesn't work, try subtract the block  beggining address (it
+can be viewed with any binary file header reader, like BINHEAD  from  A&L
+Software) from the path address.
+        For Memory Mapper  games  converted to  MegaRAM  there  aren't  a  
+specific  formula, because the blocks addresses change from game to game,
+and from block to block. Only a experienced MSX programmer can do it.
+        For MegaRAM games the geral rule is subtract  the  patch  address
+from block beginning (use a binary file header  reader).  If  the  blocks 
+are 8k size,the page is the number of the block minus  one (assuming  the
+first block as block 1).If the blocks are 16k size, each block contains 2 
+pages. The page is the  block number  times two minus two  (assuming  the
+first block as block 1). If the patch  address  is  greater  than  2000h,
+increase page number and  subtract 2000h from address.
+        For games with 16k MegaROM pages, the page is  the  block  number
+minus one (assuming the first block as block 1).
+        Unfortunatelly, this technique  doesn' t  work  for  all  MegaRAM
+games, because many were internally modified to be  adapted  to  MegaRAM,
+what can conflict with ExecROM atuation.
+
+
+        08. The patchfile
+            -------------
+
+        The patchfile contents various modifications for a ROM  file  and
+they can have several reasons. ROM adaption,  options  change,  etc.  For
+games, the most common are  modifications  for  getting  infinite  lives,
+immunition, etc. It's recommended that the patchfile  size  don't  exceed
+8kb.
+        When a patchfile is loaded, every modification  is  presented  to
+the user and he can choose if he wants it to be applyed or not.
+        The patchfile structure is:
+
+        /* header */
+        string   ExecROM patchfile  /* identification */
+        byte     0x1A
+        byte     XY                 /* file version X.Y(in BCD format) */
+
+        /* body */
+        /* patchblock */
+        byte     BB                 /* number of modification blocks */
+        byte     EE                 /* essential patchfile flag */
+        string   ...                /* patch identification */
+        byte     0x24               /* identification end flag */
+         /* modification blocks */
+         byte     TT                /* modification size in bytes */
+         endereco AABB              /* initial address of modification */
+         byte     PP                /* target page */
+         bytes    ...               /* modification bytes */
+
+        /* end */
+        byte     00                   /* file end */
+
+        When a patchfile is read, the   identification  string  of  every
+patch is shown like a question (i.e., followed by  a  "(Y/N)?")  and  the
+user must give an answer.
+        If EE, the essential patch flag, is 255 (0xFF), the question will
+not be done and the  patch  will  be  applyed  automaticly  to  the  ROM.
+Generally, essential patchs are those who modify the ROM to allow  it  to
+be executed by ExecROM or those who solve defects of the ROM.
+        If the answer is "Y" or the patch is essential,the TT modificaion
+bytes are put on the page PP, starting at the AABB address.For 16k or 32k
+ROM files, the page number must be 00.
+        The  address  is  the  relative   dislocation  to  the  cartridge
+beginning or to the page beginning (i.e, the cartridge and page beginning 
+are assumed as address 0000).
+        Example:
+
+        'ExecROM patchfile'
+        1A                             // signature
+        10                             // version 1.0
+        01                             // this patch has one block
+        FF                             // patch is essential (no ask)
+        'Correcao do MegaROM'          // patch definition
+        24                             // patch definition end
+        03 10 40 01                    // 3 bytes,address 4010h,page 01h
+        28 54 72                       // patch data
+        02                             // this patch has two blocks
+        00                             // this patch is optative (ask)
+        'Skip intro screen'            // patch definition
+        24                             // patch definition end
+        02 23 50 10                    // 2 bytes,address 5023h,page 10h
+        56 8A                          // patch data
+        01 14 60 05 56 8A              // 1 byte,address 6014h,page 05h
+        C3                             // patch data
+        00                             // end of file
+
+
+        09. ExecROM troubleshooting
+            -----------------------
+
+        * WARNING:
+
+        a) Don't execute ExecROM with a MegaRAM Disk in slot  1;  if  you 
+           have your MegaRAM Disk on slot 1, boot from disk.
+
+        b) Don't execute ExecROM from MegaRAM RAMDisk,  or  an error will
+           hang up your computer.
+
+        c) Generally, boot your MSX with the CONTROL key  pressed  before
+           running ExecROM if you have more than one diskdrive.
+
+        d) If you're using Nyyrikki's DOS2TAB  program,  remove  it  from
+           memory before running  ExecROM,  or  system  may  hang  during
+           execution of ROM code.
+
+        e) If you have a SCC and your MegaRAM is in an expanded slot,  do
+           not use the SCC cartridge in the expanded slot. ExecROM  can't
+           use SCC if it's in the same primary slot of MegaRAM.
+
+        * GENERAL TROUBLESHOOTING:
+            
+        If you are having problems with  ExecROM  using  a  MegaRAM  Disk
+and/or have more than one diskdrive conected to your MSX,try booting with 
+the  DELETE  key  pressed  (to  desactivate  the MegaRAM Disk and turning
+it to a  MegaRAM  Game)  and/or  the CONTROL key pressed (to  desactivate 
+the logical drives).
+
+        * SPECIFIC TROUBLESHOOTING:
+
+        a) After the loading, ExecROM locks the computer  on  the message 
+           "Executing ROM cartridge"
+
+           This is the most generic problem. Can be caused by an error in
+           the ROM file, a disk read error or even by an  error  in  your
+           MSX. Verify if the ROM file is not damaged. Verify if exists a
+           patchfile necessary to run this ROM. Reboot your MSX  and  try
+           loading the ROM again. Some cartridges requires some "special"
+           conditions to run, that can be provided by ExecROM. Some games
+           need  the  ID  cartridge identification or need to  reset  the
+           MSX  to  run. These cases are resolved with options  /S  (that
+           put the ID cartridge identification on ROM file) and /B  (that
+           reboot your MSX to execute the ROM file). Try to  use  one  of
+           these or both options with the ROM file.  If  the  game  still
+           doesn't run, see the "GENERAL TROUBLESHOOTING".
+           Here are some cartridges   that  require  special  options  to
+           run:
+                                Cartridge                       Options
+
+                                Elevator Action                 /S
+                                Kung Fu Master                  /S /B
+                                Star Force                      /S /B
+                                Crazy Train                     /B
+
+        b) When the ROM file is executed strange  images  appear  on  the
+           screen and the computer hangs up
+
+           See the topic above.
+
+        c) Resident cartriges are not enabled when loaded with ExecROM
+
+           For resident cartridges  you  must  use  the   /S   option  in 
+           ExecROM, or they will not be enabled. See "How to use ExecROM"
+           for details.
+
+        d) Patchs on the ROM file are not done
+
+           i)  . The patch page, address and byte are correct?
+           ii) . Had you given the patch in hexadecimal format?
+           iii). Do you not received the message "Error in path request"?
+
+        e) After an error on ExecROM, the computer hangs up
+
+           You probably are using a MegaRAM  Disk  and  executed  ExecROM
+           at the MegaRAM Disk drive. Execute ExecROM from a diskdrive or
+           reboot your MSX with the DELETE key pressed.  If  the  problem
+           persists, boot DOS from diskette, not from MegaRAM Disk.
+
+        f) The MSX hangs up after computer identification
+
+           See the topic above.
+
+        g) ExecROM  is   reexecuted   or  strange  messages  appear  when 
+           "Stopping the drive" or " Executing  ROM  cartridge"  messages
+           are displayed
+
+           See "GENERAL TROUBLESHOOTING".
+
+        h) The Game Master doesn't work with a game
+
+           The Game Master only works with Konami's games. The  game  you 
+           are running is a Konami game?
+
+        i) ExecROM doesn't load Game Master I or II
+
+           i)  . The Game Master file is  called  GMASTER.ROM  (for  Game
+                 Master I) or GMASTER2.ROM (for Game Master II)?
+           ii) . Are you sure that the file is a Game Master?
+           iii). Do you have a MegaRAM to use Game Master?
+           iv) . If you are running Game Master II, are  you  shure  your
+                 MSX has at least 128k Memory Mapper?
+           v)  . Are you sure your Game  Master  ROM   is   the  original
+                 one? ExecROM will not load Game Master ( I  or  II)   if
+                 it isn't the original one.
+
+        j) The Game Master II doesn't save or load files
+
+           The disk functions of Game Master II only works  with  ExecROM
+           if your MSX has 160k or more of Memory Mapper.
+
+        k) Using the option /X, when going to BASIC the MSX hangs
+
+          It's a bug in ExecROM that was not fixed yet.  Please,  wait  a
+          future version that fixes this problem.
+
+        i) ExecROM doesn't enable SCC in a  Konami  game,  even  when  it
+           detects the SCC.
+
+           Check if ExecROM recognizes the Konami game you're running, by
+           the messages displayed by the program on  screen.  If  ExecROM
+           doesn't recognize the ROM, the SCC will not  be  enabled.  Get
+           another ROM of the same game, because yours can  be  corrupted
+           or patched.
+
+        j) ExecROM recognizes the Konami game and enables SCC,but the MSX
+           hangs when starting the game.
+
+           i)  . Check if you have Nyyrikkis's DOS2TAB program loaded  on
+                 memory.
+           ii) . Try removing any memory resident program before  running
+                 ExecROM.
+           iii). Try another ROM of the same game. ExecROM, to enable the
+                 SCC, patches specific locations of game ROM. If the  ROM
+                 you're using was modified, probably the patches made  by
+                 ExecROM will corrupt the game, not enable SCC.
+
+
+        10. Credits, use, copy and thanks
+            -----------------------------
+
+        The program ExecROM is freeware, i.e., it's free, you don't  need
+to pay for it. But you only can use, copy or distribute it if  you  don't
+remove  the  author  name  and  enclose  the  three  files:  ExecROM.COM,
+ExecROM.ENG and ExecROM.POR.
+        ExecROM 1.2c can run about 80% of MSX MegaROMs  without needing a
+patchfile and almost all 16k/32k ROMs.If you discover any bug or have any
+idea or comment, let us know. If a ROM file doesn't run with you (please,
+see the troubleshooting first!), tell us and, if possible, send us a copy
+of your ROM to fast solving the problem. If you created a  patchfile  for
+any ROM, please, send us a copy.
+        A&L Software would like to thanks all  the  active  guys  on  MSX
+Broadcast List at Unesp, SP, Brazil for tests, ideas, bugs and comments.
+        Special thanks (without any order) to:Marco Antonio Simon Dal Poz
+for his help about the MegaRAM; Fabio Ricardo Schmidlin,  Giovanni  Nunes
+and Werner Kai (MSX Core Club), for their inumerous good ideas  and  tips
+for improving ExecROM; Daniel Caetano for initial implementation of  Game
+Master II under ExecROM;Leonard Oliveira for his help about SCC detection
+and idea about using ExecROM with MSXDOS2; Mauricio Braga for  the  ideia
+of supporting Konami Game Collection ROMs; Ricardo  Bittencourt  for  the
+ideia of MegaROM type detection.
+        The CoolColors palette and the idea of inclusion  in  ExecROM  is
+from Fabio Ricardo Schmidlin and was used under permission.
+        ExecROM is copyright (c) 1996-1999,2001-2004 A&L Software.Contact
+at:
+
+        alsoftware@alsoftware.com.br
+        http://www.alsoftware.com.br
+
+        The MSX related page of A&L Software can be reached at:
+
+        http://www.alsoftware.com.br/adrianpage/
+
+        And remember: MSX now and forever!
