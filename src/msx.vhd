@@ -264,6 +264,9 @@ architecture Behavior of msx is
 	signal vdp_wr_n_s			: std_logic;
 	signal vga_en_s			: std_logic;
 	signal scanline_en_s		: std_logic;
+	signal ntsc_pal_s			: std_logic		:= '0';
+	signal vertfreq_csw_s	: std_logic;
+	signal vertfreq_d_s		: std_logic;
 
 	-- PSG
 	signal psg_cs_s			: std_logic;
@@ -382,8 +385,9 @@ begin
 		rgb_b_o			=> rgb_b_o,
 		hsync_n_o		=> hsync_n_o,
 		vsync_n_o		=> vsync_n_o,
-		vertfreq_on_k_i=> vertfreq_on_k_i,
-		ntsc_pal_o		=> ntsc_pal_o
+		ntsc_pal_i		=> ntsc_pal_s,
+		vertfreq_csw_o	=> vertfreq_csw_s,
+		vertfreq_d_o	=> vertfreq_d_s
 	);
 
 	-- PSG
@@ -494,6 +498,9 @@ begin
 		turbo_on_k_i	=> turbo_on_k_i,
 		vga_on_k_i		=> vga_on_k_i,
 		scanline_on_k_i=> scanline_on_k_i,
+		vertfreq_on_k_i=> vertfreq_on_k_i,
+		vertfreq_csw_i	=> vertfreq_csw_s,
+		vertfreq_d_i	=> vertfreq_d_s,
 		--
 		nextor_en_o		=> nextor_en_s,
 		mr_type_o		=> mr_type_s,
@@ -501,6 +508,7 @@ begin
 		softreset_o		=> softreset_s,
 		vga_en_o			=> vga_en_s,
 		scanline_en_o	=> scanline_en_s,
+		ntsc_pal_o		=> ntsc_pal_s,
 		keymap_addr_o	=> keymap_addr_o,
 		keymap_data_o	=> keymap_data_o,
 		keymap_we_o		=> keymap_we_o,

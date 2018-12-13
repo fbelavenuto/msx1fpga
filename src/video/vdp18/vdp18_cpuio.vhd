@@ -88,10 +88,10 @@ entity vdp18_cpuio is
 		palette_idx_o	: out std_logic_vector(0 to  3);
 		palette_val_o	: out std_logic_vector(0 to 15);
 		palette_wr_o	: out std_logic;
-		vertfreq_on_k_i: in  std_logic						:= '0';
-		ntsc_pal_o		: out std_logic;
 		irq_i				: in  boolean;
-		int_n_o			: out std_logic
+		int_n_o			: out std_logic;
+		vertfreq_csw_o	: out std_logic;
+		vertfreq_d_o	: out std_logic
 	);
 
 end vdp18_cpuio;
@@ -138,7 +138,6 @@ architecture rtl of vdp18_cpuio is
 	type   read_mux_t is (RDMUX_STATUS, RDMUX_READAHEAD);
 	signal read_mux_s				: read_mux_t;
 
-	signal ntsc_pal_s			: std_logic := '0';
 	-- palette
 	signal palette_idx_s		: unsigned(0 to 3);
 	signal incr_palidx_s		: boolean;
@@ -295,9 +294,8 @@ begin
 	--   Implements the register interface.
 	--
 	reg_if: process (clock_i, reset_i)
-		variable reg_addr_v : unsigned(0 to 2);
-		variable incr_palidx_v : boolean := false;
-		variable vf_on_de_v	: std_logic_vector(1 downto 0) := "00";
+		variable reg_addr_v		: unsigned(0 to 2);
+		variable incr_palidx_v	: boolean := false;
 	begin
 		if reset_i then
 			tmp_q            <= (others => '0');
@@ -313,9 +311,9 @@ begin
 			ctrl_reg_q(7) <= X"F7";
 	-- p ragma translate_on
 			palette_idx_s	<= X"0";
-			ntsc_pal_s		<= '0';
 
 		elsif clock_i'event and clock_i = '1' then
+			vertfreq_csw_o		<= '0';
 			if clk_en_10m7_i then
 				-- Temporary register -------------------------------------------------
 				if write_tmp_s then
@@ -327,7 +325,8 @@ begin
 					if    cd_i(3 to 7) = "10000" then				-- 16
 						palette_idx_s <= unsigned(tmp_q(4 to 7));
 					elsif cd_i(3 to 7) = "01001" then				-- 9
-						ntsc_pal_s	<= tmp_q(6);
+						vertfreq_d_o	<= tmp_q(6);
+						vertfreq_csw_o	<= '1';
 					else
 						reg_addr_v := unsigned(cd_i(5 to 7));
 						ctrl_reg_q(to_integer(reg_addr_v)) <= tmp_q;
@@ -361,13 +360,6 @@ begin
 			elsif destr_rd_status_s then
 				int_n_q <= '1';
 			end if;
-
-			-- by Fabio : 50/60Hz change by key
-			vf_on_de_v	:= vf_on_de_v(0) & vertfreq_on_k_i;
-			if vf_on_de_v = "01" then
-				ntsc_pal_s <= not ntsc_pal_s;
-			end if;
-
 		end if;
 	end process reg_if;
 	--
@@ -634,8 +626,6 @@ begin
 	int_n_o     <= int_n_q or not ctrl_reg_q(1)(2);
 	palette_val_o	<= palette_val_s;
 	palette_wr_o	<= to_std_logic_f(incr_palidx_s) when palette_idx_s /= 0 else '0';
-	ntsc_pal_o		<= ntsc_pal_s;
-
 	wait_o			<= wait_s;
 
 end rtl;

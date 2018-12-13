@@ -172,13 +172,15 @@ begin
 				elsif keyb_data_s = X"F0" then
 					-- Release code (break) follows
 					break_v			:= '1';
-				elsif keyb_data_s = X"14" and extended_v = "10"	then		-- PAUSE/BREAK
+				elsif keyb_data_s = X"14" and extended_v = "10"	then		-- PAUSE/BREAK E1 [14] (77 E1 F0 14) F0 77
 					if break_v = '0' then
-						skip_count_v	:= "110";									-- Skip the next 6 sequences
+						skip_count_v	:= "100";									-- Skip the next 4 sequences
 						extended_v		:= "00";
 						shift_v			:= '0';
 					end if;
-					extra_keys_s(0) <= not break_v;
+					extra_keys_s(0) <= '1';
+				elsif keyb_data_s = X"77" and extended_v = "00" then		-- PAUSE/BREAK release (F0 77)
+					extra_keys_s(0) <= '0';
 				elsif keyb_data_s = X"7C" and extended_v = "01" then		-- PRINT SCREEN E0,12,E0,7C  E0,F0,7C,E0,F0,12
 					if break_v = '0' then
 						extended_v		:= "00";

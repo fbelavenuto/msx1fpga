@@ -205,23 +205,21 @@ void main()
 		//     12345678901234567890123456789012
 		error("Error reading Config file!");
 	}
-	cfgnxt = (buffer[0] == '1') ? CFG_NEXTOR		: 0;
-	cfgvga = (buffer[1] == '1') ? CFG_SCANDBL		: 0;
+	cfgnxt = (buffer[0] == '1') ? CFG_NEXTOR		: 0;	// Options
+	cfgvga = (buffer[1] == '1') ? CFG_SCANDBL		: 0;	// Options
 	cfgkm  = buffer[2];
 	if (cfgkm != 'E' && cfgkm != 'B' && cfgkm != 'F' && cfgkm != 'S' && cfgkm != 'J') {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("Invalid keymap!");
 	}
-	cfgcor   = (buffer[3] == 'P') ? VDP_PAL 		: VDP_NTSC;
+	cfgcor   = (buffer[3] == 'P') ? CFG_NTSC_PAL 	: 0;	// Options
 	cfgturbo = (buffer[4] == '1') ? TURBO_ON		: 0;
-	cfgsln   = (buffer[5] == '1') ? CFG_SCANLINES	: 0;
-
-	VDP_CMD = cfgcor;
-	VDP_CMD = 0x89;
+	cfgsln   = (buffer[5] == '1') ? CFG_SCANLINES	: 0;	// Options
 
 	SWIOP_REGNUM = REG_OPTIONS;
-	SWIOP_REGVAL = cfgsln | cfgvga | cfgnxt;
+	SWIOP_REGVAL = cfgcor | cfgsln | cfgvga | cfgnxt;
+	//putdec8(cfgcor | cfgsln | cfgvga | cfgnxt);
 
 	// IPL pages config
 	if ((hwmemcfg & 0x07) == 0) {			// 512K

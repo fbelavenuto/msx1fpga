@@ -185,9 +185,9 @@ $8F,$A5,$80,$92,$B8			; Å  Ñ  Ç  Æ IJ
 059,0,6	; RSHIFT
 014,1,6	; LCTRL
 11F,0,8	; LWIN (mapped to SPACE key)
-011,2,6	; LALT
+011,2,6	; LALT (mapped to GRAPH key)
 029,0,8	; SPACE
-111,2,6	; RALT
+111,4,6	; RALT (mapped to CODE key)
 127,0,8	; RWIN (mapped to SPACE key)
 12F,F,F	; RMENU
 114,1,6	; RCTRL
@@ -196,7 +196,7 @@ $8F,$A5,$80,$92,$B8			; Å  Ñ  Ç  Æ IJ
 17D,6,7	; PAGE UP (mapped to SELECT key)
 171,3,8	; DEL
 169,4,7	; END (mapped to STOP key)
-17A,4,6	; PAGE DOWN (mapped to CODE key)
+17A,F,F	; PAGE DOWN
 175,5,8	; UP
 16B,4,8	; LEFT
 172,6,8	; DOWN

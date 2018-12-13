@@ -38,3 +38,5 @@
 	- Added synth to the Multicore2 board, with the OPLL and YT51
 	- Added alternative Spanish keymap (thanks to desUBIKado)
 	- Added experimental Japanese keymap (thanks to tanam (tms9918))
+	- Fixed keyboard bug with new schema to the load keymap and change the ROM tables
+	

@@ -94,30 +94,31 @@ entity vdp18_core is
 		-- CPU Interface ----------------------------------------------------------
 		csr_n_i			: in  std_logic;
 		csw_n_i			: in  std_logic;
-		mode_i			: in  std_logic_vector(0 to  1);
+		mode_i			: in  std_logic_vector( 0 to  1);
 		int_n_o			: out std_logic;
-		cd_i				: in  std_logic_vector(0 to  7);
-		cd_o				: out std_logic_vector(0 to  7);
+		cd_i				: in  std_logic_vector( 0 to  7);
+		cd_o				: out std_logic_vector( 0 to  7);
 		wait_o			: out std_logic;
 		-- VRAM Interface ---------------------------------------------------------
 		vram_ce_o		: out std_logic;
 		vram_oe_o		: out std_logic;
 		vram_we_o		: out std_logic;
-		vram_a_o			: out std_logic_vector(0 to 13);
-		vram_d_o			: out std_logic_vector(0 to  7);
-		vram_d_i			: in  std_logic_vector(0 to  7);
+		vram_a_o			: out std_logic_vector( 0 to 13);
+		vram_d_o			: out std_logic_vector( 0 to  7);
+		vram_d_i			: in  std_logic_vector( 0 to  7);
 		-- Video Interface --------------------------------------------------------
 		vga_en_i			: in  std_logic;
 		scanline_en_i	: in  std_logic;
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
 		cnt_ver_o		: out std_logic_vector( 7 downto 0);
-		rgb_r_o			: out std_logic_vector(0 to 3);
-		rgb_g_o			: out std_logic_vector(0 to 3);
-		rgb_b_o			: out std_logic_vector(0 to 3);
+		rgb_r_o			: out std_logic_vector( 0 to  3);
+		rgb_g_o			: out std_logic_vector( 0 to  3);
+		rgb_b_o			: out std_logic_vector( 0 to  3);
 		hsync_n_o		: out std_logic;
 		vsync_n_o		: out std_logic;
-		vertfreq_on_k_i: in  std_logic								:= '0';
-		ntsc_pal_o		: out std_logic
+		ntsc_pal_i		: in  std_logic;		-- 0 = NTSC
+		vertfreq_csw_o	: out std_logic;
+		vertfreq_d_o	: out std_logic
 	);
 end vdp18_core;
 
@@ -190,7 +191,6 @@ architecture struct of vdp18_core is
 	signal palette_idx_s		: std_logic_vector(0 to  3);
 	signal palette_val_s		: std_logic_vector(0 to 15);
 	signal palette_wr_s		: std_logic;
-	signal ntsc_pal_i_s		: std_logic;
 	signal ntsc_pal_e_s		: std_logic;
 	signal oddline_s			: std_logic							:= '0';
 
@@ -201,7 +201,6 @@ begin
 	wr_s          <= not to_boolean_f(csw_n_i);
 	por_s				<= por_i = '1';
 	reset_s			<= reset_i = '1';
-	ntsc_pal_o		<= ntsc_pal_e_s;
 
 	-----------------------------------------------------------------------------
 	-- Clock Generator
@@ -305,10 +304,10 @@ begin
 		palette_idx_o	=> palette_idx_s,
 		palette_val_o	=> palette_val_s,
 		palette_wr_o	=> palette_wr_s,
-		vertfreq_on_k_i=> vertfreq_on_k_i,
-		ntsc_pal_o		=> ntsc_pal_i_s,
 		irq_i				=> irq_s,
-		int_n_o			=> int_n_o
+		int_n_o			=> int_n_o,
+		vertfreq_csw_o	=> vertfreq_csw_o,
+		vertfreq_d_o	=> vertfreq_d_o
  );
 
 	-----------------------------------------------------------------------------
@@ -404,7 +403,7 @@ begin
 
 	von3: if video_opt_g /= 3 generate
 
-		ntsc_pal_e_s <= ntsc_pal_i_s;
+		ntsc_pal_e_s <= ntsc_pal_i;
 
 		-----------------------------------------------------------------------------
 		-- Palette memory

@@ -55,7 +55,7 @@ $(ODIR)/%.rel: $(SDIR)/%.S
 $(ODIR)/%.rel: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(ODIR)/%.rel: $(LDIR)/%.S
+$(ODIR)/%.rel: $(LDIR)/%.s
 	$(AS) -o $@ $<
 
 $(ODIR)/%.rel: $(LDIR)/%.c

@@ -68,6 +68,9 @@ entity swioports is
 		turbo_on_k_i	: in  std_logic;
 		vga_on_k_i		: in  std_logic;
 		scanline_on_k_i: in  std_logic;
+		vertfreq_on_k_i: in  std_logic;
+		vertfreq_csw_i	: in  std_logic;
+		vertfreq_d_i	: in  std_logic;
 		--
 		nextor_en_o		: out std_logic;
 		mr_type_o		: out std_logic_vector( 1 downto 0);
@@ -75,6 +78,7 @@ entity swioports is
 		softreset_o		: out std_logic;
 		vga_en_o			: out std_logic;
 		scanline_en_o	: out std_logic;
+		ntsc_pal_o		: out std_logic;		-- 0 = NTSC
 		keymap_addr_o	: out std_logic_vector( 8 downto 0);
 		keymap_data_o	: out std_logic_vector( 7 downto 0);
 		keymap_we_o		: out std_logic;
@@ -102,6 +106,7 @@ architecture Behavior of swioports is
 	signal keymap_we_s		: std_logic;
 	signal vga_en_q			: std_logic								:= '0';
 	signal scanline_en_q		: std_logic								:= '0';
+	signal ntsc_pal_q			: std_logic								:= '0';
 	signal volumes_q			: volumes_t;
 
 begin
@@ -151,6 +156,7 @@ begin
 		variable turbo_on_de_v	: std_logic_vector(1 downto 0) := "00";
 		variable vga_on_de_v		: std_logic_vector(1 downto 0) := "00";
 		variable scln_on_de_v	: std_logic_vector(1 downto 0) := "00";
+		variable vf_on_de_v		: std_logic_vector(1 downto 0) := "00";
 		variable keymap_we_a_v	: std_logic;
 	begin
 		if por_i = '1' then
@@ -159,6 +165,7 @@ begin
 			turbo_on_q		<= '0';
 			vga_en_q			<= vga_on_i;
 			scanline_en_q	<= '0';
+			ntsc_pal_q		<= '0';
 			-- default volumes
 			volumes_q.beep	<= std_logic_vector(to_unsigned(default_vol_beep, 8));
 			volumes_q.ear	<= std_logic_vector(to_unsigned(default_vol_ear, 8));
@@ -172,8 +179,9 @@ begin
 			keymap_we_s	<= '0';
 		elsif falling_edge(clock_i) then
 			turbo_on_de_v	:= turbo_on_de_v(0) & turbo_on_k_i;
-			vga_on_de_v		:= vga_on_de_v(0) & vga_on_k_i;
-			scln_on_de_v	:= scln_on_de_v(0) & scanline_on_k_i;
+			vga_on_de_v		:= vga_on_de_v(0)   & vga_on_k_i;
+			scln_on_de_v	:= scln_on_de_v(0)  & scanline_on_k_i;
+			vf_on_de_v		:= vf_on_de_v(0)    & vertfreq_on_k_i;
 			if turbo_on_de_v = "01" then
 				turbo_on_q <= not turbo_on_q;
 			end if;
@@ -183,7 +191,14 @@ begin
 			if scln_on_de_v = "01" then
 				scanline_en_q <= not scanline_en_q;
 			end if;
+			if vf_on_de_v = "01" then
+				ntsc_pal_q	<= not ntsc_pal_q;
+			end if;
 			keymap_we_s	<= '0';		-- default
+			-- Vertical frequency control by VDP
+			if vertfreq_csw_i = '1' then
+				ntsc_pal_q	<= vertfreq_d_i;
+			end if;
 
 			-- Panasonic
 			if    cs_i = '1' and wr_i = '1' and maker_id_s = PANAMKID_C then
@@ -203,6 +218,7 @@ begin
 						keymap_data_q	<= data_i;
 						keymap_we_s		<= '1';
 					when X"10" =>
+						ntsc_pal_q		<= data_i(3);
 						scanline_en_q	<= data_i(2);
 						vga_en_q			<= data_i(1);
 						nextor_en_q		<= data_i(0);
@@ -301,7 +317,7 @@ begin
 						reg_data_s			<= "0000000" & hw_hashwds_i;
 						has_data_regv_s	<= '1';
 					when X"10" =>
-						reg_data_s			<= "000000" & vga_en_q & nextor_en_q;
+						reg_data_s			<= "0000" & ntsc_pal_q & scanline_en_q & vga_en_q & nextor_en_q;
 						has_data_regv_s	<= '1';
 					when X"11" =>
 						reg_data_s			<= "000000" & mapper_q;
@@ -364,6 +380,7 @@ begin
 	keymap_we_o		<= keymap_we_s;
 	vga_en_o			<= vga_en_q;
 	scanline_en_o	<= scanline_en_q;
+	ntsc_pal_o		<= ntsc_pal_q;
 	volumes_o		<= volumes_q;
 
 end architecture;

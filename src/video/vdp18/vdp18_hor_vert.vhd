@@ -57,7 +57,7 @@ entity vdp18_hor_vert is
     clk_en_5m37_i : in  boolean;
     reset_i       : in  boolean;
     opmode_i      : in  opmode_t;
-	 ntsc_pal_i		: in  std_logic;
+	 ntsc_pal_i		: in  std_logic;		-- 0 = NTSC
     num_pix_o     : out hv_t;
     num_line_o    : out hv_t;
     vert_inc_o    : out boolean;

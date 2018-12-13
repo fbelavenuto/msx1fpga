@@ -54,16 +54,10 @@ static const unsigned char mymkid = 40;
 #define CFG_NEXTOR		0x01
 #define CFG_SCANDBL		0x02
 #define CFG_SCANLINES	0x04
+#define CFG_NTSC_PAL	0x08
 
 // Reg turbo
 #define TURBO_ON		0x01
-
-// VDP
-__sfr __at 0x98 VDP_DATA;
-__sfr __at 0x99 VDP_CMD;
-
-#define VDP_NTSC		0x00
-#define VDP_PAL			0x02
 
 // SPI
 __sfr __at 0x9E SPI_CTRL;

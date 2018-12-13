@@ -355,6 +355,7 @@ begin
 		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
 		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
+		vertfreq_on_k_i=> extra_keys_s(0),		-- Pause
 		vga_en_o			=> vga_en_s,
 		-- SPI/SD
 		flspi_cs_n_o	=> flspi_cs_n_s,

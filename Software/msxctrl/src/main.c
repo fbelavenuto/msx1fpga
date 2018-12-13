@@ -23,11 +23,11 @@ http://msx.atlantes.org/index_en.html#sdccmsxdos
 */
 
 #include <stdlib.h>
-#include "hardware.h"
 #include <bios.h>
 #include <conio.h>
 #include <msxdos.h>
 #include <getopt.h>
+#include "hardware.h"
 
 /* Defines */
 typedef unsigned char bool;
@@ -38,6 +38,7 @@ typedef unsigned char bool;
 const unsigned char REGS[] = {REG_OPTIONS, REG_MAPPER, REG_TURBO, REG_VOLBEEP,
 							  REG_VOLEAR, REG_VOLPSG, REG_VOLSCC, REG_VOLOPLL, REG_VOLAUX1};
 const unsigned char *ONOFFSTR[] = {"OFF", "ON"};
+const unsigned char *TRUEFALSESTR[] = {"FALSE", "TRUE"};
 const unsigned char SCCMAPTYPEVAL[] = {0, 1, 3};
 const unsigned char *SCCMAPTYPESTR[] = {"SCC-I", "ASCII 8", "ASCII 16"};
 
@@ -48,7 +49,7 @@ struct tRegValPair {
 };
 
 /* Global vars */
-unsigned char hwid, hwversion, hwtxt[20], hwmemcfg, hwds;
+unsigned char hwid, hwversion, buffer[100], hwmemcfg, hwds;
 unsigned char c, options;
 unsigned int  i;
 int fhandle;
@@ -121,6 +122,8 @@ void use(bool all)
 /******************************************************************************/
 void readRegs()
 {
+	struct tRegValPair *p;
+
 	// Try open file
 	fhandle = open(filename, O_RDONLY);
 	if (fhandle == -1) {
@@ -129,22 +132,24 @@ void readRegs()
 		puts("'.\r\n");
 		exit(2);
 	}
-	for (i = 0; i < sizeof(REGS); i++) {
-		if (-1 == read(fhandle, &rvp, 2)) {
-			if (last_error == EEOF) {
-				puts("End of file!\r\n");
-				close(fhandle);
-				return;
-			} else {
-				puts("Reading error: ");
-				puthex8(last_error);
-				puts("!\r\n");
-				close(fhandle);
-				return;
-			}
+	if (-1 == read(fhandle, buffer, sizeof(REGS)*sizeof(struct tRegValPair))) {
+		if (last_error == EEOF) {
+			puts("End of file!\r\n");
+			close(fhandle);
+			return;
+		} else {
+			puts("Reading error: ");
+			puthex8(last_error);
+			puts("!\r\n");
+			close(fhandle);
+			return;
 		}
-		SWIOP_REGNUM = rvp.reg;
-		SWIOP_REGVAL = rvp.value;
+	}
+	p = (struct tRegValPair *)buffer;
+	for (i = 0; i < sizeof(REGS); i++) {
+		SWIOP_REGNUM = p->reg;
+		SWIOP_REGVAL = p->value;
+		++p;
 	}
 	puts("Regs load sucessful!\r\n");
 	close(fhandle);
@@ -153,6 +158,8 @@ void readRegs()
 /******************************************************************************/
 void writeRegs()
 {
+	struct tRegValPair *p;
+
 	// write
 	// Try open file
 	fhandle = creat(filename, O_WRONLY, ATTR_NONE);
@@ -162,15 +169,17 @@ void writeRegs()
 		puts("'.\r\n");
 		exit(2);
 	}
+	p = (struct tRegValPair *)buffer;
 	for (i = 0; i < sizeof(REGS); i++) {
-		rvp.reg = REGS[i];
-		SWIOP_REGNUM = rvp.reg;
-		rvp.value = SWIOP_REGVAL;
-		if (-1 == write(fhandle, &rvp, sizeof(rvp))) {
-			puts("Error writing file.\r\n");
-			close(fhandle);
-			exit(4);
-		}
+		SWIOP_REGNUM = REGS[i];
+		p->reg = REGS[i];
+		p->value = SWIOP_REGVAL;
+		++p;
+	}
+	if (-1 == write(fhandle, buffer, sizeof(REGS)*sizeof(struct tRegValPair))) {
+		puts("Error writing file.\r\n");
+		close(fhandle);
+		exit(4);
 	}
 	puts("Regs write sucessful!\r\n");
 	close(fhandle);
@@ -206,8 +215,8 @@ int main(char *argv[], int argc)
 	hwid = SWIOP_REGVAL;
 	SWIOP_REGNUM = REG_HWTXT;
 	for (i = 0; i < 20; i++) {
-		hwtxt[i] = SWIOP_REGVAL;
-		if (hwtxt[i] == 0) {
+		buffer[i] = SWIOP_REGVAL;
+		if (buffer[i] == 0) {
 			break;
 		}
 	}
@@ -220,7 +229,7 @@ int main(char *argv[], int argc)
 	puts("HW ID = ");
 	puthex8(hwid);
 	puts(" - ");
-	puts(hwtxt);
+	puts(buffer);
 	puts("\r\nVersion ");
 	putdec8(hwversion >> 4);
 	putchar('.');
@@ -228,7 +237,7 @@ int main(char *argv[], int argc)
 	puts("\r\nMem config = ");
 	puthex8(hwmemcfg);
 	puts("\r\nHas HWDS = ");
-	puthex8(hwds);
+	puts(TRUEFALSESTR[hwds]);
 	puts("\r\n\r\n");
 
 	if (argc < 1) {
@@ -356,16 +365,6 @@ int main(char *argv[], int argc)
 		SWIOP_REGVAL = 1;
 	}
 
-	if (chg50) {
-		VDP_CMD = VDP_PAL;
-		VDP_CMD = 0x89;
-		puts("50 Hz selected.\r\n");
-	} else if (chg60) {
-		VDP_CMD = VDP_NTSC;
-		VDP_CMD = 0x89;
-		puts("60 Hz selected.\r\n");
-	}
-
 	if (lregs) {
 		readRegs();
 	} else if (wregs) {
@@ -383,6 +382,14 @@ int main(char *argv[], int argc)
 	// OPTIONS
 	SWIOP_REGNUM = REG_OPTIONS;
 	options = SWIOP_REGVAL;
+
+	if (chg60) {
+		options &= ~CFG_NTSC_PAL;
+		puts("50 Hz selected.\r\n");
+	} else if (chg50) {
+		options |= CFG_NTSC_PAL;
+		puts("60 Hz selected.\r\n");
+	}
 
 	if (chgsline) {
 		if (newsline == 0) {
