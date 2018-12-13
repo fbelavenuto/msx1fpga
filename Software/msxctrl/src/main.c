@@ -385,10 +385,10 @@ int main(char *argv[], int argc)
 
 	if (chg60) {
 		options &= ~CFG_NTSC_PAL;
-		puts("50 Hz selected.\r\n");
+		puts("60 Hz selected.\r\n");
 	} else if (chg50) {
 		options |= CFG_NTSC_PAL;
-		puts("60 Hz selected.\r\n");
+		puts("50 Hz selected.\r\n");
 	}
 
 	if (chgsline) {

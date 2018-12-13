@@ -1,0 +1,125 @@
+               **********************************
+               *          SofaUnZip v1.3        *
+               * (c) 2017 by Louthrax and Grauw *
+               **********************************
+
+
+===================================================================
+                           Introduction
+===================================================================
+
+SofaUnZip is a  tool to extract  ZIP files on  MSX-DOS 2, based  on
+Grauw's Gunzip tool (https://bitbucket.org/grauw/gunzip).
+
+It features:
+
+  * DEFLATE and STORE methods support.
+  * Directories suppport.
+  * Long file names support.
+  * File time and date support.
+  * Fast extraction speed.
+  * CRC32 check.
+  * Output concatenation to a single file (useful for disk images).
+
+Please report any bugs to: http://www.msx.org/forum/msx-talk/
+software/sofaunzip-bug-report-thread
+
+
+===================================================================
+                              License
+===================================================================
+
+SofaUnZip v1.2 (c) 2016 by Louthrax and Grauw
+
+Redistribution and use in source and binary forms, with or  without
+modification, are permitted provided that the following  conditions
+are met:
+
+1. Redistributions of source  code must retain the  above copyright
+   notice, this list of conditions and the following disclaimer.
+   
+2. Redistributions  in  binary  form  must  reproduce  the    above
+   copyright  notice, this  list of  conditions and  the  following
+   disclaimer in the documentation and/or other materials  provided
+   with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS  OR IMPLIED WARRANTIES, INCLUDING, BUT  NOT
+LIMITED TO, THE IMPLIED  WARRANTIES OF MERCHANTABILITY AND  FITNESS
+FOR A  PARTICULAR PURPOSE  ARE DISCLAIMED.  IN NO  EVENT SHALL  THE
+COPYRIGHT  HOLDER  OR  CONTRIBUTORS  BE  LIABLE  FOR  ANY   DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL  DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS  OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS  INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT  LIABILITY,  OR  TORT  (INCLUDING  NEGLIGENCE  OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+===================================================================
+                           Requirements
+===================================================================
+
+Any MSX computer with MSX-DOS 2.
+
+
+===================================================================
+                             Usage
+===================================================================
+
+Usage: suz <command> <archive> [<files>...] [<switches>...]
+
+<command>:
+  e  Extract <files> from <archive>
+  l  List <files> in <archive>
+  t  Test <files> in <archive>
+  x  Extract <files> from <archive> with path
+
+<switches>:
+  /b<read_buffer_size>
+      Specify read buffer size in bytes (default is 2048)
+  /c<file>
+      Concatenate output(s) to <file>
+  /f  Fast mode (no CRC check)
+  /p  Pre-allocate created files (faster)
+  /o  Overwrite existing files
+  /s  Short list (file names only)
+
+
+===================================================================
+                               Notes
+===================================================================
+
+Standard wildcards are allowed in <files> parameters.
+
+Spaces are not allowed in the <files> parameters, try to use "?" or
+"*" wildcards instead.
+
+Long file names in  archive are extracted to  MSX-DOS 2 using a  "~
+indexed" naming convention.
+
+ZIP files containing end of file comments are not supported (you'll
+get a "bad signature" error).
+
+If you run out of memory during the extraction process, try to  use
+the /f option.
+
+/f option does not check for CRC, use it at your own risk.
+
+/c option can be  used to create a  contatenated disk image from  a
+ZIP file  containing individual  images.
+For example: suz e disks.zip aleste?2*disk?* /caleste2.dsk
+
+Please report any bugs to: http://www.msx.org/forum/msx-talk/
+software/sofaunzip-bug-report-thread
+
+
+===================================================================
+                              Thanks
+===================================================================
+
+Thanks to:
+
+  * Wouter Vermaelen for his optimization suggestions.
+  * The openMSX team.
