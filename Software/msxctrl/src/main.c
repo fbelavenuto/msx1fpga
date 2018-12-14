@@ -153,7 +153,6 @@ void regInfo(const unsigned char reg, const unsigned char value)
 		case REG_MAPPER:
 			puts("ESE-RAM mapper ");
 			puts(SCCMAPTYPESTR[value]);
-			puts("\r\n");
 			break;
 		case REG_TURBO:
 			puts("Turbo ");
