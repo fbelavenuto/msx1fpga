@@ -50,13 +50,13 @@ DRV_TYPE	equ	1
 
 DRV_HOTPLUG	equ	1
 
-DEBUG		equ	0	;Set to 1 for debugging, 0 to normal operation
+DEBUG	equ	0	;Set to 1 for debugging, 0 to normal operation
 
 ;Driver version
 
 VER_MAIN	equ	1
 VER_SEC		equ	0
-VER_REV		equ	1
+VER_REV		equ	0
 
 ;-----------------------------------------------------------------------------
 ; SPI addresses. Check the Technical info above for the bit contents
@@ -105,9 +105,9 @@ SCRMOD	= $FCAF
 
 ;-----------------------------------------------------------------------------
 
-	org	$4000
+	org		$4000
 
-	ds	256, $FF	; 256 dummy bytes
+	ds		256, $FF		; 256 dummy bytes
 
 DRV_START:
 
@@ -225,8 +225,8 @@ CUR_BANK	equ	40FFh
 ; Built-in format choice strings
 ;
 
-NULL_MSG	equ	781Fh	;Null string (disk can't be formatted)
-SING_DBL	equ	7820h	;"1-Single side / 2-Double side"
+NULL_MSG  equ     781Fh	;Null string (disk can't be formatted)
+SING_DBL  equ     7820h ;"1-Single side / 2-Double side"
 
 
 ;-----------------------------------------------------------------------------
@@ -256,7 +256,7 @@ SING_DBL	equ	7820h	;"1-Single side / 2-Double side"
 ;
 
 DRV_NAME:
-	db	"FBLabs MSX1FPGA Driver"
+	db	"MSX1FPGA SD Driver"
 	ds	32-($-DRV_NAME)," "
 
 
@@ -335,88 +335,88 @@ DRV_TIMI:
 ;     get two allocated drives.)
 
 DRV_INIT:
-	or	a		; Is this the 1st call?
-	jp	nz, .call2
+	or		a							; Is this the 1st call?
+	jp nz,	.call2
 ; 1st call:
-	ld	hl, 0		; No RAM needed
-	or	a		; Clear Cy
+	ld		hl, 0						; No RAM needed
+	or		a							; Clear Cy
 	ret
 
 .call2:
 ; 2nd call:
-	call	MYSETSCR	; Set the screen mode
+	call	MYSETSCR					; Set the screen mode
 
-	ld	de,strTitle	; prints the title
+	ld		de,strTitle					; prints the title
 	call	printString
 
  IF HWDS = 0
-	xor	a
-	ld	(WRKAREA.FLAGS), a
+	xor		a
+	ld		(WRKAREA.FLAGS), a
  ENDIF
 
-	ld	a, 1		; Detect SD card #1 (only 1 SD for now)
+	ld		a, 1						; Detect SD card #1 (only 1 SD for now)
 	call	.detect
-	ld	bc, 0
-	ld	e, 5
+	ld		bc, 0
+	ld		e, 5
 
-	call	INICHKSTOP	; Check if the STOP key was pressed
+	call	INICHKSTOP					; Check if the STOP key was pressed
 
-	ld	de, strCrLf
-	jp	printString
+	ld		de, strCrLf
+	jp		printString
 
 .detect:
-	ld	(WRKAREA.NUMSD), a	; SD card detection process
+	ld		(WRKAREA.NUMSD), a			; SD card detection process
 	push	af
-	ld	de, strSDSlot
+	ld		de, strSDSlot
 	call	printString
-	pop	af
-	add	'0'
+	pop		af
+	add		'0'
 	call	CHPUT
-	ld	a, ':'
+	ld		a, ':'
 	call	CHPUT
-	ld	a, ' '
+	ld		a, ' '
 	call	CHPUT
-	in	a, (PORTCTL)	; Is there an SD Card in the slot?
-	and	$2
-	jr	z, .naoVazio
-	ld	de, strVazio	; nop
+	in		a, (PORTCTL)				; Is there an SD Card in the slot?
+	and		$2
+	jr z,	.naoVazio
+	ld		de, strVazio				; nop
 	call	printString
 	ret
 .naoVazio:
-	call	detectCard	; Yep, initialize it and detect it
-	jr	nc, .detectou
+	call	detectCard					; Yep, initialize it and detect it
+	jr nc,	.detectou
 	call	disableCards
-	ld	de, strNaoIdentificado
+	ld		de, strNaoIdentificado
  IF HWDS = 1
- 	jp	printString
+ 	jp		printString
  ELSE
 	call	printString
 .marcaErro:
-	jp	marcaErroCartao	; slot vazio ou erro de deteccao, marcar nas flags
+	jp		marcaErroCartao				; slot vazio ou erro de deteccao, marcar nas flags
  ENDIF
 .detectou:
 	call	getCIDaddr
-	ld	a, (ix+15)	; SDV1 or SDV2
-	ld	de, strSDV1
-	or	a
-	jr	z, .pula1
-	ld	de, strSDV2
+	ld		a, (ix+15)					; SDV1 or SDV2
+	ld		de, strSDV1
+	or		a
+	jr z,	.pula1
+	ld		de, strSDV2
 .pula1:
 	call	printString
-	ld	a, '('
+	ld		a, '('
 	call	CHPUT
-	ld	a, (ix)		; Manufacturer ID
+	ld		a, (ix)						; Manufacturer ID
 	call	printDecToAscii
-	ld	a, ')'
+	ld		a, ')'
 	call	CHPUT
-	ld	a, ' '
+	ld		a, ' '
 	call	CHPUT
-	ld	a, (ix)		; Manufacturer ID
+	ld		a, (ix)						; Manufacturer ID
 	call	findManStr
-	ex	de, hl
+	ex		de, hl
 	call	printString
-	ld	de, strCrLf
-	jp	printString
+	ld		de, strCrLf
+	jp		printString
 
 
 ;-----------------------------------------------------------------------------
@@ -513,92 +513,92 @@ DRV_DIRECT4:
 
 DEV_RW:
 	push	af
-	cp	2		; only 1 device
-	jr	nc, .error
-	dec	c		; only 1 logical unit
-	jr	z, .ok
+	cp		a, 2						; only 1 device
+	jr nc,	.error
+	dec		c							; only 1 logical unit
+	jr z,	.ok
 .error:
-	pop	af
-	ld	a, EIDEVL	; error
-	ld	b, 0
+	pop		af
+	ld		a, EIDEVL					; error
+	ld		b, 0
 	ret
 .ok:
  IF HWDS = 0
 	call	checkSWDS
-	jr	c, .error
+	jr c,	.error
  ENDIF
-	ld	a, b
-	ld	(WRKAREA.NUMBLOCKS), a	; save the number of blocks to transfer
+	ld		a, b
+	ld		(WRKAREA.NUMBLOCKS), a		; save the number of blocks to transfer
 	exx
-	call	getCIDaddr	; ix=CID offset
-	ld	a, (ix+15)	; SDV1 or SDV2
-	ld	ixl, a		; ixl=SDcard version
-	exx			; hl=Source/dest Address, de=Pointer to sect#
-	ld	ixh, b 		; ixh=Number of blocks to transfer
-	pop	af		; a=Device number, f=read/write flag
-	jr	c, isWrite		; Skip if it's a write operation
+	call	getCIDaddr					; ix=CID offset
+	ld		a, (ix+15)					; SDV1 or SDV2
+	ld		ixl, a						; ixl=SDcard version
+	exx									; hl=Source/dest Address, de=Pointer to sect#
+	ld		ixh, b 						; ixh=Number of blocks to transfer
+	pop		af							; a=Device number, f=read/write flag
+	jr c,	isWrite						; Skip if it's a write operation
 isRead:
-	ld	a, (de)		; block #1
+	ld		a, (de)						; block #1
 	push	af
-	inc	de
-	ld	a, (de)		; block #2
+	inc		de
+	ld		a, (de)						; block #2
 	push	af
-	inc	de
-	ld	a, (de)		; block #3
-	ld	c, a
-	inc	de
-	ld	a, (de)		; block #4
-	ld	b, a
-	pop	af
-	ld	d, a
-	pop	af		; HL=dest address
-	ld	e, a		; BC DE = 32 bits block number
+	inc		de
+	ld		a, (de)						; block #3
+	ld		c, a
+	inc		de
+	ld		a, (de)						; block #4
+	ld		b, a
+	pop		af
+	ld		d, a
+	pop		af							; HL=dest address
+	ld		e, a						; BC DE = 32 bits block number
 	call	readBlock
-	jr	nc, DEV_RW_OK
+	jr nc,	DEV_RW_OK
  IF HWDS = 0
-	call	marcaErroCartao	; ocorreu erro na leitura, marcar erro
+	call	marcaErroCartao				; ocorreu erro na leitura, marcar erro
  ENDIF
-	ld	a, (WRKAREA.NUMBLOCKS)	; Get the number of requested blocks
-	sub	ixh		; subtract the number of remaining blocks
-	ld	b, a		; b=number of blocks read
-	ld	a, ENRDY	; Not ready
-;	ld	a, EDISK	; General unknown disk error
+	ld		a, (WRKAREA.NUMBLOCKS)		; Get the number of requested blocks
+	sub		ixh							; subtract the number of remaining blocks
+	ld		b, a						; b=number of blocks read
+	ld		a, ENRDY					; Not ready
+;	ld		a, EDISK					; General unknown disk error
 DEV_RW_OK:
-	xor	a		; exit with no error
+	xor		a							; exit with no error
 	ret
 
 isWrite:
-	in	a, (PORTCTL)	; destructive read
-	and	$4		; test if the card is write protected
-	jr	z, .ok
-	ld	a, EWPROT	; write protect
-	ld	b, 0		; 0 blocks were written
+	in		a, (PORTCTL)				; destructive read
+	and		$4							; test if the card is write protected
+	jr z,	.ok
+	ld		a, EWPROT					; write protect
+	ld		b, 0						; 0 blocks were written
 	ret
 .ok:
-	ld	a, (de)		; block #1
+	ld		a, (de)						; block #1
 	push	af
-	inc	de
-	ld	a, (de)		; block #2
+	inc		de
+	ld		a, (de)						; block #2
 	push	af
-	inc	de
-	ld	a, (de)		; block #3
-	ld	c, a
-	inc	de
-	ld	a, (de)		; block #4
-	ld	b, a
-	pop	af
-	ld	d, a
-	pop	af		; HL=dest address
-	ld	e, a		; BC DE = 32 bits block number
+	inc		de
+	ld		a, (de)						; block #3
+	ld		c, a
+	inc		de
+	ld		a, (de)						; block #4
+	ld		b, a
+	pop		af
+	ld		d, a
+	pop		af							; HL=dest address
+	ld		e, a						; BC DE = 32 bits block number
 	call	writeBlock
-	jr	nc, DEV_RW_OK
+	jr nc,	DEV_RW_OK
  IF HWDS = 0
-	call	marcaErroCartao	; ocorreu erro na leitura, marcar erro
+	call	marcaErroCartao				; ocorreu erro na leitura, marcar erro
  ENDIF
-	ld	a, (WRKAREA.NUMBLOCKS)	; Get the number of requested blocks
-	sub	ixh		; subtract the number of remaining blocks
-	ld	b, a		; b=number of blocks read
-	ld	a, EWRERR	; write error
+	ld		a, (WRKAREA.NUMBLOCKS)		; Get the number of requested blocks
+	sub		ixh							; subtract the number of remaining blocks
+	ld		b, a						; b=number of blocks read
+	ld		a, EWRERR					; write error
 	ret
 
 ;-----------------------------------------------------------------------------
@@ -638,105 +638,105 @@ isWrite:
 ; provided, not the leftmost.
 
 DEV_INFO:
-	inc	b
-	cp	a, 2		; only 1 device
-	jr	c, .ok
+	inc		b
+	cp		a, 2						; only 1 device
+	jr c,	.ok
 .error:
-	ld	a, 1		; error
+	ld		a, 1						; error
 	ret
 .ok:
  IF HWDS = 0
 	call	checkSWDS
-	jr	c, .error
+	jr c,	.error
  ENDIF
 	djnz	.noBasic
 
 ; Basic information:
-	ld	(hl), 1		; only 1 logical unit
-	xor	a		; reserved, must be 0
-	inc	hl
-	ld	(hl), a
-	ret			; return with A=0 (OK)
+	ld		(hl), 1						; only 1 logical unit
+	xor		a							; reserved, must be 0
+	inc		hl
+	ld		(hl), a
+	ret									; return with A=0 (OK)
 
 .noBasic:
 	push	hl
 	call	getCIDaddr
-	pop	hl
+	pop		hl
 
 	djnz	.noManuf
 ; Manufacturer Name:
-	push	hl		; save buffer pointer
-	ld	b, 64		; fill with SPACE char
-	ld	a, ' '
+	push	hl							; save buffer pointer
+	ld		b, 64						; fill with SPACE char
+	ld		a, ' '
 .loop1:
-	ld	(hl), a
-	inc	hl
+	ld		(hl), a
+	inc		hl
 	djnz	.loop1
-	pop	de		; restore buffer pointer in DE
-	ld	a, '('		; put brackets
-	ld	(de), a
-	inc	de
-	ld	a, (ix)		; manufacturer ID
+	pop		de							; restore buffer pointer in DE
+	ld		a, '('						; put brackets
+	ld		(de), a
+	inc		de
+	ld		a, (ix)						; manufacturer ID
 	call	DecToAscii
-	ld	a, ')'
-	ld	(de), a
-	inc	de
-	ld	a, ' '
-	ld	(de), a
-	inc	de
-	ld	a, (ix)		; manufacturer ID
+	ld		a, ')'
+	ld		(de), a
+	inc		de
+	ld		a, ' '
+	ld		(de), a
+	inc		de
+	ld		a, (ix)						; manufacturer ID
 	call	findManStr
-	ldir			; copy manufacturer name
+	ldir								; copy manufacturer name
 	ret
 
 .noManuf:
 	djnz	.noProduct
 ; Product Name:
-	push	hl		; save buffer pointer
+	push	hl							; save buffer pointer
 	push	ix
-	pop	hl		; HL <- IX
-	ld	d, 0
-	ld	e, 3		; add productname offset
-	add	hl, de
-	pop	de		; restore buffer pointer in DE
-	ld	bc, 5		; 5 chars
-	ldir			; copy product name
-	ex	de, hl
-	ld	b, 59		; space padding
-	ld	a, ' '
+	pop		hl							; HL <- IX
+	ld		d, 0
+	ld		e, 3						; add productname offset
+	add		hl, de
+	pop		de							; restore buffer pointer in DE
+	ld		bc, 5						; 5 chars
+	ldir								; copy product name
+	ex		de, hl
+	ld		b, 59						; space padding
+	ld		a, ' '
 .loop2:
-	ld	(hl), a
-	inc	hl
+	ld		(hl), a
+	inc		hl
 	djnz	.loop2
-	xor	a		; no errors
+	xor		a							; no errors
 	ret
 
 .noProduct:
 ; Serial Number:
-	ld	(hl), '0'	; put prefix "0x"
-	inc	hl
-	ld	(hl), 'x'
-	inc	hl
-	push	hl		; save buffer pointer
+	ld		(hl), '0'					; put prefix "0x"
+	inc		hl
+	ld		(hl), 'x'
+	inc		hl
+	push	hl							; save buffer pointer
 	push	ix
-	pop	hl		; HL <- IX
-	ld	d, 0
-	ld	e, 9		; add serial offset
-	add	hl, de
-	pop	de		; restore buffer pointer in DE
-	ld	b, 4		; 4 bytes size
+	pop		hl							; HL <- IX
+	ld		d, 0
+	ld		e, 9						; add serial offset
+	add		hl, de
+	pop		de							; restore buffer pointer in DE
+	ld		b, 4						; 4 bytes size
 .loop3:
-	ld	a, (hl)
+	ld		a, (hl)
 	call	HexToAscii
-	inc	hl
+	inc		hl
 	djnz	.loop3
-	ld	b, 54		; space padding
-	ld	a, ' '
+	ld		b, 54						; space padding
+	ld		a, ' '
 .loop4:
-	ld	(de), a
-	inc	de
+	ld		(de), a
+	inc		de
 	djnz	.loop4
-	xor	a		; no errors
+	xor		a							; no errors
 	ret
 
 ;-----------------------------------------------------------------------------
@@ -769,48 +769,48 @@ DEV_INFO:
 ; DEV_STATUS itself. Please read the Driver Developer Guide for more info.
 
 DEV_STATUS:
-	cp	a, 2		; only 1 device
-	jr	nc, .error
-	dec	b		; only 1 logical unit
-	jr	nz, .error
-	ld	(WRKAREA.NUMSD),a
+	cp		a, 2						; only 1 device
+	jr nc,	.error
+	dec		b							; only 1 logical unit
+	jr nz,	.error
+	ld		(WRKAREA.NUMSD),a
  IF HWDS = 0
-	ld	a, (WRKAREA.FLAGS)
-	and	1
-	jr	z, .nochange
-	call	detectCard	; try redetect
-	jr	c, .withError
-	ld	a, (WRKAREA.FLAGS)
-	and	$FE
-	ld	(WRKAREA.FLAGS), a
-	jr	.changed
+	ld		a, (WRKAREA.FLAGS)
+	and		1
+	jr z,	.nochange
+	call	detectCard					; try redetect
+	jr c,	.withError
+	ld		a, (WRKAREA.FLAGS)
+	and		$FE
+	ld		(WRKAREA.FLAGS), a
+	jr		.changed
  ELSE
-	in	a, (PORTCTL)	; destructive read
-	ld	b, a
-	and	$02		; SD card present?
-	jr	nz, .error		; no
-	ld	a, b
-	and	$01		; changed?
-	jr	nz, .changed	; yes
+	in		a, (PORTCTL)				; destructive read
+	ld		b, a
+	and		$02							; SD card present?
+	jr nz,	.error						; no
+	ld		a, b
+	and		$01							; changed?
+	jr nz,	.changed					; yes
  ENDIF
 
 .nochange:
-	ld	a, 1		; SD card is ok and has not changed
+	ld		a, 1						; SD card is ok and has not changed
 	ret
 .changed:
-	call	detectCard	; Try redetect
-	jr	c, .error
+	call	detectCard					; Try redetect
+	jr c,	.error
 .changed2:
-	ld	a, 2		; SD card is ok and has changed
+	ld		a, 2						; SD card is ok and has changed
 	ret
 
  IF HWDS = 0
 .withError:
-	call	marcaErroCartao	; marcar erro do cartao nas flags
+	call	marcaErroCartao				; marcar erro do cartao nas flags
  ENDIF
 
 .error:
-	xor	a		; error
+	xor		a							; error
 	ret
 
 ;-----------------------------------------------------------------------------
@@ -848,50 +848,50 @@ DEV_STATUS:
 ; For other types of device, these fields must be zero.
 
 LUN_INFO:
-	cp	a, 2		; only 1 device
-	jr	nc, .error
-	dec	b		; only 1 logical unit
-	jr	z, .ok
+	cp		a, 2						; only 1 device
+	jr nc,	.error
+	dec		b							; only 1 logical unit
+	jr z,	.ok
 .error:
-	ld	a, 1		; error
+	ld		a, 1						; error
 	ret
 .ok:
  IF HWDS = 0
 	call	checkSWDS
-	jr	c, .error
+	jr c,	.error
  ENDIF
 	exx
-	call	getBlockAddr	; IX=# blocks address
+	call	getBlockAddr				; IX=# blocks address
 	exx
-	xor	a
-	ld	(hl), a		; report as block device (00h)
-	inc	hl
-	ld	(hl), a		; block size: 512 bytes (0200h)
-	inc	hl
-	ld	(hl), 2
-	inc	hl
-	ld	a, (ix)		; copy # blocks
-	ld	(hl), a
-	inc	hl
-	ld	a, (ix+1)
-	ld	(hl), a
-	inc	hl
-	ld	a, (ix+2)
-	ld	(hl), a
-	inc	hl
-	ld	(hl), 0		; The highest byte must be set to 0, as SDcards
-				; have 24bit total block numbers, and Nextor
-				; requires 32bits.
-	inc	hl
-	ld	(hl),1		; flags: R/W, removable device
-	inc	hl
-	xor	a		; CHS = 0
-	ld	(hl), a
-	inc	hl
-	ld	(hl), a
-	inc	hl
-	ld	(hl), a
-	ret			; exit with A=0 (no errors)
+	xor		a
+	ld		(hl), a						; report as block device (00h)
+	inc		hl
+	ld		(hl), a						; block size: 512 bytes (0200h)
+	inc		hl
+	ld		(hl), 2
+	inc		hl
+	ld		a, (ix)						; copy # blocks
+	ld		(hl), a
+	inc		hl
+	ld		a, (ix+1)
+	ld		(hl), a
+	inc		hl
+	ld		a, (ix+2)
+	ld		(hl), a
+	inc		hl
+	ld		(hl), 0						; The highest byte must be set to 0, as SDcards
+										; have 24bit total block numbers, and Nextor
+										; requires 32bits.
+	inc		hl
+	ld		(hl),1						; flags: R/W, removable device
+	inc		hl
+	xor		a							; CHS = 0
+	ld		(hl), a
+	inc		hl
+	ld		(hl), a
+	inc		hl
+	ld		(hl), a
+	ret									; exit with A=0 (no errors)
 
 ;=====
 ;=====  END of DEVICE-BASED specific routines
@@ -909,13 +909,13 @@ LUN_INFO:
 ; Destroys AF
 ;------------------------------------------------
 checkSWDS:
-	ld	a, (WRKAREA.FLAGS)	; testar bit de erro do cartao nas flags
-	and	1
-	jr	z, .ok
-	scf			; indica erro
+	ld		a, (WRKAREA.FLAGS)			; testar bit de erro do cartao nas flags
+	and		1
+	jr z,	.ok
+	scf									; indica erro
 	ret
 .ok:
-	xor	a		; Cy = 0 indicates no error
+	xor		a							; Cy = 0 indicates no error
 	ret
 
 ;------------------------------------------------
@@ -923,9 +923,9 @@ checkSWDS:
 ; Destroi AF
 ;------------------------------------------------
 marcaErroCartao:
-	ld	a, (WRKAREA.FLAGS)	; marcar erro
-	or	1
-	ld	(WRKAREA.FLAGS), a
+	ld		a, (WRKAREA.FLAGS)			; marcar erro
+	or		1
+	ld		(WRKAREA.FLAGS), a
 	ret
 
  ENDIF
@@ -936,14 +936,14 @@ marcaErroCartao:
 ; Destroys AF, HL, IX
 ;------------------------------------------------
 getCIDaddr:
-	ld	hl, WRKAREA.BCID1
-	ld	a, (WRKAREA.NUMSD)
-	dec	a
-	jr	z, .c1
-	ld	hl, WRKAREA.BCID2
+	ld		hl, WRKAREA.BCID1
+	ld		a, (WRKAREA.NUMSD)
+	dec		a
+	jr z,	.c1
+	ld		hl, WRKAREA.BCID2
 .c1:
 	push	hl
-	pop	ix		; IX <- HL
+	pop		ix							; IX <- HL
 	ret
 
 ;------------------------------------------------
@@ -952,14 +952,14 @@ getCIDaddr:
 ; Destroys AF, HL, IX
 ;------------------------------------------------
 getBlockAddr:
-	ld	hl, WRKAREA.BLOCKS1
-	ld	a, (WRKAREA.NUMSD)
-	dec	a
-	jr	z, .c1
-	ld	hl, WRKAREA.BLOCKS2
+	ld		hl, WRKAREA.BLOCKS1
+	ld		a, (WRKAREA.NUMSD)
+	dec		a
+	jr z,	.c1
+	ld		hl, WRKAREA.BLOCKS2
 .c1:
 	push	hl
-	pop	ix		; IX <- HL
+	pop		ix							; IX <- HL
 	ret
 
 
@@ -979,31 +979,31 @@ detectCard:
 	ret	c									; exit if error
 	call	trySDV2							; try SDV2 initialization process
 	ret	c
-	ld	hl, WRKAREA.BCSD
-	ld	a, CMD9							; read CSD
+	ld		hl, WRKAREA.BCSD
+	ld		a, CMD9							; read CSD
 	call	readBlockCxD
 	ret	c
 	call	getCIDaddr
-	ld	a, CMD10						; read CID
+	ld		a, CMD10						; read CID
 	call	readBlockCxD
 	ret	c
-	ld	a, CMD58						; read OCR
-	ld	de, 0
+	ld		a, CMD58						; read OCR
+	ld		de, 0
 	call	SD_SEND_CMD_2_ARGS_GET_R3
 	ret	c
-	ld	a, b							; CCS bit of OCR register reports SDV1 or SDV2
-	and	$40
-	ld	(ix+15), a						; put SD card version (V1 ou V2) in the byte 15 of CID
-	call	z, set512bytesBlocks		; if is not SDV2 (Block address - SDHC ou SDXD) changes
-	ret	c									; block size to 512 bytes
+	ld		a, b							; CCS bit of OCR register reports SDV1 or SDV2
+	and		$40
+	ld		(ix+15), a						; put SD card version (V1 ou V2) in the byte 15 of CID
+	call z,	set512bytesBlocks		; if is not SDV2 (Block address - SDHC ou SDXD) changes
+	ret c									; block size to 512 bytes
 	call	disableCards
 	call	getBlockAddr
-	ld	hl, WRKAREA.BCSD+5
-	ld	a, (WRKAREA.BCSD)
-	and	$C0								; checks CSD register version
-	jr	z, .CSD1calc
-	cp	$40
-	jr	z, .CSD2calc
+	ld		hl, WRKAREA.BCSD+5
+	ld		a, (WRKAREA.BCSD)
+	and		$C0								; checks CSD register version
+	jr z,	.CSD1calc
+	cp		$40
+	jr z,	.CSD2calc
 	scf										; CSD register version was not recognized, report error
 	ret
 
@@ -1011,134 +1011,134 @@ detectCard:
 ; Calculates CSD version 1
 ; -----------------------------------
 .CSD1calc:
-	ld	a, (hl)
-	and	$0F								; mask READ_BL_LEN
+	ld		a, (hl)
+	and		$0F								; mask READ_BL_LEN
 	push	af								; save READ_BL_LEN
-	inc	hl
-	ld	a, (hl)							; mask 2 LSB bits of C_SIZE
-	and	3
-	ld	d, a
-	inc	hl
-	ld	e, (hl)							; next 8 bits of C_SIZE
-	inc	hl
-	ld	a, (hl)
-	and	$C0								; mask 2 MSB bits of C_SIZE
-	add	a, a							; rotate left
-	rl	e								; rotate to DE
-	rl	d
-	add	a, a
-	rl	e
-	rl	d
-	inc	de								; now DE contains all 12 bits of C_SIZE. Increment it
-	inc	hl
-	ld	a, (hl)							; next byte
-	and	3								; mask 2 LSB bits of C_SIZE_MUL
-	ld	b, a
-	inc	hl
-	ld	a, (hl)							; next byte
-	and	$80								; mask 1 MSB bit of C_SIZE_MUL
-	add	a, a
-	rl	b
-	inc	b								; now B contains all 3 bits of C_SIZE_MUL
-	inc	b								; B <= C_SIZE_MUL + 2
-	pop	af								; restore READ_BL_LEN
-	add	a, b							; A <= READ_BL_LEN + (C_SIZE_MUL+2)
-	ld	bc, 0
+	inc		hl
+	ld		a, (hl)							; mask 2 LSB bits of C_SIZE
+	and		3
+	ld		d, a
+	inc		hl
+	ld		e, (hl)							; next 8 bits of C_SIZE
+	inc		hl
+	ld		a, (hl)
+	and		$C0								; mask 2 MSB bits of C_SIZE
+	add		a, a							; rotate left
+	rl		e								; rotate to DE
+	rl		d
+	add		a, a
+	rl		e
+	rl		d
+	inc		de								; now DE contains all 12 bits of C_SIZE. Increment it
+	inc		hl
+	ld		a, (hl)							; next byte
+	and		3								; mask 2 LSB bits of C_SIZE_MUL
+	ld		b, a
+	inc		hl
+	ld		a, (hl)							; next byte
+	and		$80								; mask 1 MSB bit of C_SIZE_MUL
+	add		a, a
+	rl		b
+	inc		b								; now B contains all 3 bits of C_SIZE_MUL
+	inc		b								; B <= C_SIZE_MUL + 2
+	pop		af								; restore READ_BL_LEN
+	add		a, b							; A <= READ_BL_LEN + (C_SIZE_MUL+2)
+	ld		bc, 0
 	call	.eleva2
-	ld	e, d							; (BC DE) contains bytes size of SD card
-	ld	d, c							; divide (BC DE) by 256
-	ld	c, b
-	ld	b, 0
-	srl	c
-	rr	d
-	rr	e								; (BC DE) <= (BC DE) / 2 (converts total bytes to 512-byte blocks)
+	ld		e, d							; (BC DE) contains bytes size of SD card
+	ld		d, c							; divide (BC DE) by 256
+	ld		c, b
+	ld		b, 0
+	srl		c
+	rr		d
+	rr		e								; (BC DE) <= (BC DE) / 2 (converts total bytes to 512-byte blocks)
 .saveBlocks:
-	ld	(ix+2), c
-	ld	(ix+1), d
-	ld	(ix), e
-	xor	a								; Cy = 0
+	ld		(ix+2), c
+	ld		(ix+1), d
+	ld		(ix), e
+	xor		a								; Cy = 0
 	ret
 
 .eleva2:									; in: A = (READ_BL_LEN + (C_SIZE_MUL+2))
 											; BC = 0
 											; DE = C_SIZE
-	sla	e								; rotate C_SIZE by 'A' times
-	rl	d
-	rl	c
-	rl	b
-	dec	a								; decrement
-	jr	nz, .eleva2
+	sla		e								; rotate C_SIZE by 'A' times
+	rl		d
+	rl		c
+	rl		b
+	dec		a								; decrement
+	jr nz,	.eleva2
 	ret
 
 ; -----------------------------------
 ; Calculates CSD version 2
 ; -----------------------------------
 .CSD2calc:
-	inc	hl								; HL pointer to BCSD+5, increment plus 2
-	inc	hl
-	ld	a, (hl)
-	and	$3F
-	ld	c, a
-	inc	hl
-	ld	d, (hl)
-	inc	hl
-	ld	e, (hl)
+	inc		hl								; HL pointer to BCSD+5, increment plus 2
+	inc		hl
+	ld		a, (hl)
+	and		$3F
+	ld		c, a
+	inc		hl
+	ld		d, (hl)
+	inc		hl
+	ld		e, (hl)
 	call	.inc32							; 32 bits increment
 	call	.desloca32						; * 512
 	call	.rotaciona24					; * 2
-	jp	.saveBlocks
+	jp		.saveBlocks
 
 .inc32:
-	inc	e
+	inc		e
 	ret	nz
-	inc	d
+	inc		d
 	ret	nz
-	inc	c
+	inc		c
 	ret	nz
-	inc	b
+	inc		b
 	ret
 
 .desloca32:
-	ld	b, c
-	ld	c, d
-	ld	d, e
-	ld	e, 0
+	ld		b, c
+	ld		c, d
+	ld		d, e
+	ld		e, 0
 .rotaciona24:
-	sla	d
-	rl	c
-	rl	b
+	sla		d
+	rl		c
+	rl		b
 	ret
 
 ; ------------------------------------------------
 ; for SDV1: sets 512-byte blocks
 ; ------------------------------------------------
 set512bytesBlocks:
-	ld	a, CMD16
-	ld	bc, 0
-	ld	de, 512
-	jp	SD_SEND_CMD_GET_ERROR
+	ld		a, CMD16
+	ld		bc, 0
+	ld		de, 512
+	jp		SD_SEND_CMD_GET_ERROR
 
 ; ------------------------------------------------
 ; Try to initialize an SDV2 card, if there is an
 ; error the card should be SDV1
 ; ------------------------------------------------
 trySDV2:
-	ld	a, CMD8
-	ld	de, $1AA
+	ld		a, CMD8
+	ld		de, $1AA
 	call	SD_SEND_CMD_2_ARGS_GET_R3
-	ld	hl, SD_SEND_CMD1
-	jr	c, .pula						; SD card declined CMD8, send CMD1 command
-	ld	hl, SD_SEND_ACMD41			; SD card accepted CMD8, send ACMD41 command
+	ld		hl, SD_SEND_CMD1
+	jr c,	.pula						; SD card declined CMD8, send CMD1 command
+	ld		hl, SD_SEND_ACMD41			; SD card accepted CMD8, send ACMD41 command
 .pula:
-	ld	bc, 120						; B <= 0, C <= 120: 30720 tries
+	ld		bc, 120						; B <= 0, C <= 120: 30720 tries
 .loop:
 	push	bc
 	call	.jumpHL
-	pop	bc
-	ret	nc
+	pop		bc
+	ret		nc
 	djnz	.loop
-	dec	c
-	jr	nz, .loop
+	dec		c
+	jr nz,	.loop
 	scf
 	ret
 .jumpHL:
@@ -1152,33 +1152,33 @@ readBlockCxD:
 	ret	c
 	call	WAIT_RESP_FE
 	ret	c
-	ld	c, PORTDATA
- .16	ini					; INI x16
-	in	a, (PORTDATA)
+	ld		c, PORTDATA
+	.16	ini					; INI x16
+	in		a, (PORTDATA)
 	nop
-	in	a, (PORTDATA)						; answer
-	or	a
-	jr	disableCards
+	in		a, (PORTDATA)						; answer
+	or		a
+	jr		disableCards
 
 ; ------------------------------------------------
 ; Algorithm to initialize an SD card
 ; Destroys AF, B, DE
 ; ------------------------------------------------
 initializeSD:
-	ld	a, $FF
-	out	(PORTCTL), a				; disable SD card
-	ld	b, 10						; send 80 clock pulses with SD card not selected
+	ld		a, $FF
+	out		(PORTCTL), a				; disable SD card
+	ld		b, 10						; send 80 clock pulses with SD card not selected
 .loop:
-	out	(PORTDATA), a
+	out		(PORTDATA), a
 	djnz	.loop
 	call	enableSD					; enable actual SD card
-	ld	b, 8						; 8 tries for CMD0
+	ld		b, 8						; 8 tries for CMD0
 SD_SEND_CMD0:
-	ld	a, CMD0						; first command: CMD0
-	ld	de, 0
+	ld		a, CMD0						; first command: CMD0
+	ld		de, 0
 	push	bc
 	call	SD_SEND_CMD_2_ARGS_TEST_BUSY
-	pop	bc
+	pop		bc
 	ret	nc								; SD card accepts CMD0, return
 	djnz	SD_SEND_CMD0
 	scf									; SD card not accepts CMD0, error
@@ -1190,36 +1190,36 @@ SD_SEND_CMD0:
 ; ------------------------------------------------
 disableCards:
 	push	af
-	ld	a, $FF
-	out	(PORTCTL), a
-	pop	af
+	ld		a, $FF
+	out		(PORTCTL), a
+	pop		af
 	ret
 
 ; ------------------------------------------------
 ; Send ACMD41 command
 ; ------------------------------------------------
 SD_SEND_ACMD41:
-	ld	a, CMD55
+	ld		a, CMD55
 	call	SD_SEND_CMD_NO_ARGS
-	ld	a, ACMD41
-	ld	bc, $4000
-	ld	d, c
-	ld	e, c
-	jr	SD_SEND_CMD_GET_ERROR
+	ld		a, ACMD41
+	ld		bc, $4000
+	ld		d, c
+	ld		e, c
+	jr		SD_SEND_CMD_GET_ERROR
 
 ; ------------------------------------------------
 ; Send CMD1 command. Carry flag indicates error
 ; Destroys AF, BC, DE
 ; ------------------------------------------------
 SD_SEND_CMD1:
-	ld	a, CMD1
+	ld		a, CMD1
 SD_SEND_CMD_NO_ARGS:
-	ld	bc, 0
-	ld	d, b
-	ld	e, c
+	ld		bc, 0
+	ld		d, b
+	ld		e, c
 SD_SEND_CMD_GET_ERROR:
 	call	SD_SEND_CMD
-	or	a
+	or		a
 	ret	z								; if A=0 is OK, return
 	; fall throw
 
@@ -1229,7 +1229,7 @@ SD_SEND_CMD_GET_ERROR:
 ; ------------------------------------------------
 setError:
 	scf
-	jr	disableCards
+	jr		disableCards
 
 ; ------------------------------------------------
 ; Enviar comando em A com 2 bytes de parametros
@@ -1238,12 +1238,12 @@ setError:
 ; Destroi AF, BC
 ; ------------------------------------------------
 SD_SEND_CMD_2_ARGS_TEST_BUSY:
-	ld	bc, 0
+	ld		bc, 0
 	call	SD_SEND_CMD
-	ld	b, a
-	and	$FE							; testar bit 0 (flag BUSY)
-	ld	a, b
-	jr	nz, setError				; BUSY em 1, informar erro
+	ld		b, a
+	and		$FE							; testar bit 0 (flag BUSY)
+	ld		a, b
+	jr		nz, setError				; BUSY em 1, informar erro
 	ret									; sem erros
 
 ; ------------------------------------------------
@@ -1257,16 +1257,16 @@ SD_SEND_CMD_2_ARGS_GET_R3:
 	ret	c
 	push	af
 	call	WAIT_RESP_NO_FF
-	ld	h, a
+	ld		h, a
 	call	WAIT_RESP_NO_FF
-	ld	l, a
+	ld		l, a
 	call	WAIT_RESP_NO_FF
-	ld	d, a
+	ld		d, a
 	call	WAIT_RESP_NO_FF
-	ld	e, a
-	ld	b, h
-	ld	c, l
-	pop	af
+	ld		e, a
+	ld		b, h
+	ld		c, l
+	pop		af
 	ret
 
 ; ------------------------------------------------
@@ -1277,34 +1277,34 @@ SD_SEND_CMD_2_ARGS_GET_R3:
 ; Destroi AF, BC
 ; ------------------------------------------------
 SD_SEND_CMD:
-	ex	af,af'
+	ex		af,af'
 	call	enableSD
-	ex	af,af'
-	out	(PORTDATA), a
+	ex		af,af'
+	out		(PORTDATA), a
 	push	af
-	ld	a, b
-	out	(PORTDATA), a
-	ld	a, c
+	ld		a, b
+	out		(PORTDATA), a
+	ld		a, c
 	nop
-	out	(PORTDATA), a
-	ld	a, d
+	out		(PORTDATA), a
+	ld		a, d
 	nop
-	out	(PORTDATA), a
-	ld	a, e
+	out		(PORTDATA), a
+	ld		a, e
 	nop
-	out	(PORTDATA), a
-	pop	af
-	cp	CMD0
-	ld	b, $95						; CRC para CMD0
-	jr	z, enviaCRC
-	cp	CMD8
-	ld	b, $87						; CRC para CMD8
-	jr	z, enviaCRC
-	ld	b, $FF						; CRC dummy
+	out		(PORTDATA), a
+	pop		af
+	cp		CMD0
+	ld		b, $95						; CRC para CMD0
+	jr		z, enviaCRC
+	cp		CMD8
+	ld		b, $87						; CRC para CMD8
+	jr		z, enviaCRC
+	ld		b, $FF						; CRC dummy
 enviaCRC:
-	ld	a, b
-	out	(PORTDATA), a
-;	jr	WAIT_RESP_NO_FF
+	ld		a, b
+	out		(PORTDATA), a
+;	jr		WAIT_RESP_NO_FF
 
 ; ------------------------------------------------
 ; Esperar que resposta do cartao seja diferente
@@ -1312,14 +1312,14 @@ enviaCRC:
 ; Destroi AF, BC
 ; ------------------------------------------------
 WAIT_RESP_NO_FF:
-	ld	bc, 100						; 25600 tentativas
+	ld		bc, 100						; 25600 tentativas
 .loop:
-	in	a, (PORTDATA)
-	cp	$FF							; testa $FF
+	in		a, (PORTDATA)
+	cp		$FF							; testa $FF
 	ret	nz								; sai se nao for $FF
 	djnz	.loop
-	dec	c
-	jr	nz, .loop
+	dec		c
+	jr		nz, .loop
 	ret
 
 ; ------------------------------------------------
@@ -1327,12 +1327,12 @@ WAIT_RESP_NO_FF:
 ; Destroi AF, B
 ; ------------------------------------------------
 WAIT_RESP_FE:
-	ld	b, 10						; 10 tentativas
+	ld		b, 10						; 10 tentativas
 .loop:
 	push	bc
 	call	WAIT_RESP_NO_FF				; esperar resposta diferente de $FF
-	pop	bc
-	cp	$FE							; resposta é $FE ?
+	pop		bc
+	cp		$FE							; resposta é $FE ?
 	ret	z								; sim, retornamos com carry=0
 	djnz	.loop
 	scf									; erro, carry=1
@@ -1344,14 +1344,14 @@ WAIT_RESP_FE:
 ; Destroi A, BC
 ; ------------------------------------------------
 WAIT_RESP_NO_00:
-	ld	bc, 128					; 32768 tentativas
+	ld		bc, 128					; 32768 tentativas
 .loop:
-	in	a, (PORTDATA)
-	or	a
+	in		a, (PORTDATA)
+	or		a
 	ret	nz								; se resposta for <> $00, sai
 	djnz	.loop
-	dec	c
-	jr	nz, .loop
+	dec		c
+	jr		nz, .loop
 	scf									; erro
 	ret
 
@@ -1360,10 +1360,10 @@ WAIT_RESP_NO_00:
 ; Nao destroi registradores
 ; ------------------------------------------------
 enableSD:
-	in	a, (PORTDATA)				; dummy read
-	ld	a, (WRKAREA.NUMSD)
+	in		a, (PORTDATA)				; dummy read
+	ld		a, (WRKAREA.NUMSD)
 	cpl
-	out	(PORTCTL), a
+	out		(PORTCTL), a
 	ret
 
 
@@ -1406,7 +1406,7 @@ writeBlock:
 	ld	a, $FC		; mandar $FC para indicar que os proximos dados
 	out	(c),a		; sao para gravacao
 	nop
- .512	outi		; OUTI x512
+	.512	outi		; OUTI x512
 	out	(c),a	; Send a dummy 16bit CRC
 	nop
 	out	(c),a
@@ -1444,7 +1444,7 @@ writeBlock:
 	ld	a, $FE		; mandar $FE para indicar que vamos mandar dados para gravacao
 	out	(c),a
 	nop
- .512	outi		; OUTI x512
+	.512	outi		; OUTI x512
 .part2s:
 	ld	a, $FF		; envia dummy CRC
 	out	(c),a
@@ -1502,7 +1502,7 @@ readBlock:
 	jr	terminaLeituraEscritaBloco
 .zFEok:
 	ld	c,PORTDATA
- .512	ini
+	.512	ini
 	in	a, (c)	; discard 16bit CRC
 	nop
 	in	a, (c)
@@ -1522,7 +1522,7 @@ readBlock:
 	jp	c,terminaLeituraEscritaBloco
 
 	ld	c,PORTDATA
- .512	ini
+	.512	ini
 .part2s:
 	in	a, (c)	; discard 16bit CRC
 	nop
@@ -1536,13 +1536,13 @@ readBlock:
 ; BC DE = (BC DE) * 512
 ; ------------------------------------------------
 blocoParaByte:
-	ld	b, c
-	ld	c, d
-	ld	d, e
-	ld	e, 0
-	sla	d
-	rl	c
-	rl	b
+	ld		b, c
+	ld		c, d
+	ld		d, e
+	ld		e, 0
+	sla		d
+	rl		c
+	rl		b
 	ret
 
 ; ==========================================================================
@@ -1554,12 +1554,12 @@ blocoParaByte:
 ; Destroi todos os registradores
 ; ------------------------------------------------
 printString:
-	ld	a, (de)
-	or	a
-	ret	z
+	ld		a, (de)
+	or		a
+	ret z
 	call	CHPUT
-	inc	de
-	jr	printString
+	inc		de
+	jr		printString
 
 
 ; ------------------------------------------------
@@ -1568,32 +1568,32 @@ printString:
 ; Destroi AF, BC, HL, DE
 ; ------------------------------------------------
 DecToAscii:
-	ld	iy, WRKAREA.TEMP
-	ld	h, 0
-	ld	l, a						; copiar A para HL
-	ld	(iy+0), 1					; flag para indicar que devemos cortar os zeros a esquerda
-	ld	bc, -100					; centenas
+	ld		iy, WRKAREA.TEMP
+	ld		h, 0
+	ld		l, a						; copiar A para HL
+	ld		(iy+0), 1					; flag para indicar que devemos cortar os zeros a esquerda
+	ld		bc, -100					; centenas
 	call	.num1
-	ld	c, -10						; dezenas
+	ld		c, -10						; dezenas
 	call	.num1
-	ld	(iy+0), 2					; unidade deve exibir 0 se for zero e nao corta-lo
-	ld	c, -1						; unidades
+	ld		(iy+0), 2					; unidade deve exibir 0 se for zero e nao corta-lo
+	ld		c, -1						; unidades
 .num1:
-	ld	a, '0'-1
+	ld		a, '0'-1
 .num2:
-	inc	a							; contar o valor em ascii de '0' a '9'
-	add	hl, bc						; somar com negativo
-	jr	c, .num2						; ainda nao zeramos
-	sbc	hl, bc						; retoma valor original
-	dec	(iy+0)						; se flag do corte do zero indicar para nao cortar, pula
-	jr	nz, .naozero
-	cp	'0'							; devemos cortar os zeros a esquerda. Eh zero?
-	jr	nz, .naozero
-	inc	(iy+0)						; se for zero, nao salvamos e voltamos a flag
+	inc		a							; contar o valor em ascii de '0' a '9'
+	add		hl, bc						; somar com negativo
+	jr c,	.num2						; ainda nao zeramos
+	sbc		hl, bc						; retoma valor original
+	dec		(iy+0)						; se flag do corte do zero indicar para nao cortar, pula
+	jr nz,	.naozero
+	cp		'0'							; devemos cortar os zeros a esquerda. Eh zero?
+	jr nz,	.naozero
+	inc		(iy+0)						; se for zero, nao salvamos e voltamos a flag
 	ret
 .naozero:
-	ld	(de), a						; eh zero ou eh outro numero, salvar
-	inc	de							; incrementa ponteiro de destino
+	ld		(de), a						; eh zero ou eh outro numero, salvar
+	inc		de							; incrementa ponteiro de destino
 	ret
 
 ; ------------------------------------------------
@@ -1602,7 +1602,7 @@ DecToAscii:
 ; Destroi AF, C, DE
 ; ------------------------------------------------
 HexToAscii:
-	ld	c, a
+	ld		c, a
 	rra
 	rra
 	rra
@@ -1610,13 +1610,13 @@ HexToAscii:
 	call	.conv
 	ld  	a, c
 .conv:
-	and	$0F
-	add	a, $90
+	and		$0F
+	add		a, $90
 	daa
-	adc	a, $40
+	adc		a, $40
 	daa
-	ld	(de), a
-	inc	de
+	ld		(de), a
+	inc		de
 	ret
 
 ; ------------------------------------------------
@@ -1625,33 +1625,33 @@ HexToAscii:
 ; Destroi AF, BC, HL, DE
 ; ------------------------------------------------
 printDecToAscii:
-	ld	h, 0
-	ld	l, a						; copiar A para HL
-	ld	b, 1						; flag para indicar que devemos cortar os zeros a esquerda
-	ld	de, -100					; centenas
+	ld		h, 0
+	ld		l, a						; copiar A para HL
+	ld		b, 1						; flag para indicar que devemos cortar os zeros a esquerda
+	ld		de, -100					; centenas
 	call	.num1
-	ld	e, -10						; dezenas
+	ld		e, -10						; dezenas
 	call	.num1
-	ld	b, 2						; unidade deve exibir 0 se for zero e nao corta-lo
-	ld	e, -1						; unidades
+	ld		b, 2						; unidade deve exibir 0 se for zero e nao corta-lo
+	ld		e, -1						; unidades
 .num1:
-	ld	a, '0'-1
+	ld		a, '0'-1
 .num2:
-	inc	a							; contar o valor em ascii de '0' a '9'
-	add	hl, de						; somar com negativo
-	jr	c, .num2						; ainda nao zeramos
-	sbc	hl, de						; retoma valor original
+	inc		a							; contar o valor em ascii de '0' a '9'
+	add		hl, de						; somar com negativo
+	jr c,	.num2						; ainda nao zeramos
+	sbc		hl, de						; retoma valor original
 	djnz	.naozero					; se flag do corte do zero indicar para nao cortar, pula
-	cp	'0'							; devemos cortar os zeros a esquerda. Eh zero?
-	jr	nz, .naozero
-	inc	b							; se for zero, nao imprimimos e voltamos a flag
+	cp		'0'							; devemos cortar os zeros a esquerda. Eh zero?
+	jr nz,	.naozero
+	inc		b							; se for zero, nao imprimimos e voltamos a flag
 	ret
 .naozero:
 	push	hl							; nao eh zero ou eh outro numero, imprimir
 	push	bc
 	call	CHPUT
-	pop	bc
-	pop	hl
+	pop		bc
+	pop		hl
 	ret
 
 ; ------------------------------------------------
@@ -1662,34 +1662,34 @@ printDecToAscii:
 ; Destroi AF, BC, HL
 ; ------------------------------------------------
 findManStr:
-	ld	c, a
-	ld	hl, tblFabricantes
+	ld		c, a
+	ld		hl, tblFabricantes
 
 .loop:
-	ld	a, (hl)
-	inc	hl
-	cp	c
-	jr	z, .achado
-	or	a
-	jr	z, .achado
+	ld		a, (hl)
+	inc		hl
+	cp		c
+	jr z,	.achado
+	or		a
+	jr z,	.achado
 	push	bc
 	call	.achado
-	add	hl, bc
-	inc	hl
-	pop	bc
-	jr	.loop
+	add		hl, bc
+	inc		hl
+	pop		bc
+	jr		.loop
 
 .achado:
-	ld	c, 0
+	ld		c, 0
 	push	hl
-	xor	a
+	xor		a
 .loop2:
-	inc	c
-	inc	hl
-	cp	(hl)
-	jr	nz, .loop2
-	pop	hl
-	ld	b, 0
+	inc		c
+	inc		hl
+	cp		(hl)
+	jr nz,	.loop2
+	pop		hl
+	ld		b, 0
 	ret
 
 ; ------------------------------------------------
