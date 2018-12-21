@@ -237,7 +237,15 @@ begin
 		-- I/O read port #00
 		z80_io_read('1',         addr_s, data_o_s, cs_n_s, rd_n_s);
 
-		wait for 5 us;
+		wait for 200 us;
+
+		-- Test INT generate
+		wait for 6 ms;
+	
+		-- I/O read port #00
+		z80_io_read('0',         addr_s, data_o_s, cs_n_s, rd_n_s);
+
+		wait for 6 ms;
 
 		-- wait
 		tb_end <= '1';
