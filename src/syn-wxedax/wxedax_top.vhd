@@ -139,6 +139,7 @@ architecture behavior of wxedax_top is
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
 	signal turbo_on_s			: std_logic;
+	signal clock_8m_s			: std_logic;
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
@@ -218,14 +219,21 @@ architecture behavior of wxedax_top is
 	signal bus_sltsl2_n_s	: std_logic;
 
 	-- JT51
-	signal jt51_cs_n_s		: std_logic							:= '1';
-	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_cs_n_s		: std_logic								:= '1';
+	signal jt51_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal jt51_hd_s			: std_logic								:= '0';
+	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic							:= '1';
-	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
+	signal opll_cs_n_s		: std_logic								:= '1';
+	signal opll_mo_s			: signed(12 downto 0)				:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)				:= (others => '0');
+
+	-- MIDI interface
+	signal midi_cs_n_s		: std_logic								:= '1';
+	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal midi_hd_s			: std_logic								:= '0';
 
 begin
 
@@ -235,7 +243,8 @@ begin
 		CLK_IN1	=> clock_48M_i,
 		CLK_OUT1	=> clock_master_s,		-- 21.429 MHz (6x NTSC)
 		CLK_OUT2	=> clock_sdram_s,			-- 85.716 MHz (4x master)
-		CLK_OUT3	=> sdram_clock_o			-- 85.716 MHz -90°
+		CLK_OUT3	=> sdram_clock_o,			-- 85.716 MHz -90°
+		CLK_OUT4	=> clock_8m_s				-- 8 MHz (for MIDI)
 	);
 
 	-- Clocks
@@ -612,6 +621,11 @@ begin
 	flashf_clk_o	<= spi_sclk_s;
 	flashf_cs_n_o	<= flspi_cs_n_s;
 
+	-- Peripheral BUS control
+	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
+							   midi_data_from_s	when midi_hd_s = '1'	else
+								(others => '1');
+	
 	ptjt: if per_jt51_g generate
 		-- JT51 tests
 		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
@@ -625,7 +639,8 @@ begin
 			wr_n_i			=> bus_wr_n_s,
 			rd_n_i			=> bus_rd_n_s,
 			data_i			=> bus_data_to_s,
-			data_o			=> bus_data_from_s,
+			data_o			=> jt51_data_from_s,
+			has_data_o		=> jt51_hd_s,
 			ct1_o				=> open,
 			ct2_o				=> open,
 			irq_n_o			=> open,
@@ -661,6 +676,27 @@ begin
 		);
 	end generate;
 
+	-- MIDI
+	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111111" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7E - 0x7F
+
+	-- MIDI interface
+	midi: entity work.midiIntf
+	port map (
+		clock_i			=> clock_8m_s,
+		reset_i			=> reset_s,
+		addr_i			=> bus_addr_s(0),
+		cs_n_i			=> midi_cs_n_s,
+		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
+		data_i			=> bus_data_to_s,
+		data_o			=> midi_data_from_s,
+		has_data_o		=> midi_hd_s,
+		-- Outs
+		int_n_o			=> open,
+		tx_o				=> open
+	);
+
+	
 	-- DEBUG
 	leds_n_o(0) <= '1';--sdspi_cs_n_s;
 	leds_n_o(1) <= '1';--flspi_cs_n_s;

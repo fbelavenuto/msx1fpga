@@ -49,6 +49,7 @@ entity jt51_wrapper is
 		rd_n_i			: in  std_logic;
 		data_i			: in  std_logic_vector( 7 downto 0);
 		data_o			: out std_logic_vector( 7 downto 0);
+		has_data_o		: out std_logic;
 		ct1_o				: out std_logic;
 		ct2_o				: out std_logic;
 		irq_n_o			: out std_logic;
@@ -125,6 +126,7 @@ begin
 
 	data_o	<= jt51_data_from_s when cs_n_i = '0' and rd_n_i = '0' and addr_i = '1'	else
 					(others => '1');
+	has_data_o	<= '1' when  cs_n_i = '0' and rd_n_i = '0' and addr_i = '1'	else '0';
 
 
 end architecture;

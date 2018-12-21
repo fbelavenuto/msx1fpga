@@ -3,6 +3,8 @@ I/O map (in hex):
 
 20-21		JT51 OPM clone (configurable)
 40-4F		Switched I/O ports
+7C-7D		VM2413 (if OPLL enabled)
+7E-7F		MIDI interface (custom by FBLabs)
 90-91		Printer
 98-9A		VDP TMS9918 (with extensions)
 9E-9F		(new) MMC/SD ports

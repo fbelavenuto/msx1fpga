@@ -355,3 +355,6 @@ greybox_tmp
 /src/audio/i2st_tb/transcript
 /src/audio/i2st_tb/vsim.wlf
 /src/audio/i2st_tb/work
+/src/peripheral/tb_midiIntf/transcript
+/src/peripheral/tb_midiIntf/vsim.wlf
+/src/peripheral/tb_midiIntf/work
