@@ -217,6 +217,8 @@ architecture behavior of wxedax_top is
 	signal bus_mreq_n_s		: std_logic;
 	signal bus_sltsl1_n_s	: std_logic;
 	signal bus_sltsl2_n_s	: std_logic;
+	signal bus_int_n_s		: std_logic;
+	signal bus_wait_n_s		: std_logic;
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic								:= '1';
@@ -234,6 +236,8 @@ architecture behavior of wxedax_top is
 	signal midi_cs_n_s		: std_logic								:= '1';
 	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
 	signal midi_hd_s			: std_logic								:= '0';
+	signal midi_wait_n_s		: std_logic								:= '1';
+	signal midi_int_n_s		: std_logic								:= '1';
 
 begin
 
@@ -310,9 +314,9 @@ begin
 		bus_mreq_n_o	=> bus_mreq_n_s,
 		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
 		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
-		bus_wait_n_i	=> '1',
+		bus_wait_n_i	=> bus_wait_n_s,
 		bus_nmi_n_i		=> '1',
-		bus_int_n_i		=> '1',
+		bus_int_n_i		=> bus_int_n_s,
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
 		vram_data_i		=> vram_do_s,
@@ -625,6 +629,8 @@ begin
 	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
 							   midi_data_from_s	when midi_hd_s = '1'	else
 								(others => '1');
+	bus_wait_n_s	<= midi_wait_n_s;
+	bus_int_n_s		<= midi_int_n_s;
 	
 	ptjt: if per_jt51_g generate
 		-- JT51 tests
@@ -692,7 +698,8 @@ begin
 		data_o			=> midi_data_from_s,
 		has_data_o		=> midi_hd_s,
 		-- Outs
-		int_n_o			=> open,
+		int_n_o			=> midi_int_n_s,
+		wait_n_o			=> midi_wait_n_s,
 		tx_o				=> open
 	);
 
