@@ -700,7 +700,7 @@ begin
 		-- Outs
 		int_n_o			=> midi_int_n_s,
 		wait_n_o			=> midi_wait_n_s,
-		tx_o				=> open
+		tx_o				=> uart_tx_o
 	);
 
 	

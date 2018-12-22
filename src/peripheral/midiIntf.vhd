@@ -41,7 +41,8 @@
 -- Custom by FBLabs
 -- Ports:
 -- 0 = Control (W) / Status (R)
---     b7 = Int enable / Int flag
+--     b7 = Int flag(R)
+--     b0 = Int enable(R/W)
 --     
 -- 1 = Data (W)
  
@@ -69,28 +70,34 @@ end entity;
 
 architecture rtl of midiIntf is
 
+	type states is (stIdle, stStart, stData, stStop);
 	signal enable_s		: std_logic;
 	signal port0_r_s		: std_logic;
+	signal port1_w_s		: std_logic;
+	signal ff_q				: std_logic;
+	signal ff_clr_s		: std_logic;
 	signal status_s		: std_logic_vector( 7 downto 0);
 	signal int_en_q		: std_logic;
 	signal int_n_s			: std_logic;
 	signal wait_n_s		: std_logic;
-	signal baudr_cnt_q	: unsigned(10 downto 0);
-	signal baudr_clk_s	: std_logic;
+	signal baudr_cnt_q	: integer range 0 to 256;
+	signal bit_cnt_q		: integer range 0 to 8;
 	signal intcnt_q		: unsigned(15 downto 0);
-	signal bitcnt_s		: unsigned( 3 downto 0);
+	signal state_s			: states;
 	signal shift_q			: std_logic_vector( 7 downto 0);
+	signal tx_s				: std_logic;
 
 begin
 
 	enable_s		<= '1' when cs_n_i = '0' and (wr_n_i = '0' or rd_n_i = '0')	else '0';
 
 	port0_r_s	<= '1' when enable_s = '1' and addr_i = '0' and rd_n_i = '0'	else '0';
+	port1_w_s	<= '1' when enable_s = '1' and addr_i = '1' and wr_n_i = '0'	else '0';
 
 	-- Port reading
 	has_data_o	<= port0_r_s;
 
-	data_o <=	status_s	when port0_r_s = '1'										else
+	data_o <=	status_s	when port0_r_s = '1'								else
 					(others => '1');
 
 	status_s <= not int_n_s & "000000" & int_en_q;
@@ -128,72 +135,83 @@ begin
 		end if;
 	end process;
 
-	-- Baud Rate generator
-	process (reset_i, clock_i)
+	-- Acess TX detection
+	-- flip-flop
+	process(reset_i, ff_clr_s, port1_w_s)
 	begin
-		if reset_i = '1' then
-		elsif rising_edge(clock_i) then
+		if reset_i = '1' or ff_clr_s = '1' then
+			ff_q	<= '0';
+		elsif rising_edge(port1_w_s) then
+			ff_q	<= '1';
 		end if;
 	end process;
 
 	-- Serial TX
 	process(reset_i, clock_i)
 		variable edge_v	: std_logic_vector(1 downto 0);
-		variable wr_v		: std_logic;
 	begin		
 		if reset_i = '1' then
-			baudr_cnt_q <= (others => '0');
+			baudr_cnt_q <= 0;
 			shift_q		<= (others => '1');
-			bitcnt_s		<= (others => '0');
-			tx_o			<= '1';
+			bit_cnt_q	<= 0;
+			tx_s			<= '1';
 			wait_n_s		<= '1';
+			state_s		<= stIdle;
 		elsif rising_edge(clock_i) then
-			baudr_clk_s	<= '0';
-			edge_v := edge_v(0) & (enable_s and addr_i and not wr_n_i);
-			if edge_v = "01" then
-				wr_v := '1';
-				if bitcnt_s = 0 then
-					baudr_cnt_q <= (others => '0');
-					baudr_clk_s	<= '1';
-				else
-					wait_n_s	<= '0';
-				end if;
+
+			ff_clr_s <= '0';
+
+			if ff_q = '1' and state_s /= stIdle then
+				wait_n_s	<= '0';
 			end if;
 
-			if baudr_cnt_q = 128 then
-				baudr_cnt_q <= (others => '0');
-				baudr_clk_s	<= '1';
-			else
-				baudr_cnt_q <= baudr_cnt_q + 1;
-			end if;
+			case state_s is
+				when stIdle =>
+					if ff_q = '1' then
+						shift_q		<= data_i;
+						bit_cnt_q	<= 0;
+						baudr_cnt_q	<= 0;
+						state_s		<= stStart;
+						ff_clr_s		<= '1';
+						wait_n_s		<= '1';
+					end if;
 
-			if baudr_clk_s = '1' then
-				case bitcnt_s is
-					when "0000" =>
-						-- Idle - check for a bus access
-						if wr_v = '1' then
-							shift_q	<= data_i;
-							tx_o		<= '0';						-- Start bit
-							bitcnt_s	<= bitcnt_s + 1;
-							wr_v		:= '0';
-							wait_n_s	<= '1';
-						end if;
-					when	"0001" | "0010" | "0011" | "0100" | 
-							"0101" | "0110" | "0111" | "1000" =>
-						tx_o		<= shift_q(0);
+				when stStart =>
+					tx_s		<= '0';						-- Start bit
+					if baudr_cnt_q = 255 then
+						baudr_cnt_q <= 0;
+						state_s		<= stData;
+					else
+						baudr_cnt_q <= baudr_cnt_q + 1;
+					end if;
+				when stData =>
+					tx_s	<= shift_q(0);
+					if baudr_cnt_q = 255 then
+						baudr_cnt_q <= 0;
 						shift_q	<= '1' & shift_q(7 downto 1);
-						bitcnt_s <= bitcnt_s + 1;
-					when "1001" =>
-						tx_o		<= '1';							-- Stop bit
-						bitcnt_s	<= (others => '0');
-					when others =>
-						null;
-				end case;
-			end if;
+						if bit_cnt_q = 7 then
+							state_s		<= stStop;
+						else
+							bit_cnt_q <= bit_cnt_q + 1;
+						end if;
+					else
+						baudr_cnt_q <= baudr_cnt_q + 1;
+					end if;
+				when stStop =>
+					tx_s		<= '1';							-- Stop bit
+					if baudr_cnt_q = 255 then
+						baudr_cnt_q <= 0;
+						state_s		<= stIdle;
+					else
+						baudr_cnt_q <= baudr_cnt_q + 1;
+					end if;
+			end case;
+
 		end if;
 	end process;
 
 	int_n_o	<= int_n_s;
 	wait_n_o	<= wait_n_s;
+	tx_o		<= not tx_s;
 
 end architecture;

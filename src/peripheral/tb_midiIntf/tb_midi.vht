@@ -89,6 +89,7 @@ architecture testbench of tb is
 	constant clock25_period_c	: time	:= 40.00 ns;
 	constant clock10_period_c	: time	:= 93.34 ns;
 	constant clock8_period_c	: time	:= 125 ns;
+	constant clock7_period_c	: time	:= 139.68 ns;
 	constant clock3_period_c	: time	:= 279.35 ns;
 
 	procedure z80_io_read(
@@ -169,9 +170,9 @@ begin
 			wait;
 		end if;
 		clock_cpu_s <= '0';
-		wait for clock3_period_c / 2;
+		wait for clock7_period_c / 2;
 		clock_cpu_s <= '1';
-		wait for clock3_period_c / 2;
+		wait for clock7_period_c / 2;
 	end process;
 
 
@@ -208,7 +209,7 @@ begin
 		wait for 100 ns;
 		reset_s		<= '0';
 
-		wait for 10 us;
+		wait for 1 us;
 
 		-- I/O read port #00
 		z80_io_read('0',         addr_s, data_o_s, cs_n_s, rd_n_s);
