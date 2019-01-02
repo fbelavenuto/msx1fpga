@@ -358,3 +358,7 @@ greybox_tmp
 /src/peripheral/tb_midiIntf/transcript
 /src/peripheral/tb_midiIntf/vsim.wlf
 /src/peripheral/tb_midiIntf/work
+/synth/wxedax/*.debug
+/synth/wxedax/planAhead_run_1
+/synth/wxedax/planAhead_run_2
+/synth/wxedax/planAhead_run_3

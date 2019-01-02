@@ -104,9 +104,10 @@ architecture Behavior of swioports is
 	signal mapper_q			: std_logic_vector(1 downto 0);
 	signal turbo_on_q			: std_logic								:= '0';
 	signal softreset_q		: std_logic								:= '0';
-	signal spulse_o_s			: std_logic								:= '0';
-	signal spulse_a_s			: std_logic								:= '0';
+	signal spulse_r_s			: std_logic_vector(1 downto 0)	:= (others => '0');
+	signal spulse_w_s			: std_logic_vector(1 downto 0)	:= (others => '0');
 	signal keyfifo_r_s		: std_logic								:= '0';
+	signal keyfifo_w_s		: std_logic								:= '0';
 	signal keyfifo_data_s	: std_logic_vector(7 downto 0);
 	signal keyfifo_empty_s	: std_logic;
 	signal keyfifo_full_s	: std_logic;
@@ -129,7 +130,7 @@ begin
 	port map (
 		clock_i		=> clock_i,
 		reset_i		=> reset_i,
-		write_en_i	=> keyb_valid_i,
+		write_en_i	=> keyfifo_w_s,
 		data_i		=> keyb_data_i,
 		read_en_i	=> keyfifo_r_s,
 		data_o		=> keyfifo_data_s,
@@ -137,7 +138,8 @@ begin
 		full_o		=> keyfifo_full_s
 	);
 
-	keyfifo_r_s	<= '1' when spulse_a_s = '1' and spulse_o_s = '0'	else '0';
+	keyfifo_r_s	<= '1' when spulse_r_s = "01"	else '0';
+	keyfifo_w_s	<= '1' when spulse_w_s = "01"	else '0';
 	
 	-- Maker ID
 	process (reset_i, clock_cpu_i)
@@ -301,18 +303,18 @@ begin
 		end if;
 	end process;
 
-	-- early FIFO pulse read
+	-- Detect edges for reading and writing FIFO
 	process (reset_i, clock_i)
 	begin
 		if reset_i = '1' then
-			spulse_a_s	<= '0';
-			spulse_o_s	<= '0';
+			spulse_r_s	<= (others => '0');
+			spulse_w_s	<= (others => '0');
 		elsif rising_edge(clock_i) then
-			spulse_o_s			<= spulse_a_s;
-			spulse_a_s			<= '0';
+			spulse_w_s		<= spulse_w_s(0) & keyb_valid_i;
+			spulse_r_s		<= spulse_r_s(0) & '0';
 			if cs_i = '1' and rd_i = '1' and maker_id_s = MYMKID_C and addr_i = X"49" then
 				if reg_addr_q = X"0C" then
-					spulse_a_s			<= '1';
+					spulse_r_s(0)	<= '1';
 				end if;
 			end if;
 		end if;

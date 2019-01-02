@@ -271,17 +271,29 @@ void showRegs()
 /******************************************************************************/
 void scancodes()
 {
-	puts("Showing PS/2 scancodes (reset to exit).\r\n");
+	unsigned char f;
+	puts("Showing PS/2 scancodes:\r\n");
 	
-	SWIOP_REGNUM = REG_FIFOSTAT;
 	do {
+		SWIOP_REGNUM = REG_FIFODATA;
+		c = SWIOP_REGVAL;
+		SWIOP_REGNUM = REG_FIFOSTAT;
 		c = SWIOP_REGVAL;
 	} while ((c & FIFO_EMPTY) == 0);
+	f = 0;
 	while (1) {
 		SWIOP_REGNUM = REG_FIFOSTAT;
-		do {
+		while (1) {
 			c = SWIOP_REGVAL;
-		} while ((c & FIFO_EMPTY) != 0);
+			if ((c & FIFO_EMPTY) == 0) {
+				break;
+			}
+			f = 1;
+		};
+		if (f == 1) {
+			f = 0;
+			puts("\r\n");
+		}
 		SWIOP_REGNUM = REG_FIFODATA;
 		c = SWIOP_REGVAL;
 		puts("0x");

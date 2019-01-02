@@ -42,6 +42,7 @@
 -- Ports:
 -- 0 = Control (W) / Status (R)
 --     b7 = Int flag(R)
+--     b1 = Busy flag
 --     b0 = Int enable(R/W)
 --     
 -- 1 = Data (W)
@@ -70,13 +71,16 @@ end entity;
 
 architecture rtl of midiIntf is
 
-	type states is (stIdle, stStart, stData, stStop);
+	type states is (stIdle, stClear, stStart, stData, stStop);
 	signal enable_s		: std_logic;
 	signal port0_r_s		: std_logic;
 	signal port1_w_s		: std_logic;
 	signal ff_q				: std_logic;
 	signal ff_clr_s		: std_logic;
+	signal start_s			: std_logic;
 	signal status_s		: std_logic_vector( 7 downto 0);
+	signal databuf_q		: std_logic_vector( 7 downto 0);
+	signal busy_s			: std_logic;
 	signal int_en_q		: std_logic;
 	signal int_n_s			: std_logic;
 	signal wait_n_s		: std_logic;
@@ -100,49 +104,56 @@ begin
 	data_o <=	status_s	when port0_r_s = '1'								else
 					(others => '1');
 
-	status_s <= not int_n_s & "000000" & int_en_q;
+	busy_s	<= '1' when state_s /= stIdle	else '0';
+	status_s <= not int_n_s & "00000" & busy_s & int_en_q;
 
-	-- Control port
+	-- Control port, interrupt count and int flag clear
 	process (reset_i, clock_i)
 	begin
 		if reset_i = '1' then
 			int_en_q <= '0';
-		elsif rising_edge(clock_i) then
-			if enable_s = '1' and addr_i = '0' and wr_n_i = '0'  then
-				int_en_q	<= data_i(0);
-			end if;
-		end if;
-	end process;
-
-	-- Interrupt count and int flag clear
-	process (reset_i, clock_i)
-		variable edge_v	: std_logic_vector(1 downto 0);
-	begin
-		if reset_i = '1' or int_en_q = '0' then
 			intcnt_q	<= (others => '0');
 			int_n_s	<= '1';
 		elsif rising_edge(clock_i) then
-			if intcnt_q = 40000 then
+			if int_en_q = '0' then
+				intcnt_q <= (others => '0');
+				int_n_s <= '1';
+			elsif intcnt_q = 40000 then			-- 200 Hz, 5ms
 				intcnt_q <= (others => '0');
 				int_n_s <= '0';
 			else
 				intcnt_q <= intcnt_q + 1;
 			end if;
-			edge_v := edge_v(0) & port0_r_s;
-			if edge_v = "10" then
-				int_n_s <= '1';
+
+			if enable_s = '1' and addr_i = '0' and wr_n_i = '0'  then
+				int_en_q	<= data_i(0);
+				int_n_s	<= '1';
 			end if;
 		end if;
 	end process;
 
 	-- Acess TX detection
 	-- flip-flop
-	process(reset_i, ff_clr_s, port1_w_s)
+	process(ff_clr_s, clock_i)
 	begin
 		if reset_i = '1' or ff_clr_s = '1' then
 			ff_q	<= '0';
+		elsif rising_edge(clock_i) then
+			ff_q	<= start_s;
+		end if;
+	end process;
+
+	-- Write port 1
+	process (reset_i, ff_clr_s, port1_w_s)
+	begin
+		if reset_i = '1' or ff_clr_s = '1' then
+			databuf_q	<= (others => '0');
+			start_s		<= '0';
 		elsif rising_edge(port1_w_s) then
-			ff_q	<= '1';
+			if wr_n_i = '0' then
+				databuf_q	<= data_i;
+				start_s		<= '1';
+			end if;
 		end if;
 	end process;
 
@@ -159,22 +170,24 @@ begin
 			state_s		<= stIdle;
 		elsif rising_edge(clock_i) then
 
-			ff_clr_s <= '0';
-
-			if ff_q = '1' and state_s /= stIdle then
+			if start_s = '1' and state_s /= stIdle then
 				wait_n_s	<= '0';
 			end if;
 
 			case state_s is
 				when stIdle =>
 					if ff_q = '1' then
-						shift_q		<= data_i;
+						shift_q		<= databuf_q;
 						bit_cnt_q	<= 0;
 						baudr_cnt_q	<= 0;
-						state_s		<= stStart;
+						state_s		<= stClear;
 						ff_clr_s		<= '1';
 						wait_n_s		<= '1';
 					end if;
+
+				when stClear =>
+					ff_clr_s		<= '0';
+					state_s		<= stStart;
 
 				when stStart =>
 					tx_s		<= '0';						-- Start bit
@@ -184,6 +197,7 @@ begin
 					else
 						baudr_cnt_q <= baudr_cnt_q + 1;
 					end if;
+
 				when stData =>
 					tx_s	<= shift_q(0);
 					if baudr_cnt_q = 255 then
@@ -197,6 +211,7 @@ begin
 					else
 						baudr_cnt_q <= baudr_cnt_q + 1;
 					end if;
+
 				when stStop =>
 					tx_s		<= '1';							-- Stop bit
 					if baudr_cnt_q = 255 then
@@ -205,6 +220,7 @@ begin
 					else
 						baudr_cnt_q <= baudr_cnt_q + 1;
 					end if;
+
 			end case;
 
 		end if;
