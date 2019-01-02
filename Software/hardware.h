@@ -37,6 +37,8 @@ static const unsigned char mymkid = 40;
 #define REG_HWMEMCFG	0x03
 #define REG_HWFLAGS		0x04
 #define REG_RESET		0x0A
+#define REG_FIFOSTAT	0x0B
+#define REG_FIFODATA	0x0C
 #define REG_KMLOWADDR	0x0D
 #define REG_KMHIGHADDR	0x0E
 #define REG_KMBYTE		0x0F
@@ -49,6 +51,10 @@ static const unsigned char mymkid = 40;
 #define REG_VOLSCC		0x23
 #define REG_VOLOPLL		0x24
 #define REG_VOLAUX1		0x25
+
+// PS/2 FIFO status
+#define FIFO_FULL		0x01
+#define FIFO_EMPTY		0x02
 
 // Reg config
 #define CFG_NEXTOR		0x01

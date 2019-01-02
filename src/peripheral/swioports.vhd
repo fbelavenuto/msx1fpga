@@ -49,6 +49,7 @@ entity swioports is
 		por_i				: in  std_logic;
 		reset_i			: in  std_logic;
 		clock_i			: in  std_logic;
+		clock_cpu_i		: in  std_logic;
 		addr_i			: in  std_logic_vector( 7 downto 0);
 		cs_i				: in  std_logic;
 		rd_i				: in  std_logic;
@@ -71,6 +72,8 @@ entity swioports is
 		vertfreq_on_k_i: in  std_logic;
 		vertfreq_csw_i	: in  std_logic;
 		vertfreq_d_i	: in  std_logic;
+		keyb_valid_i	: in  std_logic;
+		keyb_data_i		: in  std_logic_vector( 7 downto 0);
 		--
 		nextor_en_o		: out std_logic;
 		mr_type_o		: out std_logic_vector( 1 downto 0);
@@ -101,6 +104,12 @@ architecture Behavior of swioports is
 	signal mapper_q			: std_logic_vector(1 downto 0);
 	signal turbo_on_q			: std_logic								:= '0';
 	signal softreset_q		: std_logic								:= '0';
+	signal spulse_o_s			: std_logic								:= '0';
+	signal spulse_a_s			: std_logic								:= '0';
+	signal keyfifo_r_s		: std_logic								:= '0';
+	signal keyfifo_data_s	: std_logic_vector(7 downto 0);
+	signal keyfifo_empty_s	: std_logic;
+	signal keyfifo_full_s	: std_logic;
 	signal keymap_addr_q		: unsigned(8 downto 0);
 	signal keymap_data_q		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
@@ -111,12 +120,31 @@ architecture Behavior of swioports is
 
 begin
 
+	-- PS/2 keyscan FIFO
+	ps2fifo : entity work.fifo
+	generic map (
+		DATA_WIDTH_G	=> 8,
+		FIFO_DEPTH_G	=> 16
+	)
+	port map (
+		clock_i		=> clock_i,
+		reset_i		=> reset_i,
+		write_en_i	=> keyb_valid_i,
+		data_i		=> keyb_data_i,
+		read_en_i	=> keyfifo_r_s,
+		data_o		=> keyfifo_data_s,
+		empty_o		=> keyfifo_empty_s,
+		full_o		=> keyfifo_full_s
+	);
+
+	keyfifo_r_s	<= '1' when spulse_a_s = '1' and spulse_o_s = '0'	else '0';
+	
 	-- Maker ID
-	process (reset_i, clock_i)
+	process (reset_i, clock_cpu_i)
 	begin
 		if reset_i = '1' then
 			maker_id_s <= (others => '0');
-		elsif falling_edge(clock_i) then
+		elsif falling_edge(clock_cpu_i) then
 			if cs_i = '1' and wr_i = '1' and addr_i = X"40" then
 				if data_i = PANAMKID_C or data_i = MYMKID_C or data_i = OCMMKID_C then
 					maker_id_s <= data_i;
@@ -140,11 +168,11 @@ begin
 					(others => '1');
 
 	-- Set register number (only if maker id = 40)
-	process (reset_i, clock_i)
+	process (reset_i, clock_cpu_i)
 	begin
 		if reset_i = '1' then
 			reg_addr_q <= (others => '0');
-		elsif falling_edge(clock_i) then
+		elsif falling_edge(clock_cpu_i) then
 			if cs_i = '1' and wr_i = '1' and maker_id_s = MYMKID_C and addr_i = X"48" then
 				reg_addr_q <= data_i;
 			end if;
@@ -152,7 +180,7 @@ begin
 	end process;
 
 	-- Write to Switched I/O ports
-	process (por_i, reset_i, clock_i, nextor_en_i, mr_type_i, vga_on_i)
+	process (por_i, reset_i, clock_cpu_i, nextor_en_i, mr_type_i, vga_on_i)
 		variable turbo_on_de_v	: std_logic_vector(1 downto 0) := "00";
 		variable vga_on_de_v		: std_logic_vector(1 downto 0) := "00";
 		variable scln_on_de_v	: std_logic_vector(1 downto 0) := "00";
@@ -177,7 +205,7 @@ begin
 		elsif reset_i = '1' then
 			softreset_q	<= '0';
 			keymap_we_s	<= '0';
-		elsif falling_edge(clock_i) then
+		elsif falling_edge(clock_cpu_i) then
 			turbo_on_de_v	:= turbo_on_de_v(0) & turbo_on_k_i;
 			vga_on_de_v		:= vga_on_de_v(0)   & vga_on_k_i;
 			scln_on_de_v	:= scln_on_de_v(0)  & scanline_on_k_i;
@@ -273,8 +301,25 @@ begin
 		end if;
 	end process;
 
-	-- Reading register
+	-- early FIFO pulse read
 	process (reset_i, clock_i)
+	begin
+		if reset_i = '1' then
+			spulse_a_s	<= '0';
+			spulse_o_s	<= '0';
+		elsif rising_edge(clock_i) then
+			spulse_o_s			<= spulse_a_s;
+			spulse_a_s			<= '0';
+			if cs_i = '1' and rd_i = '1' and maker_id_s = MYMKID_C and addr_i = X"49" then
+				if reg_addr_q = X"0C" then
+					spulse_a_s			<= '1';
+				end if;
+			end if;
+		end if;
+	end process;
+
+	-- Reading register
+	process (reset_i, clock_cpu_i)
 		variable index_v		: integer range 0 to 20	:= 0;
 		variable reading_v	: boolean	:= false;
 		variable char_v		: character;
@@ -282,7 +327,7 @@ begin
 		if reset_i = '1' then
 			reading_v 	:= false;
 			index_v		:= 0;
-		elsif falling_edge(clock_i) then
+		elsif falling_edge(clock_cpu_i) then
 			has_data_regv_s	<= '0';
 			reg_data_s			<= (others => '0');
 			-- Panasonic
@@ -315,6 +360,12 @@ begin
 						has_data_regv_s	<= '1';
 					when X"04" =>
 						reg_data_s			<= "0000000" & hw_hashwds_i;
+						has_data_regv_s	<= '1';
+					when X"0B" =>
+						reg_data_s			<= "000000" & keyfifo_empty_s & keyfifo_full_s;
+						has_data_regv_s	<= '1';
+					when X"0C" =>
+						reg_data_s			<= keyfifo_data_s;
 						has_data_regv_s	<= '1';
 					when X"10" =>
 						reg_data_s			<= "0000" & ntsc_pal_q & scanline_en_q & vga_en_q & nextor_en_q;
@@ -367,6 +418,7 @@ begin
 				end if;
 				reading_v	:= false;
 			end if;
+
 		end if;
 	end process;
 

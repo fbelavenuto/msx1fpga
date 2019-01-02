@@ -114,12 +114,14 @@ architecture testbench of tb is
 		rows_o				: out std_logic_vector(3 downto 0);
 		cols_i				: in  std_logic_vector(7 downto 0)		:= (others => '1');
 		caps_en_o			: out std_logic;
-		keymap_addr_o	: out std_logic_vector(9 downto 0);
-		keymap_data_o	: out std_logic_vector(7 downto 0);
+		keyb_valid_i	: in  std_logic;
+		keyb_data_i		: in  std_logic_vector( 7 downto 0);
+		keymap_addr_o	: out std_logic_vector( 8 downto 0);
+		keymap_data_o	: out std_logic_vector( 7 downto 0);
 		keymap_we_o		: out std_logic;
 		-- Audio
 		audio_scc_o		: out signed(14 downto 0);
-		audio_psg_o		: out unsigned(7 downto 0);
+		audio_psg_o		: out unsigned( 7 downto 0);
 		beep_o				: out std_logic;
 		volumes_o		: out volumes_t;
 		-- K7
@@ -232,8 +234,10 @@ architecture testbench of tb is
 	signal rows_s				: std_logic_vector(3 downto 0);
 	signal cols_s				: std_logic_vector(7 downto 0)		:= (others => '1');
 	signal caps_en_s			: std_logic;
-	signal keymap_addr_s		: std_logic_vector(9 downto 0);
-	signal keymap_data_s		: std_logic_vector(7 downto 0);
+	signal keyb_valid_s		: std_logic;
+	signal keyb_data_s		: std_logic_vector( 7 downto 0);
+	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
+	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s			: std_logic;
 	signal audio_scc_s			: signed(14 downto 0);
 	signal audio_psg_s			: unsigned(7 downto 0);
@@ -322,6 +326,8 @@ begin
 		rows_o				=> rows_s,
 		cols_i				=> cols_s,
 		caps_en_o			=> caps_en_s,
+		keyb_valid_i		=> keyb_valid_s,
+		keyb_data_i			=> keyb_data_s,
 		keymap_addr_o		=> keymap_addr_s,
 		keymap_data_o		=> keymap_data_s,
 		keymap_we_o			=> keymap_we_s,
@@ -424,6 +430,10 @@ begin
 		cols_s				<= (others => '1');
 		k7_audio_i_s		<= '0';
 		spi_miso_s			<= '0';
+--		keyb_valid_s		<= '0';
+--		keyb_data_s			<= (others => '0');
+		keyb_valid_s		<= '1';
+		keyb_data_s			<= X"AA";
 
 		-- reset
 		por_s		<= '1';
@@ -441,7 +451,7 @@ begin
 --		wait for 1 us;
 --		turbo_on_k_s <= '0';
 
-		wait for 16 ms;
+		wait for 1 ms;
 
 		-- wait
 		tb_end <= '1';

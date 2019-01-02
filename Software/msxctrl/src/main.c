@@ -37,6 +37,7 @@ typedef unsigned char bool;
 /* Constants */
 const unsigned char REGS[] = {REG_OPTIONS, REG_MAPPER, REG_TURBO, REG_VOLBEEP,
 							  REG_VOLEAR, REG_VOLPSG, REG_VOLSCC, REG_VOLOPLL, REG_VOLAUX1};
+const unsigned char DEFAULTS[] = {3, 0, 1, 128, 20, 240, 255, 255, 255};
 const unsigned char *ONOFFSTR[] = {"OFF", "ON"};
 const unsigned char *TRUEFALSESTR[] = {"FALSE", "TRUE"};
 const unsigned char SCCMAPTYPEVAL[] = {0, 1, 3};
@@ -55,6 +56,7 @@ unsigned int  i;
 int fhandle;
 struct tRegValPair rvp;
 bool reset = false;
+bool boot = false;
 bool chg50 = false, chg60 = false;
 bool wregs = false;
 char *filename = NULL;
@@ -87,7 +89,7 @@ void use(const bool all)
 	//    1234567890123456789012345678901234567890
 	puts("Use:\r\n");
 	puts("\r\n");
-	puts("MSXCTRL -h -i -r -[5|6] -m<0-2> \r\n");
+	puts("MSXCTRL -h -i -r -b -[5|6] -m<0-2> \r\n");
 	puts("        -c<0-1> -d<0-1> -t<0-1>\r\n");
 	puts("        [-w<filename> | -l<filename>]\r\n");
 	puts("        -k<0-255> -e<0-255> -p<0-255>\r\n");
@@ -97,7 +99,8 @@ void use(const bool all)
 		//    1234567890123456789012345678901234567890
 		puts(" -h       Show this help\r\n");
 		puts(" -i       Show raw info of reg. values\r\n");
-		puts(" -r       Resets the machine\r\n");
+		puts(" -r       Reset registers to default\r\n");
+		puts(" -b       Boot the machine\r\n");
 		puts(" -5       Enable 50 Hz\r\n");
 		puts(" -6       Enable 60 Hz\r\n");
 		puts(" -w fn    Write the all registers to\r\n");
@@ -181,6 +184,15 @@ void regInfo(const unsigned char reg, const unsigned char value)
 }
 
 /******************************************************************************/
+void resetRegs() {
+	for (i = 0; i < sizeof(REGS); i++) {
+		SWIOP_REGNUM = REGS[i];
+		SWIOP_REGVAL = DEFAULTS[i];
+	}
+	puts("Registers reset to default values.\r\n");
+}
+
+/******************************************************************************/
 void readRegs()
 {
 	struct tRegValPair *p;
@@ -257,6 +269,28 @@ void showRegs()
 }
 
 /******************************************************************************/
+void scancodes()
+{
+	puts("Showing PS/2 scancodes (reset to exit).\r\n");
+	
+	SWIOP_REGNUM = REG_FIFOSTAT;
+	do {
+		c = SWIOP_REGVAL;
+	} while ((c & FIFO_EMPTY) == 0);
+	while (1) {
+		SWIOP_REGNUM = REG_FIFOSTAT;
+		do {
+			c = SWIOP_REGVAL;
+		} while ((c & FIFO_EMPTY) != 0);
+		SWIOP_REGNUM = REG_FIFODATA;
+		c = SWIOP_REGVAL;
+		puts("0x");
+		puthex8(c);
+		putchar(' ');
+	}
+}
+
+/******************************************************************************/
 int main(char *argv[], int argc)
 {
 	puts("MSXCTRL.COM - Utility to manipulate\r\nMSX1FPGA core.\r\n");
@@ -301,7 +335,7 @@ int main(char *argv[], int argc)
 		use(false);
 	}
 
-	while ((c = getopt(argc, argv, "hir56w:l:m:c:d:t:k:e:p:s:o:a:")) != 255) {
+	while ((c = getopt(argc, argv, "hirb56w:l:m:c:d:t:k:e:p:s:o:a:z")) != 255) {
 		switch (c) {
 			case 'h':
 				use(true);
@@ -313,6 +347,10 @@ int main(char *argv[], int argc)
 
 			case 'r':
 				reset = true;
+			break;
+
+			case 'b':
+				boot = true;
 			break;
 
 			case '5':
@@ -399,6 +437,11 @@ int main(char *argv[], int argc)
 				newvolaux = atoi(optarg);
 			break;
 
+			case 'z':
+				scancodes();
+				return 0;
+			break;
+
 			default:
 				puts("Error in parameters.\r\n");
 				use(false);
@@ -417,12 +460,14 @@ int main(char *argv[], int argc)
 	// Detects MSXDOS version
 	msxdos_init();
 
-	if (reset) {
+	if (boot) {
 		SWIOP_REGNUM = REG_RESET;
 		SWIOP_REGVAL = 1;
 	}
 
-	if (lregs) {
+	if (reset) {
+		resetRegs();
+	} else if (lregs) {
 		readRegs();
 	} else if (wregs) {
 		writeRegs();

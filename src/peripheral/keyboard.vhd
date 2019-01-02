@@ -58,6 +58,9 @@ entity keyboard is
 		-- PS/2 interface
 		ps2_clk_io		: inout std_logic;
 		ps2_data_io		: inout std_logic;
+		-- Direct Access
+		keyb_valid_o	: out   std_logic;
+		keyb_data_o		: out   std_logic_vector(7 downto 0);
 		--
 		reset_o			: out   std_logic								:= '0';
 		por_o				: out   std_logic								:= '0';
@@ -271,5 +274,8 @@ begin
 	end process;
 
 	extra_keys_o <= extra_keys_s;
+	--
+	keyb_valid_o	<= keyb_valid_s;
+	keyb_data_o		<= keyb_data_s;
 
 end architecture;

@@ -175,6 +175,8 @@ architecture behavior of zxuno_top_vga2m is
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector( 3 downto 0);
 	signal reload_core_s		: std_logic;
+	signal keyb_valid_s		: std_logic;
+	signal keyb_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
@@ -292,6 +294,8 @@ begin
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
 		caps_en_o		=> caps_en_s,
+		keyb_valid_i	=> keyb_valid_s,
+		keyb_data_i		=> keyb_data_s,
 		keymap_addr_o	=> keymap_addr_s,
 		keymap_data_o	=> keymap_data_s,
 		keymap_we_o		=> keymap_we_s,

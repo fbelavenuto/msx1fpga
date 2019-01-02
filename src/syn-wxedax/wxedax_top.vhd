@@ -159,9 +159,9 @@ architecture behavior of wxedax_top is
 
 	-- Audio
 	signal audio_scc_s		: signed(14 downto 0);
-	signal audio_psg_s		: unsigned(7 downto 0);
+	signal audio_psg_s		: unsigned( 7 downto 0);
 	signal beep_s				: std_logic;
-	signal tapein_s			: std_logic_vector(7 downto 0);
+	signal tapein_s			: std_logic_vector( 7 downto 0);
 	signal ear_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
@@ -181,6 +181,8 @@ architecture behavior of wxedax_top is
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector( 3 downto 0);
+	signal keyb_valid_s		: std_logic;
+	signal keyb_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
@@ -328,6 +330,8 @@ begin
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
 		caps_en_o		=> caps_en_s,
+		keyb_valid_i	=> keyb_valid_s,
+		keyb_data_i		=> keyb_data_s,
 		keymap_addr_o	=> keymap_addr_s,
 		keymap_data_o	=> keymap_data_s,
 		keymap_we_o		=> keymap_we_s,
@@ -443,6 +447,9 @@ begin
 		-- PS/2 interface
 		ps2_clk_io		=> ps2_clk_io,
 		ps2_data_io		=> ps2_dat_io,
+		-- Direct Access
+		keyb_valid_o	=> keyb_valid_s,
+		keyb_data_o		=> keyb_data_s,
 		--
 		reset_o			=> soft_reset_k_s,
 		por_o				=> soft_por_s,

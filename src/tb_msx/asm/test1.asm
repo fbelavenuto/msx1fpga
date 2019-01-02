@@ -22,11 +22,19 @@
 	di
 	ld	a, #28
 	out	(#40), a
-	ld	a, #13
+	ld	a, #12		; Turbo register
 	out	(#48), a
-	ld	a, 0
+	ld	a, 1		; Turn on turbo
 	out	(#49), a
-	ld	a, 0
+	ld	c, #49		; Port #49
+	ld	a, #0B		; PS/2 FIFO status
+	out	(#48), a
+	in	a, (c)		; Read status
+	ld	a, #0C		; PS/2 FIFO data
+	out	(#48), a
+	in	a, (c)		; Read data
+	
+	xor	a
 	out	(#99), a
 	ld	a, #40
 	out	(#99), a

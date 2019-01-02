@@ -211,6 +211,8 @@ architecture behavior of multicore2_top is
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
 	signal extra_keys_s		: std_logic_vector( 3 downto 0);
+	signal keyb_valid_s		: std_logic;
+	signal keyb_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
 	signal keymap_we_s		: std_logic;
@@ -230,11 +232,15 @@ architecture behavior of multicore2_top is
 	signal bus_mreq_n_s		: std_logic;
 	signal bus_sltsl1_n_s	: std_logic;
 	signal bus_sltsl2_n_s	: std_logic;
+	signal bus_int_n_s		: std_logic;
+	signal bus_wait_n_s		: std_logic;
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal jt51_hd_s			: std_logic								:= '0';
+	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 		
 	-- OPLL
 	signal opll_cs_n_s		: std_logic							:= '1';
@@ -324,9 +330,9 @@ begin
 		bus_mreq_n_o	=> bus_mreq_n_s,
 		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
 		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
-		bus_wait_n_i	=> '1',
+		bus_wait_n_i	=> bus_wait_n_s,
 		bus_nmi_n_i		=> '1',
-		bus_int_n_i		=> '1',
+		bus_int_n_i		=> bus_int_n_s,
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
 		vram_data_i		=> vram_do_s,
@@ -338,6 +344,8 @@ begin
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
 		caps_en_o		=> caps_en_s,
+		keyb_valid_i	=> keyb_valid_s,
+		keyb_data_i		=> keyb_data_s,
 		keymap_addr_o	=> keymap_addr_s,
 		keymap_data_o	=> keymap_data_s,
 		keymap_we_o		=> keymap_we_s,
@@ -456,6 +464,9 @@ begin
 		-- PS/2 interface
 		ps2_clk_io		=> ps2_clk_io,
 		ps2_data_io		=> ps2_data_io,
+		-- Direct Access
+		keyb_valid_o	=> keyb_valid_s,
+		keyb_data_o		=> keyb_data_s,
 		--
 		reset_o			=> soft_reset_k_s,
 		por_o				=> soft_por_s,
@@ -693,6 +704,13 @@ begin
 	vga_hsync_n_o	<= vga_hsync_n_s;
 	vga_vsync_n_o	<= vga_vsync_n_s;
 
+	-- Peripheral BUS control
+	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
+--							   midi_data_from_s	when midi_hd_s = '1'	else
+								(others => '1');
+	bus_wait_n_s	<= '1';--midi_wait_n_s;
+	bus_int_n_s		<= '1';--midi_int_n_s;
+
 	-- JT51
 	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
@@ -705,7 +723,8 @@ begin
 		wr_n_i			=> bus_wr_n_s,
 		rd_n_i			=> bus_rd_n_s,
 		data_i			=> bus_data_to_s,
-		data_o			=> bus_data_from_s,
+		data_o			=> jt51_data_from_s,
+		has_data_o		=> jt51_hd_s,
 		ct1_o				=> open,
 		ct2_o				=> open,
 		irq_n_o			=> open,
@@ -737,6 +756,27 @@ begin
 		melody_o		=> opll_mo_s,
 		rythm_o		=> opll_ro_s
 	);
+
+		-- MIDI
+--	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111111" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7E - 0x7F
+
+	-- MIDI interface
+--	midi: entity work.midiIntf
+--	port map (
+--		clock_i			=> clock_8m_s,
+--		reset_i			=> reset_s,
+--		addr_i			=> bus_addr_s(0),
+--		cs_n_i			=> midi_cs_n_s,
+--		wr_n_i			=> bus_wr_n_s,
+--		rd_n_i			=> bus_rd_n_s,
+--		data_i			=> bus_data_to_s,
+--		data_o			=> midi_data_from_s,
+--		has_data_o		=> midi_hd_s,
+--		-- Outs
+--		int_n_o			=> midi_int_n_s,
+--		wait_n_o			=> midi_wait_n_s,
+--		tx_o				=> uart_tx_o
+--	);
 
 	-- DEBUG
 --	leds_n_o(0)		<= not turbo_on_s;

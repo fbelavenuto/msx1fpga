@@ -1,4 +1,4 @@
-goto pula
+rem goto pula
 
 vlib work
 IF ERRORLEVEL 1 GOTO error
@@ -12,6 +12,9 @@ IF ERRORLEVEL 1 GOTO error
 vcom ..\ram\dpram.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\ram\spram.vhd
+IF ERRORLEVEL 1 GOTO error
+
+vcom ..\shared\fifo.vhd
 IF ERRORLEVEL 1 GOTO error
 
 vcom ..\audio\YM2149.vhd

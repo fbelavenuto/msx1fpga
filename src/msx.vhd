@@ -119,12 +119,14 @@ entity msx is
 		rows_o			: out std_logic_vector( 3 downto 0);
 		cols_i			: in  std_logic_vector( 7 downto 0)		:= (others => '1');
 		caps_en_o		: out std_logic;
+		keyb_valid_i	: in  std_logic;
+		keyb_data_i		: in  std_logic_vector( 7 downto 0);
 		keymap_addr_o	: out std_logic_vector( 8 downto 0);
 		keymap_data_o	: out std_logic_vector( 7 downto 0);
 		keymap_we_o		: out std_logic;
 		-- Audio
 		audio_scc_o		: out signed(14 downto 0);
-		audio_psg_o		: out unsigned(7 downto 0);
+		audio_psg_o		: out unsigned( 7 downto 0);
 		beep_o			: out std_logic;
 		volumes_o		: out volumes_t;
 		-- K7
@@ -132,24 +134,24 @@ entity msx is
 		k7_audio_o		: out std_logic;
 		k7_audio_i		: in  std_logic;
 		-- Joystick
-		joy1_up_i		: in    std_logic;
-		joy1_down_i		: in    std_logic;
-		joy1_left_i		: in    std_logic;
-		joy1_right_i	: in    std_logic;
-		joy1_btn1_i		: in    std_logic;
-		joy1_btn1_o		: out   std_logic;
-		joy1_btn2_i		: in    std_logic;
-		joy1_btn2_o		: out   std_logic;
-		joy1_out_o		: out   std_logic;
-		joy2_up_i		: in    std_logic;
-		joy2_down_i		: in    std_logic;
-		joy2_left_i		: in    std_logic;
-		joy2_right_i	: in    std_logic;
-		joy2_btn1_i		: in    std_logic;
-		joy2_btn1_o		: out   std_logic;
-		joy2_btn2_i		: in    std_logic;
-		joy2_btn2_o		: out   std_logic;
-		joy2_out_o		: out   std_logic;
+		joy1_up_i		: in  std_logic;
+		joy1_down_i		: in  std_logic;
+		joy1_left_i		: in  std_logic;
+		joy1_right_i	: in  std_logic;
+		joy1_btn1_i		: in  std_logic;
+		joy1_btn1_o		: out std_logic;
+		joy1_btn2_i		: in  std_logic;
+		joy1_btn2_o		: out std_logic;
+		joy1_out_o		: out std_logic;
+		joy2_up_i		: in  std_logic;
+		joy2_down_i		: in  std_logic;
+		joy2_left_i		: in  std_logic;
+		joy2_right_i	: in  std_logic;
+		joy2_btn1_i		: in  std_logic;
+		joy2_btn1_o		: out std_logic;
+		joy2_btn2_i		: in  std_logic;
+		joy2_btn2_o		: out std_logic;
+		joy2_out_o		: out std_logic;
 		-- Video
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
 		cnt_ver_o		: out std_logic_vector( 7 downto 0);
@@ -478,7 +480,8 @@ begin
 	port map (
 		por_i				=> por_i,
 		reset_i			=> reset_i,
-		clock_i			=> clock_cpu_i,
+		clock_i			=> clock_i,
+		clock_cpu_i		=> clock_cpu_i,
 		addr_i			=> cpu_addr_s(7 downto 0),
 		cs_i				=> niorq_s,
 		rd_i				=> nrd_s,
@@ -501,6 +504,8 @@ begin
 		vertfreq_on_k_i=> vertfreq_on_k_i,
 		vertfreq_csw_i	=> vertfreq_csw_s,
 		vertfreq_d_i	=> vertfreq_d_s,
+		keyb_valid_i	=> keyb_valid_i,
+		keyb_data_i		=> keyb_data_i,
 		--
 		nextor_en_o		=> nextor_en_s,
 		mr_type_o		=> mr_type_s,

@@ -48,7 +48,7 @@ add wave -noupdate /tb/u_target/wait_n_s
 add wave -noupdate -radix hexadecimal /tb/keymap_addr_s
 add wave -noupdate -radix hexadecimal /tb/keymap_data_s
 add wave -noupdate /tb/keymap_we_s
-add wave -noupdate -divider {New Divider}
+add wave -noupdate -divider VDP
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/mode_i
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/access_type_i
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/wr_i
@@ -58,14 +58,27 @@ add wave -noupdate /tb/u_target/vdp/cpu_io_b/state_q
 add wave -noupdate -radix hexadecimal /tb/u_target/vdp/cpu_io_b/buffer_q
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/wrvram_q
 add wave -noupdate /tb/u_target/vdp/cpu_io_b/wait_s
-add wave -noupdate -divider {New Divider}
+add wave -noupdate -divider {Video OUT}
 add wave -noupdate -radix unsigned /tb/rgb_r_s
 add wave -noupdate -radix decimal /tb/u_target/vdp/hor_vert_b/cnt_hor_q
 add wave -noupdate -radix unsigned /tb/cnt_hor_s
 add wave -noupdate -radix decimal /tb/u_target/vdp/hor_vert_b/cnt_vert_q
 add wave -noupdate -radix unsigned /tb/cnt_ver_s
+add wave -noupdate -divider {SWIO Ports}
+add wave -noupdate /tb/u_target/swiop/clock_i
+add wave -noupdate /tb/u_target/swiop/cs_i
+add wave -noupdate -radix hexadecimal /tb/u_target/swiop/data_i
+add wave -noupdate -radix hexadecimal /tb/u_target/swiop/data_o
+add wave -noupdate /tb/u_target/swiop/has_data_mkid_s
+add wave -noupdate /tb/u_target/swiop/has_data_regv_s
+add wave -noupdate -radix hexadecimal /tb/u_target/swiop/keyfifo_data_s
+add wave -noupdate /tb/u_target/swiop/keyfifo_empty_s
+add wave -noupdate /tb/u_target/swiop/keyfifo_full_s
+add wave -noupdate /tb/u_target/swiop/spulse_a_s
+add wave -noupdate /tb/u_target/swiop/spulse_o_s
+add wave -noupdate /tb/u_target/swiop/keyfifo_r_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {2982755 ns} 0}
+WaveRestoreCursors {{Cursor 1} {27094 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 264
 configure wave -valuecolwidth 100
@@ -81,4 +94,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {2534849 ns} {3425729 ns}
+WaveRestoreZoom {24017 ns} {30977 ns}

@@ -16,12 +16,12 @@ architecture rtl of ipl_rom is
 
 	type ROM_ARRAY is array(0 to 8191) of std_logic_vector(7 downto 0);
 	constant ROM : ROM_ARRAY := (
-		x"F3",x"3E",x"28",x"D3",x"40",x"3E",x"13",x"D3", -- 0x0000
-		x"48",x"3E",x"00",x"D3",x"49",x"3E",x"00",x"D3", -- 0x0008
-		x"99",x"3E",x"40",x"D3",x"99",x"00",x"AF",x"D3", -- 0x0010
-		x"98",x"3C",x"18",x"FB",x"FF",x"FF",x"FF",x"FF", -- 0x0018
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0020
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0028
+		x"F3",x"3E",x"28",x"D3",x"40",x"3E",x"12",x"D3", -- 0x0000
+		x"48",x"3E",x"01",x"D3",x"49",x"0E",x"49",x"3E", -- 0x0008
+		x"0B",x"D3",x"48",x"ED",x"78",x"3E",x"0C",x"D3", -- 0x0010
+		x"48",x"ED",x"78",x"AF",x"D3",x"99",x"3E",x"40", -- 0x0018
+		x"D3",x"99",x"00",x"AF",x"D3",x"98",x"3C",x"18", -- 0x0020
+		x"FB",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0028
 		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0030
 		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0038
 		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0040

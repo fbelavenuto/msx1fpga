@@ -43,19 +43,23 @@ Registers (hex):
 			bits 2-0 = 0=>512K, 2=>2MB, 4=>8MB
 (R )	04 => Hardware flags
 			bot 0 = Has Hardware disk-change
-( W)	0A =>
+( W)	0A => Reset
 			bit 0 = Soft reset
+(R )	0B => PS/2 status
+			bit 1 = FIFO empty flag
+			bit 0 = FIFO full flag
+(R )	0C => PS/2 DATA
 ( W)	0D => Lower address of Keymap
 ( W)	0E => High address of Keymap (bits 1-0)
 ( W)	0F => Write a byte to keymap (address auto-increment)
-(RW)	10 =>
+(RW)	10 => Options
 			bit 3 = Vertical Frequency (0 = 60 Hz, 1 = 50 Hz)
 			bit 2 = Scanlines (1 = enabled)
 			bit 1 = Scandoubler-VGA (1 = enabled)
 			bit 0 = Nextor SD interface enable (slot 3.2) (1 = enabled)
-(RW)	11 =>
+(RW)	11 => Mapper
 			bits 1-0 = Slot 1: SCC mapper type (X0 = SCC-I, 01 = ASCII 8, 11 = ASCII 16)
-(RW)	12 =>
+(RW)	12 => Turbo
 			bit 0 = Turbo
 (RW)	20 => beep volume (default = 128)
 (RW)	21 => ear feedback volume (default = 20)

@@ -247,6 +247,7 @@ set_global_assignment -name VHDL_FILE ../../src/hdmi2/hdmi.vhd
 set_global_assignment -name VHDL_FILE ../../src/hdmi2/encoder.vhd
 set_global_assignment -name VHDL_FILE ../../src/hdmi2/altddio_out1.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
+set_global_assignment -name VHDL_FILE ../../src/shared/fifo.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/memoryctl.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keyboard.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/keymap.vhd
