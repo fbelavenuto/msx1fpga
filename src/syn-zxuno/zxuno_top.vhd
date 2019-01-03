@@ -47,7 +47,7 @@ use work.msx_pack.all;
 
 entity zxuno_top is
 	generic (
-		ramsize_g			: integer		:= 2048			-- 512 or 2048
+		ramsize_g			: integer		:= 512			-- 512 or 2048
 	);
 	port (
 		-- Clocks
@@ -90,7 +90,7 @@ entity zxuno_top is
 		joy_right_i			: in    std_logic;
 		joy_fire1_i			: inout std_logic;
 		joy_fire2_i			: inout std_logic;
-		joy_fire3_o			: out   std_logic;
+		joy_fire3_o			: out   std_logic								:= '1';
 
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
@@ -194,7 +194,7 @@ architecture behavior of zxuno_top is
 	signal sd_cs_n_s			: std_logic;
 
 	-- Joystick
-	signal joy_out1_s			: std_logic;
+	--signal joy_out1_s			: std_logic;
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
@@ -325,10 +325,10 @@ begin
 		joy1_left_i		=> joy_left_i,
 		joy1_right_i	=> joy_right_i,
 		joy1_btn1_i		=> joy_fire1_i,
-		joy1_btn1_o		=> joy_fire1_i,
+		joy1_btn1_o		=> open,--joy_fire1_i,
 		joy1_btn2_i		=> joy_fire2_i,
-		joy1_btn2_o		=> joy_fire2_i,
-		joy1_out_o		=> joy_out1_s,
+		joy1_btn2_o		=> open,--joy_fire2_i,
+		joy1_out_o		=> open,--joy_out1_s,
 		joy2_up_i		=> '1',
 		joy2_down_i		=> '1',
 		joy2_left_i		=> '1',
@@ -368,7 +368,7 @@ begin
 	);
 
 	sd_cs_n_o	<= sd_cs_n_s;
-	joy_fire3_o <= not joy_out1_s;		-- for Sega Genesis joypad
+	--joy_fire3_o <= not joy_out1_s;		-- for Sega Genesis joypad
 
 	-- ROM
 	irom: if ramsize_g = 512 generate
