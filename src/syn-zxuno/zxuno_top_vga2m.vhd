@@ -393,6 +393,9 @@ begin
 		-- PS/2 interface
 		ps2_clk_io		=> ps2_clk_io,
 		ps2_data_io		=> ps2_data_io,
+		-- Direct Access
+		keyb_valid_o	=> keyb_valid_s,
+		keyb_data_o		=> keyb_data_s,
 		--
 		reset_o			=> soft_reset_k_s,
 		por_o				=> soft_por_s,

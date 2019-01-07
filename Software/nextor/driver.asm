@@ -31,7 +31,7 @@
 	output	"driver.bin"
 
 ; Uses HW (1) or SW (0) disk-change:
-;HWDS = 1
+;HWDS = 0
 
 ;-----------------------------------------------------------------------------
 ;
@@ -61,9 +61,9 @@ VER_REV		equ	0
 ;-----------------------------------------------------------------------------
 ; SPI addresses. Check the Technical info above for the bit contents
 
-SPICTRL   = #9E
-SPISTATUS = #9E
-SPIDATA   = #9F
+PORTCTRL	= $9E
+PORTSTATUS	= $9E
+PORTDATA	= $9F
 
 ; SPI commands:
 CMD0	= 0  | $40
@@ -120,7 +120,7 @@ DRV_START:
 ;This is a 2 byte buffer to store the address of code to be executed.
 ;It is used by some of the kernel page 0 routines.
 
-CODE_ADD:	equ	0F84Ch
+CODE_ADD:	equ	$F84C
 
 
 ;-----------------------------------------------------------------------------
@@ -128,18 +128,18 @@ CODE_ADD:	equ	0F84Ch
 ; Error codes for DEV_RW
 ;
 
-ENCOMP	equ	0FFh
-EWRERR	equ	0FEh
-EDISK	equ	0FDh
-ENRDY	equ	0FCh
-EDATA	equ	0FAh
-ERNF	equ	0F9h
-EWPROT	equ	0F8h
-EUFORM	equ	0F7h
-ESEEK	equ	0F3h
-EIFORM	equ	0F0h
-EIDEVL	equ	0B5h
-EIPARM	equ	08Bh
+ENCOMP	equ	$FF
+EWRERR	equ	$FE
+EDISK	equ	$FD
+ENRDY	equ	$FC
+EDATA	equ	$FA
+ERNF	equ	$F9
+EWPROT	equ	$F8
+EUFORM	equ	$F7
+ESEEK	equ	$F3
+EIFORM	equ	$F0
+EIDEVL	equ	$B5
+EIPARM	equ	$8B
 
 ;-----------------------------------------------------------------------------
 ;
@@ -152,7 +152,7 @@ EIPARM	equ	08Bh
 ;    ld ix,GSLOT1
 ;    call CALBNK
 
-GSLOT1	equ	402Dh
+GSLOT1	equ	$402D
 
 
 ;* This routine reads a byte from another bank.
@@ -163,7 +163,7 @@ GSLOT1	equ	402Dh
 ;    ld ix,RDBANK
 ;    call CALBNK
 
-RDBANK	equ	403Ch
+RDBANK	equ	$403C
 
 
 ;* This routine temporarily switches kernel main bank
@@ -177,7 +177,7 @@ RDBANK	equ	403Ch
 ;          AF, BC, DE, HL, IX, IY passed to the called routine.
 ;  Output: AF, BC, DE, HL, IX, IY returned from the called routine.
 
-CALLB0	equ	403Fh
+CALLB0	equ	$403F
 
 
 ;* Call a routine in another bank.
@@ -190,7 +190,7 @@ CALLB0	equ	403Fh
 ;          BC, DE, HL, IY = input for the routine
 ;  Output: AF, BC, DE, HL, IX, IY returned from the called routine.
 
-CALBNK	equ	4042h
+CALBNK	equ	$4042
 
 
 ;* Get in IX the address of the SLTWRK entry for the slot passed in A,
@@ -206,19 +206,19 @@ CALBNK	equ	4042h
 ;    ld ix,GWORK
 ;    call CALBNK
 
-GWORK	equ	4045h
+GWORK	equ	$4045
 
 
 ;* This address contains one byte that tells how many banks
 ;  form the Nextor kernel (or alternatively, the first bank
 ;  number of the driver).
 
-K_SIZE	equ	40FEh
+K_SIZE	equ	$40FE
 
 
 ;* This address contains one byte with the current bank number.
 
-CUR_BANK	equ	40FFh
+CUR_BANK equ	$40FF
 
 
 ;-----------------------------------------------------------------------------
@@ -226,8 +226,8 @@ CUR_BANK	equ	40FFh
 ; Built-in format choice strings
 ;
 
-NULL_MSG  equ	781Fh	;Null string (disk can't be formatted)
-SING_DBL  equ	7820h	;"1-Single side / 2-Double side"
+NULL_MSG equ	$781F	;Null string (disk can't be formatted)
+SING_DBL equ	$7820	;"1-Single side / 2-Double side"
 
 
 ;-----------------------------------------------------------------------------
@@ -377,12 +377,16 @@ DRV_INIT:
 	call	CHPUT
 	ld	a, ' '
 	call	CHPUT
-	in	a, (SPISTATUS)	; Is there an SD Card in the slot?
+	in	a, (PORTSTATUS)	; Is there an SD Card in the slot?
 	and	$2
 	jr	z, .naoVazio
 	ld	de, strVazio	; nop
 	call	printString
+ IF HWDS = 1
 	ret
+ ELSE
+ 	jr	.marcaErro
+ ENDIF
 .naoVazio:
 	call	detectCard	; Yep, initialize it and detect it
 	jr	nc, .detectou
@@ -430,9 +434,9 @@ DRV_INIT:
 ;         C = Revision number
 
 DRV_VERSION:
-	ld	a,VER_MAIN
-	ld	b,VER_SEC
-	ld	c,VER_REV
+	ld	a, VER_MAIN
+	ld	b, VER_SEC
+	ld	c, VER_REV
 	ret
 
 
@@ -514,7 +518,7 @@ DRV_DIRECT4:
 
 DEV_RW:
 	push	af
-	cp	a, 2		; only 1 device
+	cp	2		; only 1 device
 	jr	nc, .error
 	dec	c		; only 1 logical unit
 	jr	z, .ok
@@ -569,7 +573,7 @@ DEV_RW_OK:
 	ret
 
 isWrite:
-	in	a, (SPISTATUS)	; destructive read
+	in	a, (PORTSTATUS)	; destructive read
 	and	$4		; test if the card is write protected
 	jr	z, .ok
 	ld	a, EWPROT	; write protect
@@ -596,7 +600,7 @@ isWrite:
  IF HWDS = 0
 	call	marcaErroCartao	; ocorreu erro na leitura, marcar erro
  ENDIF
-	ld	a, (WRKAREA.NUMBLOCKS)	; Get the number of requested blocks
+	ld	a, (WRKAREA.NUMBLOCKS)		; Get the number of requested blocks
 	sub	ixh		; subtract the number of remaining blocks
 	ld	b, a		; b=number of blocks read
 	ld	a, EWRERR	; write error
@@ -640,7 +644,7 @@ isWrite:
 
 DEV_INFO:
 	inc	b
-	cp	a, 2		; only 1 device
+	cp	2		; only 1 device
 	jr	c, .ok
 .error:
 	ld	a, 1		; error
@@ -770,7 +774,7 @@ DEV_INFO:
 ; DEV_STATUS itself. Please read the Driver Developer Guide for more info.
 
 DEV_STATUS:
-	cp	a, 2		; only 1 device
+	cp	2		; only 1 device
 	jr	nc, .error
 	dec	b		; only 1 logical unit
 	jr	nz, .error
@@ -786,11 +790,13 @@ DEV_STATUS:
 	ld	(WRKAREA.FLAGS), a
 	jr	.changed
  ELSE
-	in	a, (SPISTATUS)	; destructive read
-	bit	1, a		; SD card present?
-	jr	z, .error	; no
-	bit	0, a		; changed?
-	jr	z, .changed	; yes
+	in	a, (PORTSTATUS)	; destructive read
+	ld	b, a
+	and	$02		; SD card present?
+	jr	nz, .error	; no
+	ld	a, b
+	and	$01		; changed?
+	jr	nz, .changed	; yes
  ENDIF
 
 .nochange:
@@ -847,7 +853,7 @@ DEV_STATUS:
 ; For other types of device, these fields must be zero.
 
 LUN_INFO:
-	cp	a, 2		; only 1 device
+	cp	2		; only 1 device
 	jr	nc, .error
 	dec	b		; only 1 logical unit
 	jr	z, .ok
@@ -994,7 +1000,7 @@ detectCard:
 	and	$40
 	ld	(ix+15), a	; put SD card version (V1 ou V2) in the byte 15 of CID
 	call	z, set512bytesBlocks	; if is not SDV2 (Block address - SDHC ou SDXD) changes
-	ret c			; block size to 512 bytes
+	ret	c		; block size to 512 bytes
 	call	disableCards
 	call	getBlockAddr
 	ld	hl, WRKAREA.BCSD+5
@@ -1066,7 +1072,7 @@ detectCard:
 	rl	c
 	rl	b
 	dec	a		; decrement
-	jr nz,	.eleva2
+	jr	nz, .eleva2
 	ret
 
 ; -----------------------------------
@@ -1151,11 +1157,11 @@ readBlockCxD:
 	ret	c
 	call	WAIT_RESP_FE
 	ret	c
-	ld	c, SPIDATA
+	ld	c, PORTDATA
  .16	ini			; INI x16
-	in	a, (SPIDATA)
+	in	a, (PORTDATA)
 	nop
-	in	a, (SPIDATA)	; answer
+	in	a, (PORTDATA)	; answer
 	or	a
 	jr	disableCards
 
@@ -1165,10 +1171,10 @@ readBlockCxD:
 ; ------------------------------------------------
 initializeSD:
 	ld	a, $FF
-	out	(SPICTRL), a	; disable SD card
+	out	(PORTCTRL), a	; disable SD card
 	ld	b, 10		; send 80 clock pulses with SD card not selected
 .loop:
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 	djnz	.loop
 	call	enableSD	; enable actual SD card
 	ld	b, 8		; 8 tries for CMD0
@@ -1190,7 +1196,7 @@ SD_SEND_CMD0:
 disableCards:
 	push	af
 	ld	a, $FF
-	out	(SPICTRL), a
+	out	(PORTCTRL), a
 	pop	af
 	ret
 
@@ -1279,19 +1285,19 @@ SD_SEND_CMD:
 	ex	af,af'
 	call	enableSD
 	ex	af,af'
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 	push	af
 	ld	a, b
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 	ld	a, c
 	nop
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 	ld	a, d
 	nop
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 	ld	a, e
 	nop
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 	pop	af
 	cp	CMD0
 	ld	b, $95		; CRC para CMD0
@@ -1302,7 +1308,7 @@ SD_SEND_CMD:
 	ld	b, $FF		; CRC dummy
 enviaCRC:
 	ld	a, b
-	out	(SPIDATA), a
+	out	(PORTDATA), a
 ;	jr	WAIT_RESP_NO_FF
 
 ; ------------------------------------------------
@@ -1311,14 +1317,14 @@ enviaCRC:
 ; Destroi AF, BC
 ; ------------------------------------------------
 WAIT_RESP_NO_FF:
-	ld	b,0		; 256 retries
+	ld	bc, 100		; 25600 tentativas
 .loop:
-	in	a, (SPIDATA)
-	cp	$FF		; A=$FF?
-	ccf
-	ret	nc		; No, quit
+	in	a, (PORTDATA)
+	cp	$FF		; testa $FF
+	ret	nz		; sai se nao for $FF
 	djnz	.loop
-	scf			; Error: timeout
+	dec	c
+	jr	nz, .loop
 	ret
 
 ; ------------------------------------------------
@@ -1326,19 +1332,15 @@ WAIT_RESP_NO_FF:
 ; Destroi AF, B
 ; ------------------------------------------------
 WAIT_RESP_FE:
-	ld	b, 0		; 256 tentativas
+	ld	b, 10		; 10 tentativas
 .loop:
-	in	a,(SPIDATA)
+	push	bc
+	call	WAIT_RESP_NO_FF	; esperar resposta diferente de $FF
+	pop	bc
 	cp	$FE		; resposta é $FE ?
 	ret	z		; sim, retornamos com carry=0
-	ex	(sp),hl
-	ex	(sp),hl
-	ex	(sp),hl
-	ex	(sp),hl
 	djnz	.loop
-.timeout:
-	xor	a		; No error flags and Cy set = timeout
-	scf
+	scf			; erro, carry=1
 	ret
 
 ; ------------------------------------------------
@@ -1349,14 +1351,13 @@ WAIT_RESP_FE:
 WAIT_RESP_NO_00:
 	ld	bc, 128		; 32768 tentativas
 .loop:
-	in	a, (SPIDATA)
+	in	a, (PORTDATA)
 	or	a
 	ret	nz		; se resposta for <> $00, sai
 	djnz	.loop
 	dec	c
 	jr	nz, .loop
-	xor	a		; No error flags and Cy set = timeout
-	scf
+	scf			; erro
 	ret
 
 ; ------------------------------------------------
@@ -1364,21 +1365,10 @@ WAIT_RESP_NO_00:
 ; Nao destroi registradores
 ; ------------------------------------------------
 enableSD:
-	push	af,bc
-;	in	a, (SPIDATA)	; dummy read
+	in	a, (PORTDATA)	; dummy read
 	ld	a, (WRKAREA.NUMSD)
 	cpl
-	out	(SPICTRL), a
-	call	WAIT_RESP_NO_00
-	pop	bc
-	jr	c,.error
-	pop	af
-	or	a		; Clear Cy
-	ret
-
-.error: pop	af		; Flush the stack
-	xor	a		; No error flags and Cy set = timeout
-	scf
+	out	(PORTCTRL), a
 	ret
 
 
@@ -1417,7 +1407,7 @@ writeBlock:
 	jp	terminaLeituraEscritaBloco
 
 .loop:
-	ld	c, SPIDATA
+	ld	c, PORTDATA
 	ld	a, $FC		; mandar $FC para indicar que os proximos dados
 	out	(c),a		; sao para gravacao
 	nop
@@ -1446,7 +1436,7 @@ writeBlock:
 	call	WAIT_RESP_NO_00	; esperar cartao
 	jp	.fim		; CMD25 concluido, sair informando nenhum erro
 
-.erroEscritaBlocoZ: 		; Trick to save some cycles inside the block transfer loop
+.erroEscritaBlocoZ: ; Trick to save some cycles inside the block transfer loop
 	scf
 	jp	terminaLeituraEscritaBloco
 
@@ -1455,11 +1445,11 @@ writeBlock:
 	call	SD_SEND_CMD_GET_ERROR
 	jp	c,terminaLeituraEscritaBloco	; erro
 
-	ld	c, SPIDATA
+	ld	c, PORTDATA
 	ld	a, $FE		; mandar $FE para indicar que vamos mandar dados para gravacao
 	out	(c),a
 	nop
-	.512	outi		; OUTI x512
+ .512	outi			; OUTI x512
 .part2s:
 	ld	a, $FF		; envia dummy CRC
 	out	(c),a
@@ -1505,7 +1495,7 @@ readBlock:
 .loop:
 	ld	bc,0
 .zwaitFE:
-	in	a,(SPIDATA)
+	in	a,(PORTDATA)
 	cp	$FE
 	jr	z,.zFEok
 	djnz	.zwaitFE	; fast card wait
@@ -1516,7 +1506,7 @@ readBlock:
 	scf
 	jr	terminaLeituraEscritaBloco
 .zFEok:
-	ld	c,SPIDATA
+	ld	c,PORTDATA
  .512	ini
 	in	a, (c)		; discard 16bit CRC
 	nop
@@ -1536,7 +1526,7 @@ readBlock:
 	call	WAIT_RESP_FE
 	jp	c,terminaLeituraEscritaBloco
 
-	ld	c,SPIDATA
+	ld	c,PORTDATA
  .512	ini
 .part2s:
 	in	a, (c)		; discard 16bit CRC
@@ -1585,30 +1575,30 @@ printString:
 DecToAscii:
 	ld	iy, WRKAREA.TEMP
 	ld	h, 0
-	ld	l, a		; copiar A para HL
-	ld	(iy+0), 1	; flag para indicar que devemos cortar os zeros a esquerda
-	ld	bc, -100	; centenas
+	ld	l, a						; copiar A para HL
+	ld	(iy+0), 1					; flag para indicar que devemos cortar os zeros a esquerda
+	ld	bc, -100					; centenas
 	call	.num1
-	ld	c, -10		; dezenas
+	ld	c, -10						; dezenas
 	call	.num1
-	ld	(iy+0), 2	; unidade deve exibir 0 se for zero e nao corta-lo
-	ld	c, -1		; unidades
+	ld	(iy+0), 2					; unidade deve exibir 0 se for zero e nao corta-lo
+	ld	c, -1						; unidades
 .num1:
 	ld	a, '0'-1
 .num2:
-	inc	a		; contar o valor em ascii de '0' a '9'
-	add	hl, bc		; somar com negativo
-	jr	c, .num2	; ainda nao zeramos
-	sbc	hl, bc		; retoma valor original
-	dec	(iy+0)		; se flag do corte do zero indicar para nao cortar, pula
+	inc	a							; contar o valor em ascii de '0' a '9'
+	add	hl, bc						; somar com negativo
+	jr	c, .num2						; ainda nao zeramos
+	sbc	hl, bc						; retoma valor original
+	dec	(iy+0)						; se flag do corte do zero indicar para nao cortar, pula
 	jr	nz, .naozero
-	cp	'0'		; devemos cortar os zeros a esquerda. Eh zero?
+	cp	'0'							; devemos cortar os zeros a esquerda. Eh zero?
 	jr	nz, .naozero
-	inc	(iy+0)		; se for zero, nao salvamos e voltamos a flag
+	inc	(iy+0)						; se for zero, nao salvamos e voltamos a flag
 	ret
 .naozero:
-	ld	(de), a		; eh zero ou eh outro numero, salvar
-	inc	de		; incrementa ponteiro de destino
+	ld	(de), a						; eh zero ou eh outro numero, salvar
+	inc	de							; incrementa ponteiro de destino
 	ret
 
 ; ------------------------------------------------
@@ -1641,28 +1631,28 @@ HexToAscii:
 ; ------------------------------------------------
 printDecToAscii:
 	ld	h, 0
-	ld	l, a		; copiar A para HL
-	ld	b, 1		; flag para indicar que devemos cortar os zeros a esquerda
-	ld	de, -100	; centenas
+	ld	l, a						; copiar A para HL
+	ld	b, 1						; flag para indicar que devemos cortar os zeros a esquerda
+	ld	de, -100					; centenas
 	call	.num1
-	ld	e, -10		; dezenas
+	ld	e, -10						; dezenas
 	call	.num1
-	ld	b, 2		; unidade deve exibir 0 se for zero e nao corta-lo
-	ld	e, -1		; unidades
+	ld	b, 2						; unidade deve exibir 0 se for zero e nao corta-lo
+	ld	e, -1						; unidades
 .num1:
 	ld	a, '0'-1
 .num2:
-	inc	a		; contar o valor em ascii de '0' a '9'
-	add	hl, de		; somar com negativo
-	jr	c, .num2	; ainda nao zeramos
-	sbc	hl, de		; retoma valor original
-	djnz	.naozero	; se flag do corte do zero indicar para nao cortar, pula
-	cp	'0'		; devemos cortar os zeros a esquerda. Eh zero?
+	inc	a							; contar o valor em ascii de '0' a '9'
+	add	hl, de						; somar com negativo
+	jr	c, .num2						; ainda nao zeramos
+	sbc	hl, de						; retoma valor original
+	djnz	.naozero					; se flag do corte do zero indicar para nao cortar, pula
+	cp	'0'							; devemos cortar os zeros a esquerda. Eh zero?
 	jr	nz, .naozero
-	inc	b		; se for zero, nao imprimimos e voltamos a flag
+	inc	b							; se for zero, nao imprimimos e voltamos a flag
 	ret
 .naozero:
-	push	hl		; nao eh zero ou eh outro numero, imprimir
+	push	hl							; nao eh zero ou eh outro numero, imprimir
 	push	bc
 	call	CHPUT
 	pop	bc
@@ -1713,10 +1703,10 @@ findManStr:
 ; ------------------------------------------------
 MYSETSCR:
 	ld	a,(MSXVER)
-	or	a		; MSX1?
-	jp	z,INITXT	; Yes, change do screen-0
+	or	a			; MSX1?
+	jp	z,INITXT		; Yes, change do screen-0
 
-	ld	c,$23		; Block-2, R#3
+	ld	c, $23			; Block-2, R#3
 	ld 	ix,REDCLK
 	call	EXTROM
 	and	1
@@ -1750,8 +1740,8 @@ MYSETSCR:
 ; ------------------------------------------------
 INICHKSTOP:
 	ld	a,(INTFLG)
-	cp	4		; Was STOP pressed?
-	ret	nz		; No, quit as fast as possible
+	cp	4			; Was STOP pressed?
+	ret	nz			; No, quit as fast as possible
 
 	; Handle STOP to pause and read messages, and ask for the copyright info
 	ld	de,strBootpaused
@@ -1759,41 +1749,41 @@ INICHKSTOP:
 .wait1:
 	ld	a,7
 	call	SNSMAT
-	and	$10		; Is STOP still pressed?
-	jr	z,.wait1	; Wait for STOP to be released
+	and	$10			; Is STOP still pressed?
+	jr	z,.wait1		; Wait for STOP to be released
 	xor	a
-	ld	(INTFLG),a	; Clear STOP flag
-	ld	b,0		; b=inhibit 'i' key flag
+	ld	(INTFLG),a		; Clear STOP flag
+	ld	b,0			; b=inhibit 'i' key flag
 .wait2:
 	call	CHSNS
-	call	nz,.chkikey	; Wait until a key is pressed
+	call	nz,.chkikey		; Wait until a key is pressed
 	ld	a,(INTFLG)
-	cp	4		; Was STOP pressed?
-	jr	nz,.wait2	; No, return
+	cp	4			; Was STOP pressed?
+	jr	nz,.wait2		; No, return
 	xor	a
-	ld	(INTFLG),a	; Clear STOP flag
+	ld	(INTFLG),a		; Clear STOP flag
 	call	KILBUF
-	ld	b,30		; Since the user is trying pause the
-.wait3:	halt			; boot messages, this gives him enough
-				; time to react and pause the next
-				; driver
+	ld	b,30			; Since the user is trying pause the
+.wait3:	halt				; boot messages, this gives him enough
+					; time to react and pause the next
+					; driver
 	ld	a,(INTFLG)
-	cp	4		; Was STOP pressed?
-	ret	z		; quit so the next driver can process it
-	djnz	.wait3		; The user will have the impression
-				; that he has a perfect timing.   ;)
+	cp	4			; Was STOP pressed?
+	ret	z			; quit so the next driver can process it
+	djnz	.wait3			; The user will have the impression
+					; that he has a perfect timing.   ;)
 	ret
 
 .chkikey:
-	bit	0,b		; Was the copyright message shown?
-	ret	nz		; Yes, return
+	bit	0,b			; Was the copyright message shown?
+	ret	nz			; Yes, return
 	call	CHGET
 	cp	'i'
 	jr	z,.showcopyright
 	cp	'I'
 	ret	nz
 .showcopyright:
-	inc	b		; Inhibit further presses of the i key
+	inc	b			; Inhibit further presses of the i key
 	ld	de,strCopyright
 	jp	printString
 
