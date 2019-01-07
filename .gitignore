@@ -362,3 +362,12 @@ greybox_tmp
 /synth/wxedax/planAhead_run_1
 /synth/wxedax/planAhead_run_2
 /synth/wxedax/planAhead_run_3
+/src/peripheral/i8251/tb_uart/transcript
+/src/peripheral/i8251/tb_uart/vsim.wlf
+/src/peripheral/i8251/tb_uart/work
+/src/peripheral/i8253/tb_timer/transcript
+/src/peripheral/i8253/tb_timer/vsim.wlf
+/src/peripheral/i8253/tb_timer/work
+/src/tb_msxMidi3/transcript
+/src/tb_msxMidi3/vsim.wlf
+/src/tb_msxMidi3/work

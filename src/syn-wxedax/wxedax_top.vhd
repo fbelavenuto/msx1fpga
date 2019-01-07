@@ -238,7 +238,7 @@ architecture behavior of wxedax_top is
 	signal midi_cs_n_s		: std_logic								:= '1';
 	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
 	signal midi_hd_s			: std_logic								:= '0';
-	signal midi_wait_n_s		: std_logic								:= '1';
+--	signal midi_wait_n_s		: std_logic								:= '1';
 	signal midi_int_n_s		: std_logic								:= '1';
 
 begin
@@ -636,7 +636,7 @@ begin
 	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
 							   midi_data_from_s	when midi_hd_s = '1'	else
 								(others => '1');
-	bus_wait_n_s	<= midi_wait_n_s;
+	bus_wait_n_s	<= '1';
 	bus_int_n_s		<= midi_int_n_s;
 	
 	ptjt: if per_jt51_g generate
@@ -689,25 +689,25 @@ begin
 		);
 	end generate;
 
-	-- MIDI
-	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111111" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7E - 0x7F
+	-- MIDI3
+	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 3) = "11101" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0xE8 - 0xEF
 
-	-- MIDI interface
-	midi: entity work.midiIntf
+	midi3inst: entity work.Midi3
 	port map (
-		clock_i			=> clock_8m_s,
-		reset_i			=> reset_s,
-		addr_i			=> bus_addr_s(0),
-		cs_n_i			=> midi_cs_n_s,
-		wr_n_i			=> bus_wr_n_s,
-		rd_n_i			=> bus_rd_n_s,
+		clocksys_i		=> clock_sdram_s,
+		clock_8m_i		=> clock_8m_s,
+		reset_n_i		=> reset_n_s,
+		addr_i			=> bus_addr_s(2 downto 0),
 		data_i			=> bus_data_to_s,
 		data_o			=> midi_data_from_s,
 		has_data_o		=> midi_hd_s,
-		-- Outs
+		cs_n_i			=> midi_cs_n_s,
+		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
 		int_n_o			=> midi_int_n_s,
-		wait_n_o			=> midi_wait_n_s,
-		tx_o				=> uart_tx_o
+		-- UART
+		rxd_i				=> '1',
+		txd_o				=> uart_tx_o
 	);
 
 	

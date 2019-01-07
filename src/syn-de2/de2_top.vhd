@@ -197,6 +197,9 @@ architecture behavior of de2_top is
 	signal clock_cpu_s		: std_logic;
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
+	signal clock_16m_s		: std_logic;
+	signal clock_8m_s			: std_logic;
+
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
@@ -274,16 +277,25 @@ architecture behavior of de2_top is
 	signal bus_mreq_n_s		: std_logic;
 	signal bus_sltsl1_n_s	: std_logic;
 	signal bus_sltsl2_n_s	: std_logic;
+	signal bus_int_n_s		: std_logic;
 
 	-- JT51
-	signal jt51_cs_n_s		: std_logic							:= '1';
-	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_cs_n_s		: std_logic								:= '1';
+	signal jt51_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal jt51_hd_s			: std_logic								:= '0';
+	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic							:= '1';
-	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
+	signal opll_cs_n_s		: std_logic								:= '1';
+	signal opll_mo_s			: signed(12 downto 0)				:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)				:= (others => '0');
+
+		-- MIDI interface
+	signal midi_cs_n_s		: std_logic								:= '1';
+	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal midi_hd_s			: std_logic								:= '0';
+	signal midi_int_n_s		: std_logic								:= '1';
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
@@ -302,8 +314,9 @@ begin
 
 	pll_2: entity work.pll2
 	port map (
-		inclk0		=> clk27_i,
-		c0				=> clock_audio_s		-- 24.000000 MHz
+		inclk0	=> clk27_i,
+		c0			=> clock_audio_s,		-- 24.000000 MHz
+		c1			=> clock_16m_s			-- 16 MHz
 	);
 
 	-- Clocks
@@ -370,7 +383,7 @@ begin
 		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
 		bus_wait_n_i	=> '1',
 		bus_nmi_n_i		=> '1',
-		bus_int_n_i		=> '1',
+		bus_int_n_i		=> bus_int_n_s,
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
 		vram_data_i		=> vram_data_from_s,
@@ -584,6 +597,12 @@ begin
 	vga_blank_n_o	<= '1';
 	vga_clk_o		<= clock_master_s;
 
+	-- Peripheral BUS control
+	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
+							   midi_data_from_s	when midi_hd_s = '1'	else
+								(others => '1');
+	bus_int_n_s		<= midi_int_n_s;
+
 	ptjt: if per_jt51_g generate
 		-- JT51 tests
 		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
@@ -597,7 +616,8 @@ begin
 			wr_n_i			=> bus_wr_n_s,
 			rd_n_i			=> bus_rd_n_s,
 			data_i			=> bus_data_to_s,
-			data_o			=> bus_data_from_s,
+			data_o			=> jt51_data_from_s,
+			has_data_o		=> jt51_hd_s,
 			ct1_o				=> open,
 			ct2_o				=> open,
 			irq_n_o			=> open,
@@ -632,6 +652,36 @@ begin
 			rythm_o		=> opll_ro_s
 		);
 	end generate;
+
+	-- MIDI3
+	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 3) = "11101" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0xE8 - 0xEF
+
+	process(reset_s, clock_16m_s)
+	begin
+		if reset_s = '1' then
+			clock_8m_s	<= '0';
+		elsif rising_edge(clock_16m_s) then
+			clock_8m_s	<= not clock_8m_s;
+		end if;
+	end process;
+
+	midi3inst: entity work.Midi3
+	port map (
+		clocksys_i		=> clock_sdram_s,
+		clock_16m_i		=> clock_8m_s,
+		reset_n_i		=> not reset_s,
+		addr_i			=> bus_addr_s(2 downto 0),
+		data_i			=> bus_data_to_s,
+		data_o			=> midi_data_from_s,
+		has_data_o		=> midi_hd_s,
+		cs_n_i			=> midi_cs_n_s,
+		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
+		int_n_o			=> midi_int_n_s,
+		-- UART
+		rxd_i				=> '1',
+		txd_o				=> open
+	);
 
 	-- DEBUG
 	D_display_s	<= bus_addr_s;
