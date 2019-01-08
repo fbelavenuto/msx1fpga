@@ -210,7 +210,6 @@ architecture testbench of tb is
 
 
 	signal tb_end				: std_logic;
-	signal clocksys_s			: std_logic;
 	signal clock_s				: std_logic;
 	signal clock_vdp_s		: std_logic;
 	signal clock_cpu_s		: std_logic;
@@ -299,17 +298,6 @@ begin
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
 	-- ----------------------------------------------------- --
-	process
-	begin
-		if tb_end = '1' then
-			wait;
-		end if;
-		clocksys_s <= '0';
-		wait for clock85_period_c / 2;
-		clocksys_s <= '1';
-		wait for clock85_period_c / 2;
-	end process;
-
 	process
 	begin
 		if tb_end = '1' then
@@ -469,7 +457,7 @@ begin
 
 	midi3inst: Midi3
 	port map (
-		clocksys_i		=> clocksys_s,
+		clocksys_i		=> clock_s,
 		clock_8m_i		=> clock_8m_s,
 		reset_n_i		=> reset_n_s,
 		addr_i			=> bus_addr_s(2 downto 0),

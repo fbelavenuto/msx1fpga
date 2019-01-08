@@ -942,11 +942,11 @@ marcaErroCartao:
 ;------------------------------------------------
 getCIDaddr:
 	ld	hl, WRKAREA.BCID1
-	ld	a, (WRKAREA.NUMSD)
-	dec	a
-	jr	z, .c1
-	ld	hl, WRKAREA.BCID2
-.c1:
+;	ld	a, (WRKAREA.NUMSD)
+;	dec	a
+;	jr	z, .c1
+;	ld	hl, WRKAREA.BCID2
+;.c1:
 	push	hl
 	pop	ix		; IX <- HL
 	ret
@@ -1394,24 +1394,23 @@ writeBlock:
 	ld	bc, 0
 	ld	d, c
 	ld	e,ixh		; e=Number of blocks to write
-	call	SD_SEND_CMD
-	or	a
-	jr	nz,.erroEscritaBlocoR	; erro no ACMD23
+	call	SD_SEND_CMD_GET_ERROR
+	jr	c, .erroEscritaBlocoR	; erro no ACMD23
 	exx
 	ld	a, CMD25	; CMD25 = write multiple blocks
-	call	SD_SEND_CMD
-	or	a
-	jr	z, .loop
+	call	SD_SEND_CMD_GET_ERROR
+	jr	nc, .loop
 .erroEscritaBlocoR: ; Trick to save some cycles inside the block transfer loop
 	scf
 	jp	terminaLeituraEscritaBloco
 
 .loop:
-	ld	c, PORTDATA
 	ld	a, $FC		; mandar $FC para indicar que os proximos dados
-	out	(c),a		; sao para gravacao
-	nop
- .512	outi			; OUTI x512
+	out	(PORTDATA), a	; sao para gravacao
+	ld	bc, PORTDATA
+	otir
+	otir
+	ld	a, $FF
 	out	(c),a		; Send a dummy 16bit CRC
 	nop
 	out	(c),a
@@ -1445,12 +1444,11 @@ writeBlock:
 	call	SD_SEND_CMD_GET_ERROR
 	jp	c,terminaLeituraEscritaBloco	; erro
 
-	ld	c, PORTDATA
 	ld	a, $FE		; mandar $FE para indicar que vamos mandar dados para gravacao
-	out	(c),a
-	nop
- .512	outi			; OUTI x512
-.part2s:
+	out	(PORTDATA),a
+	ld	bc, PORTDATA
+	otir
+	otir
 	ld	a, $FF		; envia dummy CRC
 	out	(c),a
 	nop

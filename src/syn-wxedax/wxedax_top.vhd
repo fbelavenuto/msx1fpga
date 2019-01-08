@@ -111,10 +111,10 @@ entity wxedax_top is
 		-- Joystick SNES
 		pad_clk_o				: out   std_logic									:= '0';
 		pad_latch_o				: out   std_logic									:= '0';
-		pad_data_i				: in    std_logic
+		pad_data_i				: in    std_logic;
 		-- Others
 --		irda_o					: out   std_logic									:= '0';
---		gpio_io					: inout std_logic_vector(1 downto 0)
+		gpio_io					: inout std_logic_vector(1 downto 0)
 	);
 end;
 
@@ -385,7 +385,7 @@ begin
 		-- DEBUG
 		D_wait_o			=> open,
 		D_slots_o		=> open,
-		D_ipl_en_o		=> leds_n_o(2)
+		D_ipl_en_o		=> open
 	);
 
 	-- RAM
@@ -694,7 +694,7 @@ begin
 
 	midi3inst: entity work.Midi3
 	port map (
-		clocksys_i		=> clock_sdram_s,
+		clocksys_i		=> clock_master_s,
 		clock_8m_i		=> clock_8m_s,
 		reset_n_i		=> reset_n_s,
 		addr_i			=> bus_addr_s(2 downto 0),
@@ -707,14 +707,17 @@ begin
 		int_n_o			=> midi_int_n_s,
 		-- UART
 		rxd_i				=> '1',
-		txd_o				=> uart_tx_o
+		txd_o				=> uart_tx_o,
+		-- Debug
+		D_out0_o			=> gpio_io(0),
+		D_out2_o			=> gpio_io(1)
 	);
 
 	
 	-- DEBUG
-	leds_n_o(0) <= '1';--sdspi_cs_n_s;
+	leds_n_o(0) <= sdspi_cs_n_s;
 	leds_n_o(1) <= '1';--flspi_cs_n_s;
---	leds_n_o(2) <= not vga_en_s;
-	leds_n_o(3) <= not turbo_on_s;
+	leds_n_o(2) <= '1';--not vga_en_s;
+	leds_n_o(3) <= midi_int_n_s;--not turbo_on_s;
 
 end architecture;

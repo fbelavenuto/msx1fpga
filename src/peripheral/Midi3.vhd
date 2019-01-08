@@ -18,7 +18,10 @@ entity Midi3 is
 		int_n_o			: out   std_logic;
 		-- UART
 		rxd_i				: in    std_logic;
-		txd_o				: out   std_logic
+		txd_o				: out   std_logic;
+		-- Debug
+		D_out0_o			: out   std_logic;
+		D_out2_o			: out   std_logic
 	);
 end entity;
 
@@ -30,6 +33,7 @@ architecture Behavior of Midi3 is
 	signal ffint_cs_n_s	: std_logic;
 	signal ffint_wr_s		: std_logic;
 	signal ffint_q			: std_logic;
+	signal ffint_n_s		: std_logic;
 	signal databd_s		: std_logic_vector(7 downto 0);
 	signal clock_4m_s		: std_logic;
 	signal out0_s			: std_logic;
@@ -54,8 +58,8 @@ begin
 
 	busdir_s	<= '0'	when rd_n_i = '0' and (i8251_cs_n_s = '0' or ffint_cs_n_s = '0' or i8253_cs_n_s = '0')	else '1';
 
-	databd_s	<= data_i	when busdir_s = '1'	else (others => 'Z');
-	data_o	<= databd_s	when busdir_s = '0'	else (others => '1');
+	databd_s		<= data_i	when busdir_s = '1'	else (others => 'Z');
+	data_o		<= databd_s	when busdir_s = '0'	else (others => '1');
 	has_data_o	<= not busdir_s;
 
 	tmr: entity work.timer
@@ -93,7 +97,7 @@ begin
 		wr_n_i		=> wr_n_i,
 		rxd_i			=> rxd_i,
 		txd_o			=> txd_o,
-		dsr_n_i		=> ffint_q,
+		dsr_n_i		=> ffint_n_s,
 		cts_n_i		=> '0',
 		rts_n_o		=> rts_s,
 		dtr_n_o		=> dtr_s
@@ -111,6 +115,11 @@ begin
 
 	end process;
 
+	ffint_n_s	<= not ffint_q;
 	int_n_o	<= ffint_q or not dtr_s;
+
+	-- Debug
+	D_out0_o		<= out0_s;
+	D_out2_o		<= out2_s;
 
 end architecture;

@@ -121,8 +121,8 @@ NET "pad_data_i"			LOC="P84"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Others
 #NET "irda_o"            LOC="P62"  | IOSTANDARD = LVCMOS33;
-#NET "gpio_io<0>"        LOC="P57"  | IOSTANDARD = LVCMOS33;
-#NET "gpio_io<1>"        LOC="P58"  | IOSTANDARD = LVCMOS33;
+NET "gpio_io<0>"        LOC="P57"  | IOSTANDARD = LVCMOS33;
+NET "gpio_io<1>"        LOC="P58"  | IOSTANDARD = LVCMOS33;
 
 #DS_A   = 80 (usado)
 #DS_B   = 79 (usado)

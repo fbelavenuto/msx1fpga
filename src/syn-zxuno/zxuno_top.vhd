@@ -47,7 +47,7 @@ use work.msx_pack.all;
 
 entity zxuno_top is
 	generic (
-		ramsize_g			: integer		:= 512			-- 512 or 2048
+		ramsize_g			: integer		:= 2048			-- 512 or 2048
 	);
 	port (
 		-- Clocks
