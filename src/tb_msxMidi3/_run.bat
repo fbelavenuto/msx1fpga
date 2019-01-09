@@ -1,4 +1,4 @@
-goto pula
+rem goto pula
 
 vlib work
 IF ERRORLEVEL 1 GOTO error

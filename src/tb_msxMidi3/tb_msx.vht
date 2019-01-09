@@ -191,8 +191,7 @@ architecture testbench of tb is
 
 	component Midi3
 	port (
-		clocksys_i		: in    std_logic;
-		clock_8m_i		: in    std_logic;
+		clock_i			: in    std_logic;
 		reset_n_i		: in    std_logic;
 		addr_i			: in    std_logic_vector(2 downto 0);
 		data_i			: in    std_logic_vector(7 downto 0);
@@ -447,7 +446,7 @@ begin
 	u_clocks: clocks
 	port map (
 		clock_i			=> clock_s,
-		por_i			=> por_s,
+		por_i				=> por_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_cpu_o		=> clock_cpu_s,
@@ -457,8 +456,7 @@ begin
 
 	midi3inst: Midi3
 	port map (
-		clocksys_i		=> clock_s,
-		clock_8m_i		=> clock_8m_s,
+		clock_i			=> clock_8m_s,
 		reset_n_i		=> reset_n_s,
 		addr_i			=> bus_addr_s(2 downto 0),
 		data_i			=> bus_data_to_s,

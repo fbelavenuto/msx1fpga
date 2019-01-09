@@ -44,7 +44,7 @@ init:
 	ld	a, 8
 	out	(#EC), a		; initialize counter 0 on 500 KHz (4MHz / 8 = 500KHz)
 	ld	a, #B4
-	out	(#EF), a		; counter 2, WORD, mode	2, binary
+	out	(#EF), a		; counter 2, WORD, mode 2, binary
 	ld	hl, 20000
 	ld	a, l
 	out	(#EE), a

@@ -50,6 +50,7 @@
 -- to produced all the required values.
 -- (The first part of the curve is a bit steeper and the last bit is more linear than expected)
 --
+-- by FBLabs: renamed signals and fixed port_a and port_b directions
 
 library ieee;
 use IEEE.std_logic_1164.all;
@@ -73,8 +74,6 @@ entity YM2149 is
 		bc2_i					: in  std_logic;
 		-- I/O ports
 		port_a_i				: in  std_logic_vector(7 downto 0);
-		port_a_o				: out std_logic_vector(7 downto 0);
-		port_b_i				: in  std_logic_vector(7 downto 0);
 		port_b_o				: out std_logic_vector(7 downto 0);
 		-- audio channels out
 		audio_ch_a_o		: out std_logic_vector(7 downto 0);
@@ -102,15 +101,15 @@ architecture RTL of YM2149 is
 	signal busctrl_re_s		: std_logic;
 
 	signal reg_addr_q			: std_logic_vector(7 downto 0);
-	signal regs_q				: array_16x8_t;
+	signal regs_q				: array_16x8_t	:= (others => (others => '0'));
 	signal env_reset			: std_logic;
 
-	signal noise_gen_cnt		: unsigned(4 downto 0);
+	signal noise_gen_cnt		: unsigned(4 downto 0)		:= (others => '0');
 	signal noise_gen_op		: std_logic;
 	signal tone_gen_cnt		: array_3x12_t := (others	=> (others => '0'));
 	signal tone_gen_op		: std_logic_vector(3 downto 1) := "000";
 	
-	signal env_gen_cnt		: std_logic_vector(15 downto 0);
+	signal env_gen_cnt		: std_logic_vector(15 downto 0)	:= (others => '0');
 	signal env_ena				: std_logic;
 	signal env_hold			: std_logic;
 	signal env_inc				: std_logic;
@@ -222,7 +221,7 @@ begin
 	end process;
 
 	-- read register
-	process(busctrl_re_s, reg_addr_q, regs_q, port_a_i, port_b_i)
+	process(busctrl_re_s, reg_addr_q, regs_q, port_a_i)
 	begin
 		data_o <= (others => '0');
 		if busctrl_re_s = '1' then
@@ -241,22 +240,15 @@ begin
 				when x"B" => data_o <= regs_q(11);
 				when x"C" => data_o <= regs_q(12);
 				when x"D" => data_o <= "0000" & regs_q(13)(3 downto 0);
-				when x"E" => if (regs_q(7)(6) = '0') then		-- input
+				when x"E" =>
 						data_o <= port_a_i;
-					else
-						data_o <= regs_q(14);						-- read output reg
-					end if;
-				when x"F" => if (regs_q(7)(7) = '0') then
-						data_o <= port_b_i;							-- input
-					else
+				when x"F" =>
 						data_o <= regs_q(15);
-					end if;
 				when others => null;
 			end case;
 		end if;
 	end process;
 
-	port_a_o <= regs_q(14);
 	port_b_o <= regs_q(15);
 
 	--  p_divider              : process
@@ -281,7 +273,7 @@ begin
 
 	--  p_noise_gen            : process
 	process(clock_i)
-		variable noise_gen_comp : unsigned(4 downto 0);
+		variable noise_gen_comp : unsigned(4 downto 0)	:= (others => '0');
 		variable poly17_zero : std_logic;
 	begin
 		if rising_edge(clock_i) then
@@ -313,8 +305,8 @@ begin
 
 	--p_tone_gens            : process
 	process(clock_i)
-		variable tone_gen_freq : array_3x12_t;
-		variable tone_gen_comp : array_3x12_t;
+		variable tone_gen_freq : array_3x12_t	:= (others => (others => '0'));
+		variable tone_gen_comp : array_3x12_t	:= (others => (others => '0'));
 	begin
 		if rising_edge(clock_i) then
 			-- looks like real chips count up - we need to get the Exact behaviour ..
@@ -349,8 +341,8 @@ begin
 
 	--p_envelope_freq        : process
 	process(clock_i)
-		variable env_gen_freq : std_logic_vector(15 downto 0);
-		variable env_gen_comp : std_logic_vector(15 downto 0);
+		variable env_gen_freq : std_logic_vector(15 downto 0)	:= (others => '0');
+		variable env_gen_comp : std_logic_vector(15 downto 0)	:= (others => '0');
 	begin
 		if rising_edge(clock_i) then
 	

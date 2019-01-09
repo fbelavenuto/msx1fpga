@@ -371,3 +371,6 @@ greybox_tmp
 /src/tb_msxMidi3/transcript
 /src/tb_msxMidi3/vsim.wlf
 /src/tb_msxMidi3/work
+/src/peripheral/tb_midi3/transcript
+/src/peripheral/tb_midi3/vsim.wlf
+/src/peripheral/tb_midi3/work

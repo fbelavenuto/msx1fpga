@@ -50,22 +50,25 @@ end tb;
 architecture testbench of tb is
 
 	-- test target
-	component UART
+	component Midi3
 	port(
-		clock_i		: in  std_logic;
-		reset_n_i	: in  std_logic;
-		addr_i		: in  std_logic;
-		data_i		: in  std_logic_vector(7 downto 0);
-		data_o		: out std_logic_vector(7 downto 0);
-		cs_n_i		: in  std_logic;
-		rd_n_i		: in  std_logic;
-		wr_n_i		: in  std_logic;
-		rxd_i			: in  std_logic;
-		txd_o			: out std_logic;
-		dsr_n_i		: in  std_logic;
-		cts_n_i		: in  std_logic;
-		rts_n_o		: out std_logic;
-		dtr_n_o		: out std_logic
+		clocksys_i		: in    std_logic;
+		clock_8m_i		: in    std_logic;
+		reset_n_i		: in    std_logic;
+		addr_i			: in    std_logic_vector(2 downto 0);
+		data_i			: in    std_logic_vector(7 downto 0);
+		data_o			: out   std_logic_vector(7 downto 0);
+		has_data_o		: out   std_logic;
+		cs_n_i			: in    std_logic;
+		wr_n_i			: in    std_logic;
+		rd_n_i			: in    std_logic;
+		int_n_o			: out   std_logic;
+		-- UART
+		rxd_i				: in    std_logic;
+		txd_o				: out   std_logic;
+		-- Debug
+		D_out0_o			: out   std_logic;
+		D_out2_o			: out   std_logic
 	);
 	end component;
 
@@ -73,25 +76,24 @@ architecture testbench of tb is
 	signal tb_end		: std_logic := '0';
 
 	signal clock_cpu_s	: std_logic;
-
-	signal wait_n_s		: std_logic								:= '1';
+	signal wait_n_s		: std_logic									:= '1';
 	signal clock_s			: std_logic;
+	signal clock_8m_s		: std_logic;
 	signal reset_n_s		: std_logic;
-	signal addr_s			: std_logic;
-	signal data_s			: std_logic_vector( 7 downto 0);
+	signal addr_s			: std_logic_vector( 2 downto 0);
+	signal data_i_s		: std_logic_vector( 7 downto 0);
 	signal data_o_s		: std_logic_vector( 7 downto 0);
+	signal has_data_s		: std_logic;
 	signal cs_n_s			: std_logic;
-	signal rd_n_s			: std_logic;
 	signal wr_n_s			: std_logic;
-	signal rxd_s			: std_logic;
-	signal txd_s			: std_logic;
-	signal rts_n_s			: std_logic;
-	signal dtr_n_s			: std_logic;
+	signal rd_n_s			: std_logic;
+	signal int_n_s			: std_logic;
+	signal tx_s				: std_logic;
 
 	procedure z80_io_read(
-		addr_i				: in  std_logic;
-		signal addr_s		: out std_logic;
-		signal data_s		: in  std_logic_vector( 7 downto 0);
+		addr_i				: in  std_logic_vector( 2 downto 0);
+		signal addr_s		: out std_logic_vector( 2 downto 0);
+		signal data_o_s	: in  std_logic_vector( 7 downto 0);
 		signal cs_n_s		: out std_logic;
 		signal rd_n_s		: out std_logic
 	) is begin
@@ -111,23 +113,23 @@ architecture testbench of tb is
 		cs_n_s	<= '1';
 		rd_n_s	<= '1';
 		wait until clock_cpu_s = '1';		-- 4.0 (proximo)
-		addr_s	<= '0';
+		addr_s	<= (others => '0');
 	end;
 
 	procedure z80_io_write(
-		addr_i				: in  std_logic;
+		addr_i				: in  std_logic_vector( 2 downto 0);
 		data_i				: in  std_logic_vector( 7 downto 0);
-		signal addr_s		: out std_logic;
-		signal data_s		: out std_logic_vector( 7 downto 0);
+		signal addr_s		: out std_logic_vector( 2 downto 0);
+		signal data_i_s	: out std_logic_vector( 7 downto 0);
 		signal cs_n_s		: out std_logic;
 		signal wr_n_s		: out std_logic
 	) is begin
 		wait until clock_cpu_s = '1';		-- 1.0
 		wr_n_s	<= '1';		
 		addr_s	<= addr_i;
-		data_s	<= (others => 'Z');
+		data_i_s	<= (others => 'Z');
 		wait until clock_cpu_s = '1';		-- 1.2
-		data_s	<= data_i;
+		data_i_s	<= data_i;
 		cs_n_s	<= '0';
 		wr_n_s	<= '0';
 		wait until clock_cpu_s = '0';		-- 1.3
@@ -140,17 +142,15 @@ architecture testbench of tb is
 		cs_n_s	<= '1';
 		wr_n_s	<= '1';
 		wait until clock_cpu_s = '1';		-- 4.0 (proximo)
-		addr_s	<= '0';
-		data_s	<= (others => 'Z');
+		addr_s	<= (others => '0');
+		data_i_s	<= (others => 'Z');
 	end;
 
-	constant clock25_period_c	: time	:= 40.00 ns;
+	constant clock21_period_c	: time	:= 46.56 ns;
 	constant clock10_period_c	: time	:= 93.34 ns;
 	constant clock8_period_c	: time	:= 125 ns;
 	constant clock7_period_c	: time	:= 139.68 ns;
-	constant clock4_period_c	: time	:= 250 ns;
 	constant clock3_period_c	: time	:= 279.35 ns;
-	constant clock500k_period_c: time	:= 2 us;
 
 begin
 
@@ -163,9 +163,20 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for clock500k_period_c / 2;
+		wait for clock21_period_c / 2;
 		clock_s <= '1';
-		wait for clock500k_period_c / 2;
+		wait for clock21_period_c / 2;
+	end process;
+
+	process
+	begin
+		if tb_end = '1' then
+			wait;
+		end if;
+		clock_8m_s <= '0';
+		wait for clock8_period_c / 2;
+		clock_8m_s <= '1';
+		wait for clock8_period_c / 2;
 	end process;
 
 	process
@@ -181,22 +192,25 @@ begin
 
 
 	-- Instance
-	u_target: UART
+	u_target: Midi3
 	port map (
-		clock_i		=> clock_s,
+		clocksys_i	=> clock_s,
+		clock_8m_i	=> clock_8m_s,
 		reset_n_i	=> reset_n_s,
 		addr_i		=> addr_s,
-		data_i		=> data_s,
+		data_i		=> data_i_s,
 		data_o		=> data_o_s,
+		has_data_o	=> has_data_s,
 		cs_n_i		=> cs_n_s,
 		rd_n_i		=> rd_n_s,
 		wr_n_i		=> wr_n_s,
-		rxd_i			=> rxd_s,
-		txd_o			=> txd_s,
-		dsr_n_i		=> '0',
-		cts_n_i		=> '0',
-		rts_n_o		=> rts_n_s,
-		dtr_n_o		=> dtr_n_s
+		int_n_o		=> int_n_s,
+		-- UART
+		rxd_i				=> '1',
+		txd_o				=> tx_s,
+		-- Debug
+		D_out0_o			=> open,
+		D_out2_o			=> open
 	);
 
 	-- ----------------------------------------------------- --
@@ -206,61 +220,74 @@ begin
 	begin
 		-- init
 		reset_n_s	<= '0';
-		addr_s		<= '0';
-		data_s		<= (others => 'Z');
+		addr_s		<= (others => '0');
+		data_i_s		<= (others => 'Z');
 		cs_n_s		<= '1';
 		rd_n_s		<= '1';
 		wr_n_s		<= '1';
-		rxd_s			<= '1';
 
-		wait for 4 us;
-
+		wait for 500 ns;
 		reset_n_s	<= '1';
 
-		wait for 4 us;
+		wait for 1 us;
 
-		-- I/O write port #01 value #00
-		z80_io_write('1', X"00", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port 2 value #00
+		z80_io_write("010", X"00", addr_s, data_i_s, cs_n_s, wr_n_s);
 
-		-- I/O write port #01 value #00
-		z80_io_write('1', X"00", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port 7 value #16
+		z80_io_write("111", X"16", addr_s, data_i_s, cs_n_s, wr_n_s);
 
-		-- I/O write port #01 value #40	-- Soft Reset
-		z80_io_write('1', X"40", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port 4 value #08
+		z80_io_write("100", X"08", addr_s, data_i_s, cs_n_s, wr_n_s);
 
-		-- I/O write port #01 value #4E	-- 1 stop bit, no parity, 8 chars, /16 baud
-		z80_io_write('1', X"4E", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port 7 value #B4
+		z80_io_write("111", X"B4", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 6 value #20
+		z80_io_write("110", X"20", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 6 value #4E
+		z80_io_write("110", X"4E", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 1 value #00
+		z80_io_write("001", X"00", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 1 value #00
+		z80_io_write("001", X"00", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 1 value #00
+		z80_io_write("001", X"00", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 1 value #40
+		z80_io_write("001", X"40", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 1 value #4E
+		z80_io_write("001", X"4E", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 1 value #03
+		z80_io_write("001", X"03", addr_s, data_i_s, cs_n_s, wr_n_s);
+
+		-- I/O write port 2 value #00
+		z80_io_write("010", X"00", addr_s, data_i_s, cs_n_s, wr_n_s);
 
 		wait for 1 us;
 
-		-- I/O write port #01 value #03	-- TX enable, DTR=1
-		z80_io_write('1', X"03", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port 0 value #AA
+		z80_io_write("000", X"AA", addr_s, data_i_s, cs_n_s, wr_n_s);
 
-		wait for 1 us;
+		-- Test INT generate
+		wait for 6 ms;
+	
+		-- I/O read port #01
+		z80_io_read("001",         addr_s, data_o_s, cs_n_s, rd_n_s);
+
+		-- I/O write port 2 value #00
+		z80_io_write("010", X"00", addr_s, data_i_s, cs_n_s, wr_n_s);
 
 		-- I/O read port #01
-		z80_io_read('0',         addr_s, data_s, cs_n_s, rd_n_s);
+		z80_io_read("001",         addr_s, data_o_s, cs_n_s, rd_n_s);
 
-		wait for 1 us;
-
-		-- I/O write port #00 value #55
-		z80_io_write('0', X"55", addr_s, data_s, cs_n_s, wr_n_s);
-
-		-- I/O read port #01
-		z80_io_read('1',         addr_s, data_s, cs_n_s, rd_n_s);
-
-		wait for 1 us;
-
-		-- I/O write port #00 value #AA
-		z80_io_write('0', X"AA", addr_s, data_s, cs_n_s, wr_n_s);
-
-		-- I/O read port #01
-		z80_io_read('1',         addr_s, data_s, cs_n_s, rd_n_s);
-
-		wait for 1 ms;
-
-		-- I/O read port #01
-		z80_io_read('1',         addr_s, data_s, cs_n_s, rd_n_s);
+		wait for 6 ms;
 
 		-- wait
 		tb_end <= '1';

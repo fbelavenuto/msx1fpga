@@ -52,25 +52,23 @@ architecture testbench of tb is
 	-- test target
 	component timer
 	port(
-		clock_i		: in    std_logic;
-		reset_n_i	: in    std_logic;
-		addr_i		: in    std_logic_vector(1 downto 0);
-		data_io		: inout std_logic_vector(7 downto 0);
-		cs_n_i		: in    std_logic;
-		rd_n_i		: in    std_logic;
-		wr_n_i		: in    std_logic;
+		clock_i		: in  std_logic;
+		reset_n_i	: in  std_logic;
+		addr_i		: in  std_logic_vector(1 downto 0);
+		data_i		: in  std_logic_vector(7 downto 0);
+		data_o		: out std_logic_vector(7 downto 0);
+		cs_n_i		: in  std_logic;
+		rd_n_i		: in  std_logic;
+		wr_n_i		: in  std_logic;
 		-- counter 0
-		clk0_i		: in    std_logic;
-		gate0_i		: in    std_logic;
-		out0_o		: out   std_logic;
+		clk0_i		: in  std_logic;
+		out0_o		: out std_logic;
 		-- counter 1
-		clk1_i		: in    std_logic;
-		gate1_i		: in    std_logic;
-		out1_o		: out   std_logic;
+		clk1_i		: in  std_logic;
+		out1_o		: out std_logic;
 		-- counter 2
-		clk2_i		: in    std_logic;
-		gate2_i		: in    std_logic;
-		out2_o		: out   std_logic
+		clk2_i		: in  std_logic;
+		out2_o		: out std_logic
 	);
 	end component;
 
@@ -78,16 +76,16 @@ architecture testbench of tb is
 	signal tb_end		: std_logic := '0';
 
 	signal clock_cpu_s	: std_logic;
-
 	signal wait_n_s		: std_logic								:= '1';
+	
 	signal clock_s			: std_logic;
 	signal reset_n_s		: std_logic;
 	signal addr_s			: std_logic_vector( 1 downto 0);
 	signal data_s			: std_logic_vector( 7 downto 0);
+	signal data_o_s		: std_logic_vector( 7 downto 0);
 	signal cs_n_s			: std_logic;
 	signal rd_n_s			: std_logic;
 	signal wr_n_s			: std_logic;
-	signal clk0_s			: std_logic;
 	signal out0_s			: std_logic;
 	signal out2_s			: std_logic;
 
@@ -152,6 +150,7 @@ architecture testbench of tb is
 	constant clock10_period_c	: time	:= 93.34 ns;
 	constant clock8_period_c	: time	:= 125 ns;
 	constant clock7_period_c	: time	:= 139.68 ns;
+	constant clock4_period_c	: time	:= 250 ns;
 	constant clock3_period_c	: time	:= 279.35 ns;
 	constant clock500k_period_c: time	:= 2 us;
 
@@ -166,9 +165,9 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for clock21_period_c / 2;
+		wait for clock4_period_c / 2;
 		clock_s <= '1';
-		wait for clock21_period_c / 2;
+		wait for clock4_period_c / 2;
 	end process;
 
 	process
@@ -189,21 +188,19 @@ begin
 		clock_i		=> clock_s,
 		reset_n_i	=> reset_n_s,
 		addr_i		=> addr_s,
-		data_io		=> data_s,
+		data_i		=> data_s,
+		data_o		=> data_o_s,
 		cs_n_i		=> cs_n_s,
 		rd_n_i		=> rd_n_s,
 		wr_n_i		=> wr_n_s,
 		-- counter 0
-		clk0_i		=> clock_cpu_s,
-		gate0_i		=> '1',
+		clk0_i		=> clock_s,
 		out0_o		=> out0_s,
 		-- counter 1
-		clk1_i		=> '0',
-		gate1_i		=> '0',
+		clk1_i		=> clock_s,
 		out1_o		=> open,
 		-- counter 2
-		clk2_i		=> out0_s,
-		gate2_i		=> '1',
+		clk2_i		=> clock_s,
 		out2_o		=> out2_s
 	);
 
@@ -226,25 +223,22 @@ begin
 
 		wait for 4 us;
 
-		-- I/O write port #03 value #34	-- Counter 0, MSB & LSB, Mode 2, binary
-		z80_io_write("11", X"34", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port #03 value #16	-- Counter 0, LSB, mode 3, binary
+		z80_io_write("11", X"16", addr_s, data_s, cs_n_s, wr_n_s);
 
-		-- I/O write port #03 value #B7	-- Counter 2, MSB & LSB, Mode 3, binary
-		z80_io_write("11", X"B7", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port #03 value #B4	-- Counter 2, WORD, mode 2, binary
+		z80_io_write("11", X"B4", addr_s, data_s, cs_n_s, wr_n_s);
 
 		wait for 1 us;
 
-		-- I/O write port #00 value #10
-		z80_io_write("00", X"10", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port #00 value #08	-- initialize counter 0 on 500 KHz (4MHz / 8 = 500KHz)
+		z80_io_write("00", X"08", addr_s, data_s, cs_n_s, wr_n_s);
 
-		-- I/O write port #00 value #00
-		z80_io_write("00", X"00", addr_s, data_s, cs_n_s, wr_n_s);
-
-		-- I/O write port #02 value #20
+		-- I/O write port #02 value #20	-- initialize counter 2 (4MHz / 20000 = 200Hz) (pulse every 5 ms)
 		z80_io_write("10", X"20", addr_s, data_s, cs_n_s, wr_n_s);
 
-		-- I/O write port #02 value #01
-		z80_io_write("10", X"02", addr_s, data_s, cs_n_s, wr_n_s);
+		-- I/O write port #02 value #4E
+		z80_io_write("10", X"4E", addr_s, data_s, cs_n_s, wr_n_s);
 
 		wait for 50 us;
 

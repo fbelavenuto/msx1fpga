@@ -411,8 +411,6 @@ begin
 		bc2_i					=> '1',
 		-- I/O ports
 		port_a_i				=> psg_port_a_s,
-		port_a_o				=> open,
-		port_b_i				=> (others => '0'),
 		port_b_o				=> psg_port_b_s,
 		-- audio channels out
 		audio_ch_a_o		=> open,

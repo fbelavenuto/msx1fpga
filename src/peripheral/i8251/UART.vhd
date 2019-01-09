@@ -1,181 +1,232 @@
+-------------------------------------------------------------------------------
+--
+-- MSX1 FPGA project
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
+--
+-------------------------------------------------------------------------------
+--
+-- RX not totally implemented yet, need much tests!
 
 library ieee;
 use ieee.std_logic_1164.all;
 
 entity UART is
 	port (
-		clock_sys_i	: in    std_logic;
-		clock_i		: in    std_logic;
-		reset_n_i	: in    std_logic;
-		addr_i		: in    std_logic;
-		data_io		: inout std_logic_vector(7 downto 0);
-		cs_n_i		: in    std_logic;
-		rd_n_i		: in    std_logic;
-		wr_n_i		: in    std_logic;
-		rxd_i			: in    std_logic;
-		txd_o			: out   std_logic;
-		dsr_n_i		: in    std_logic;
-		cts_n_i		: in    std_logic;
-		rts_n_o		: out   std_logic;
-		dtr_n_o		: out   std_logic
+		clock_i		: in  std_logic;
+		reset_n_i	: in  std_logic;
+		addr_i		: in  std_logic;
+		data_i		: in  std_logic_vector(7 downto 0);
+		data_o		: out std_logic_vector(7 downto 0);
+		cs_n_i		: in  std_logic;
+		rd_n_i		: in  std_logic;
+		wr_n_i		: in  std_logic;
+		rxd_i			: in  std_logic;
+		txd_o			: out std_logic;
+		dsr_n_i		: in  std_logic;
+		cts_n_i		: in  std_logic;
+		rts_n_o		: out std_logic;
+		dtr_n_o		: out std_logic;
+		rx_rdy_o		: out std_logic
 	);
 end entity;
 
-architecture uart1 of UART is
+architecture Behavior of UART is
 
 	signal baudclk_s		: std_logic;
 
-	signal isread_s		: std_logic;
-	signal iswrite_s		: std_logic;
-	signal load_s			: std_logic;
-	signal modectrl_q		: std_logic;
-	signal load_mode_s	: std_logic;
-	signal load_ctrl_s	: std_logic;
+	signal regidx_q		: std_logic								:= '0';
+	signal mode_r			: std_logic_vector(7 downto 0);
+	signal ctrl_r			: std_logic_vector(7 downto 0);
+	alias  stop_bits_a	: std_logic_vector(1 downto 0) is mode_r(7 downto 6);
+	alias  parity_a		: std_logic_vector(1 downto 0) is mode_r(5 downto 4);
+	alias  char_len_a		: std_logic_vector(1 downto 0) is mode_r(3 downto 2);
+	alias  baud_sel_a		: std_logic_vector(1 downto 0) is mode_r(1 downto 0);
+	alias  huntmode_a		: std_logic is ctrl_r(7);
+	alias  softreset_a	: std_logic is ctrl_r(6);
+	alias  rts_a			: std_logic is ctrl_r(5);
+	alias  reseterr_a		: std_logic is ctrl_r(4);
+	alias  sendbreak_a	: std_logic is ctrl_r(3);
+	alias  rx_en_a			: std_logic is ctrl_r(2);
+	alias  dtr_a			: std_logic is ctrl_r(1);
+	alias  tx_en_a			: std_logic is ctrl_r(0);
 
-	signal txd_ready_s	: std_logic;
-	signal txd_empty_s	: std_logic;
-	signal loadTxD_s		: std_logic;
-	signal setTxE_s		: std_logic;
-
-	signal rx_data_q		: std_logic_vector(7 downto 0); -- Receive Data Register
-	signal RxReady_s		: std_logic;
-	signal setRxR_s		: std_logic;
-	signal clrRxR_s		: std_logic;
-	signal setOE_s			: std_logic;
-	signal setFE_s			: std_logic;
-	signal setPE_s			: std_logic;
+	signal access_s		: std_logic;
+	signal dataread_s		: std_logic;
+	signal datawrite_s	: std_logic;
+	signal ctrlwrite_s	: std_logic;
 
 	signal status_s		: std_logic_vector(7 downto 0);	-- Status Register
-	signal overrun_err_q	: std_logic;
-	signal frame_err_q	: std_logic;
-	signal parity_err_q	: std_logic;
-	signal softreset_q	: std_logic;
-	signal err_reset_q	: std_logic;
-	signal tx_en_q			: std_logic;
-	signal rx_en_q			: std_logic;
-	signal rts_q			: std_logic;
-	signal dtr_q			: std_logic;
-	signal baud_sel_q		: std_logic_vector(1 downto 0);
-	signal char_len_q		: std_logic_vector(1 downto 0);
-	signal parity_q		: std_logic_vector(1 downto 0);
-	signal stop_bits_q	: std_logic_vector(1 downto 0);
+
+	signal tx_data_s		: std_logic_vector(7 downto 0);
+	signal tx_empty_s		: std_logic;
+	signal clr_txe_s		: std_logic;
+	signal tx_ready_s		: std_logic;
+
+	signal rx_data_q		: std_logic_vector(7 downto 0); -- Receive Data Register
+	signal rx_ready_s		: std_logic;
+	signal set_rdy_s		: std_logic;
+	signal set_oe_s		: std_logic;
+	signal set_fe_s		: std_logic;
+	signal set_pe_s		: std_logic;
+	signal clr_reserr_s	: std_logic;
+	signal parity_err_s	: std_logic;
+	signal overrun_err_s	: std_logic;
+	signal frame_err_s	: std_logic;
 
 begin
-
-	RCVR: entity work.UART_Receiver
-	port map (
-		reset_n_i	=> reset_n_i,
-		clock_i		=> clock_sys_i,
-		baudclk_i	=> baudclk_s,
-		rxd_i			=> rxd_i,
-		enable_i		=> rx_en_q,
-		RDRF			=> RxReady_s,
-		RDR			=> rx_data_q,
-		setRDRF		=> setRxR_s,
-		setPE			=> setPE_s,
-		setOE			=> setOE_s,
-		setFE			=> setFE_s
-	);
-
-	XMIT: entity work.UART_Transmitter 
-	port map (
-		reset_n_i	=> reset_n_i,
-		clock_i		=> clock_sys_i,
-		baudclk_i	=> baudclk_s,
-		char_len_i	=> char_len_q,
-		stop_bits_i	=> stop_bits_q,
-		data_i		=> data_io,
-		txd_empty_i	=> txd_empty_s,
-		loadTxD_i	=> loadTxD_s,
-		tx_ready_o	=> txd_ready_s,
-		setTxE_o		=> setTxE_s,
-		txd_o			=> txd_o
-	);
 
 	CLKDIV: entity work.clk_divider
 	port map (
 		clock_i		=> clock_i,
 		reset_n_i	=> reset_n_i,
-		baudsel_i	=> baud_sel_q,
+		baudsel_i	=> baud_sel_a,
 		baudclk_o	=> baudclk_s
 	);
 
+	XMIT: entity work.UART_transmitter
+	port map (
+		reset_n_i	=> reset_n_i,
+		clock_i		=> clock_i,
+		baudclk_i	=> baudclk_s,
+		data_i		=> tx_data_s,
+		char_len_i	=> char_len_a,
+		stop_bits_i	=> stop_bits_a,
+		tx_empty_i	=> tx_empty_s,
+		tx_ready_o	=> tx_ready_s,
+		clr_txe_o	=> clr_txe_s,
+		txd_o			=> txd_o
+	);
+
+	RCVR: entity work.UART_Receiver
+	port map (
+		reset_n_i	=> reset_n_i,
+		clock_i		=> clock_i,
+		baudclk_i	=> baudclk_s,
+		enable_i		=> rx_en_a,
+		rdr_o			=> rx_data_q,
+		ready_i		=> rx_ready_s,
+		set_ready_o	=> set_rdy_s,
+		set_pe_o		=> set_pe_s,
+		set_oe_o		=> set_oe_s,
+		set_fe_o		=> set_fe_s,
+		rx_i			=> rxd_i
+	);
+
 	-- Bus Interface
-	isread_s		<= '1'	when cs_n_i = '0' and rd_n_i = '0'	else '0';
-	iswrite_s	<= '1'	when cs_n_i = '0' and wr_n_i = '0'	else '0';
+	access_s		<= '1'	when cs_n_i = '0' and (rd_n_i = '0' or wr_n_i = '0')	else '0';
+	dataread_s	<= '1'	when cs_n_i = '0' and rd_n_i = '0' and addr_i = '0'	else '0';
+	datawrite_s	<= '1'	when cs_n_i = '0' and wr_n_i = '0' and addr_i = '0'	else '0';
+	ctrlwrite_s	<= '1'	when cs_n_i = '0' and wr_n_i = '0' and addr_i = '1'	else '0';
 
-	clrRxR_s		<= '1' when isread_s  = '1' and addr_i = '0'									else '0';
-	
-	loadTxD_s	<= '1' when 
-								iswrite_s = '1' and addr_i = '0' and 
-								cts_n_i = '0' and tx_en_q = '1'										else '0';
-
-	load_s		<= '1' when iswrite_s = '1' and addr_i = '1' 								else '0';
-	load_mode_s	<= '1' when iswrite_s = '1' and addr_i = '1' and modectrl_q = '0'		else '0';
-	load_ctrl_s	<= '1' when iswrite_s = '1' and addr_i = '1' and modectrl_q = '1'		else '0';
-
-
-	-- This process updates the control and status registers
-	process (clock_sys_i)
-		variable	edge_v	: std_logic_vector(1 downto 0);
+	-- Write asynchronous
+	process (reset_n_i, softreset_a, clr_reserr_s, ctrlwrite_s)
 	begin
-		if rising_edge(clock_sys_i) then
-
-			edge_v	:= edge_v(0) & load_s;
-
-			softreset_q	<= '0';
-			err_reset_q	<= '0';
-
-			if reset_n_i = '0' or softreset_q = '1' then
-				txd_empty_s		<= '1';
-				RxReady_s		<= '0';
-				overrun_err_q	<= '0';
-				frame_err_q		<= '0';
-				parity_err_q	<= '0';
-				tx_en_q			<= '0';
-				rx_en_q			<= '0';
-				rts_q				<= '0';
-				dtr_q				<= '0';
-				stop_bits_q		<= "01";
-				parity_q			<= "00";
-				char_len_q		<= "11";
-				baud_sel_q		<= "10";
-				modectrl_q		<= '0';
+		if reset_n_i = '0' or softreset_a = '1' then
+			mode_r	<= (others => '0');
+			ctrl_r	<= (others => '0');
+			regidx_q	<= '0';
+		elsif clr_reserr_s = '1' then
+			reseterr_a <= '0';
+		elsif rising_edge(ctrlwrite_s) then
+			if regidx_q = '0' then
+				regidx_q <= '1';
+				mode_r	<= data_i;
 			else
-				txd_empty_s		<= (setTxE_s and not txd_empty_s)   or (not loadTxD_s   and txd_empty_s);
-				RxReady_s		<= (setRxR_s and not RxReady_s)     or (not clrRxR_s    and RxReady_s);
-				overrun_err_q	<= (setOE_s  and not overrun_err_q) or (not err_reset_q and overrun_err_q);
-				frame_err_q		<= (setFE_s  and not frame_err_q)   or (not err_reset_q and frame_err_q);
-				parity_err_q	<= (setPE_s  and not parity_err_q)  or (not err_reset_q and parity_err_q);
-				if edge_v = "01" then
-					if load_mode_s = '1' then
-						stop_bits_q	<= data_io(7 downto 6);
-						parity_q		<= data_io(5 downto 4);
-						char_len_q	<= data_io(3 downto 2);
-						baud_sel_q	<= data_io(1 downto 0);
-						modectrl_q	<= '1';
-					elsif load_ctrl_s = '1' then
-						-- Enter Hunt Mode <= data_io(7);
-						softreset_q	<= data_io(6);
-						rts_q			<= data_io(5);
-						err_reset_q	<= data_io(4);
-						--Send Break Character	<= data_io(3);
-						rx_en_q		<= data_io(2);
-						dtr_q			<= data_io(1);
-						tx_en_q		<= data_io(0);
-					end if;
-				end if;
+				ctrl_r	<= data_i;
 			end if;
 		end if;
 	end process;
 
+	-- TX control
+	process (reset_n_i, datawrite_s, data_i, clock_i)
+	begin
+		if reset_n_i = '0' then
+			tx_empty_s	<= '1';
+		elsif datawrite_s = '1' then
+			tx_empty_s	<= '0';
+			tx_data_s	<= data_i;
+		elsif rising_edge(clock_i) then
+			if clr_txe_s = '1' then
+				tx_empty_s	<= '1';
+			end if;
+		end if;
+	end process;
+
+	-- RX Control
+	process (reset_n_i, dataread_s, reseterr_a, clock_i)
+	begin
+		if reset_n_i = '0' then
+			rx_ready_s		<= '0';
+			overrun_err_s	<= '0';
+			frame_err_s		<= '0';
+			parity_err_s	<= '0';
+		elsif dataread_s = '1' then
+			rx_ready_s	<= '0';
+		elsif rising_edge(clock_i) then
+
+			clr_reserr_s	<= '0';
+
+			if reseterr_a = '1' then
+				overrun_err_s	<= '0';
+				frame_err_s		<= '0';
+				parity_err_s	<= '0';
+				clr_reserr_s	<= '1';
+			elsif set_oe_s = '1' then
+				overrun_err_s	<= '1';
+			elsif set_fe_s = '1' then
+				frame_err_s		<= '1';
+			elsif set_pe_s = '1' then
+				parity_err_s	<= '1';
+			end if;
+
+			if set_rdy_s = '1' then
+				rx_ready_s	<= '1';
+			end if;
+
+		end if;
+	end process;
+
 	--
-	rts_n_o	<= rts_q;
-	dtr_n_o	<= dtr_q;
+	rts_n_o	<= rts_a;
+	dtr_n_o	<= dtr_a;
+	rx_rdy_o	<= rx_ready_s and rx_en_a;
 
-	status_s	<= dsr_n_i & "0" & frame_err_q & overrun_err_q & parity_err_q & txd_empty_s & RxReady_s & txd_ready_s;
+	status_s	<= dsr_n_i & "0" & frame_err_s & overrun_err_s & parity_err_s & tx_empty_s & rx_ready_s & tx_ready_s;
 
-	data_io	<= (others => 'Z')	when isread_s = '0'	else		-- tristate bus when not reading
+	data_o	<= (others => '1')	when access_s = '0' or rd_n_i = '1'	else
 					rx_data_q			when addr_i = '0'		else
 					status_s				when addr_i = '1';
 

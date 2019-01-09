@@ -9,58 +9,51 @@ add wave -noupdate /tb/cs_n_s
 add wave -noupdate /tb/rd_n_s
 add wave -noupdate /tb/wr_n_s
 add wave -noupdate -radix hexadecimal /tb/data_s
+add wave -noupdate -radix hexadecimal -childformat {{/tb/data_o_s(7) -radix hexadecimal} {/tb/data_o_s(6) -radix hexadecimal} {/tb/data_o_s(5) -radix hexadecimal} {/tb/data_o_s(4) -radix hexadecimal} {/tb/data_o_s(3) -radix hexadecimal} {/tb/data_o_s(2) -radix hexadecimal} {/tb/data_o_s(1) -radix hexadecimal} {/tb/data_o_s(0) -radix hexadecimal}} -subitemconfig {/tb/data_o_s(7) {-radix hexadecimal} /tb/data_o_s(6) {-radix hexadecimal} /tb/data_o_s(5) {-radix hexadecimal} /tb/data_o_s(4) {-radix hexadecimal} /tb/data_o_s(3) {-radix hexadecimal} /tb/data_o_s(2) {-radix hexadecimal} /tb/data_o_s(1) {-radix hexadecimal} /tb/data_o_s(0) {-radix hexadecimal}} /tb/data_o_s
 add wave -noupdate /tb/dtr_n_s
 add wave -noupdate /tb/rts_n_s
 add wave -noupdate /tb/rxd_s
 add wave -noupdate /tb/txd_s
 add wave -noupdate -divider Internal
 add wave -noupdate -radix hexadecimal /tb/u_target/status_s
-add wave -noupdate /tb/u_target/isread_s
-add wave -noupdate /tb/u_target/iswrite_s
-add wave -noupdate /tb/u_target/load_mode_s
-add wave -noupdate /tb/u_target/load_ctrl_s
-add wave -noupdate /tb/u_target/modectrl_q
-add wave -noupdate /tb/u_target/softreset_q
-add wave -noupdate /tb/u_target/tx_en_q
-add wave -noupdate /tb/u_target/rx_en_q
-add wave -noupdate /tb/u_target/baud_sel_q
-add wave -noupdate /tb/u_target/char_len_q
-add wave -noupdate /tb/u_target/stop_bits_q
-add wave -noupdate /tb/u_target/err_reset_q
-add wave -noupdate /tb/u_target/rts_q
-add wave -noupdate /tb/u_target/dtr_q
-add wave -noupdate -divider TX
+add wave -noupdate /tb/u_target/access_s
+add wave -noupdate /tb/u_target/datawrite_s
+add wave -noupdate /tb/u_target/ctrlwrite_s
+add wave -noupdate /tb/u_target/regidx_q
+add wave -noupdate -radix hexadecimal /tb/u_target/ctrl_r
+add wave -noupdate -radix hexadecimal /tb/u_target/mode_r
+add wave -noupdate /tb/u_target/baud_sel_a
+add wave -noupdate /tb/u_target/char_len_a
+add wave -noupdate /tb/u_target/dtr_a
+add wave -noupdate /tb/u_target/rts_a
 add wave -noupdate /tb/u_target/baudclk_s
-add wave -noupdate /tb/u_target/txd_empty_s
-add wave -noupdate /tb/u_target/setTxE_s
-add wave -noupdate /tb/u_target/loadTxD_s
-add wave -noupdate /tb/u_target/txd_ready_s
+add wave -noupdate -radix hexadecimal /tb/u_target/tx_data_s
+add wave -noupdate /tb/u_target/clr_txe_s
+add wave -noupdate /tb/u_target/tx_empty_s
+add wave -noupdate /tb/u_target/tx_busy_s
+add wave -noupdate /tb/u_target/tx_en_a
+add wave -noupdate -divider TX
+add wave -noupdate /tb/u_target/XMIT/bclk_dlayed_s
+add wave -noupdate /tb/u_target/XMIT/bclk_rising_s
+add wave -noupdate /tb/u_target/XMIT/bitcount_q
+add wave -noupdate /tb/u_target/XMIT/bitmax_s
+add wave -noupdate /tb/u_target/XMIT/clr_s
+add wave -noupdate /tb/u_target/XMIT/inc_s
+add wave -noupdate /tb/u_target/XMIT/shift_tsr_s
+add wave -noupdate /tb/u_target/XMIT/load_tsr_s
+add wave -noupdate /tb/u_target/XMIT/start_s
 add wave -noupdate /tb/u_target/XMIT/state_s
 add wave -noupdate /tb/u_target/XMIT/nextstate_s
-add wave -noupdate /tb/u_target/XMIT/Bclk_dlayed
-add wave -noupdate /tb/u_target/XMIT/Bclk_rising
-add wave -noupdate /tb/u_target/XMIT/bitcount_q
-add wave -noupdate -radix unsigned /tb/u_target/XMIT/bitmax_s
-add wave -noupdate /tb/u_target/XMIT/inc_s
-add wave -noupdate /tb/u_target/XMIT/loadTSR
-add wave -noupdate /tb/u_target/XMIT/shftTSR
-add wave -noupdate /tb/u_target/XMIT/start_s
-add wave -noupdate -radix hexadecimal /tb/u_target/XMIT/tdr_q
 add wave -noupdate -radix hexadecimal /tb/u_target/XMIT/tsr_q
 add wave -noupdate -divider RX
 add wave -noupdate /tb/u_target/rx_data_q
 add wave -noupdate /tb/u_target/clrRxR_s
-add wave -noupdate /tb/u_target/frame_err_q
-add wave -noupdate /tb/u_target/overrun_err_q
-add wave -noupdate /tb/u_target/parity_err_q
-add wave -noupdate /tb/u_target/parity_q
 add wave -noupdate /tb/u_target/setFE_s
 add wave -noupdate /tb/u_target/setOE_s
-add wave -noupdate /tb/u_target/RxReady_s
 add wave -noupdate /tb/u_target/setPE_s
 add wave -noupdate /tb/u_target/setRxR_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {339021 ns} 0}
+WaveRestoreCursors {{Cursor 1} {23630 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 198
 configure wave -valuecolwidth 41
@@ -76,4 +69,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {1188256 ns}
+WaveRestoreZoom {0 ns} {74272 ns}

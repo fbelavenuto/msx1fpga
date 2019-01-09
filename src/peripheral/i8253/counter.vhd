@@ -1,197 +1,231 @@
+-------------------------------------------------------------------------------
+--
+-- MSX1 FPGA project
+--
+-- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+--
+-- All rights reserved
+--
+-- Redistribution and use in source and synthezised forms, with or without
+-- modification, are permitted provided that the following conditions are met:
+--
+-- Redistributions of source code must retain the above copyright notice,
+-- this list of conditions and the following disclaimer.
+--
+-- Redistributions in synthesized form must reproduce the above copyright
+-- notice, this list of conditions and the following disclaimer in the
+-- documentation and/or other materials provided with the distribution.
+--
+-- Neither the name of the author nor the names of other contributors may
+-- be used to endorse or promote products derived from this software without
+-- specific prior written permission.
+--
+-- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+-- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+-- THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+-- PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE
+-- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+-- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+-- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+-- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+-- CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+-- ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+-- POSSIBILITY OF SUCH DAMAGE.
+--
+-- Please report bugs to the author, but before you do so, please
+-- make sure that this is not a derivative work and that
+-- you have the latest version of this file.
+--
+-- Based on timer8253.v from Next186 project
+-- http://opencores.org/project,next186
+-- Author: Nicolae Dumitrache
+-------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 entity counter is
 	port (
-		clocksys_i	: in    std_logic;
-		reset_n_i	: in    std_logic;
-		addr_i		: in    std_logic_vector(1 downto 0);
-		data_io		: inout std_logic_vector(7 downto 0);
-		read_i		: in    std_logic;
-		writec_i		: in    std_logic;
-		writer_i		: in    std_logic;
-		clock_i		: in    std_logic;
-		gate_i		: in    std_logic;
-		out_o			: out   std_logic
+		clock_i		: in  std_logic;
+		reset_n_i	: in  std_logic;
+		data_i		: in  std_logic_vector(7 downto 0);
+		data_o		: out std_logic_vector(7 downto 0);
+		cs_i			: in  std_logic;
+		wr_i			: in  std_logic;
+		cmd_i			: in  std_logic;
+		clock_c_i	: in  std_logic;
+		out_o			: out std_logic
 	);
 end entity;
 
 architecture Behavior of counter is
 
-	signal cnt_mode_q		: std_logic_vector( 2 downto 0);
-	signal cnt_rw_q		: std_logic_vector( 1 downto 0);
-	signal cnt_lmr_q		: std_logic;
-	signal cnt_lmw_q		: std_logic;
-	signal cnt_read_q		: std_logic;
-	signal cnt_latched_q	: std_logic;
-	signal cnt_initial_q	: std_logic_vector(15 downto 0);
-	signal cnt_value_q	: unsigned(15 downto 0);
-	signal cnt_latch_q	: std_logic_vector(15 downto 0);
-	signal cnt_out_q		: std_logic;
-	signal loaded_q		: boolean;
-	signal bitnum_s		: integer range 1 to 3;
+	--signal write_s		: std_logic;
+
+	signal out_q		: std_logic;
+	signal ce_q			: std_logic;
+	signal rd_q			: std_logic;
+	signal mode_q		: std_logic_vector( 5 downto 0);
+	signal value_q		: unsigned(15 downto 0);
+	signal initial_q	: std_logic_vector(15 downto 0);
+	signal state_q		: std_logic_vector( 1 downto 0);
+	signal strobe_q	: std_logic;
+	signal latched_q	: std_logic;
+	signal newcmd_q	: std_logic;
+	signal cnt1_s		: std_logic;
+	signal cnt2_s		: std_logic;
+	signal clr_ncmd_s	: std_logic;
+	signal clr_ce_s	: std_logic;
 
 begin
 
-	with addr_i select bitnum_s <=
-		1	when "00",
-		2	when "01",
-		3	when others;
+	--write_s	<= '1'	when cs_i = '1' and wr_i = '1'	else '0';
 
-	-- Read process
-	reading: process (read_i, cnt_latched_q, cnt_read_q, cnt_value_q, cnt_latch_q, cnt_lmr_q, cnt_rw_q, cnt_mode_q)
-		variable value_v	: std_logic_vector(15 downto 0);
-	begin
-		data_io	<= (others => 'Z');
-		if read_i = '1' then
-			if    cnt_read_q = '0' and cnt_latched_q = '0' then
-				value_v := std_logic_vector(cnt_value_q);
-			elsif cnt_read_q = '0' and cnt_latched_q = '1' then
-				value_v := cnt_latch_q;
-			else
-				value_v := cnt_out_q & '0' & cnt_rw_q & cnt_mode_q & '0' & cnt_out_q & '0' & cnt_rw_q & cnt_mode_q & '0';	-- No Null and BCD implemented
-			end if;
-			if    cnt_rw_q = "01" or (cnt_lmr_q = '0' and cnt_rw_q = "11") then
-				data_io	<= value_v( 7 downto 0);
-			elsif cnt_rw_q = "10" or (cnt_lmr_q = '1' and cnt_rw_q = "11") then
-				data_io	<= value_v(15 downto 8);
-			end if;
-		end if;
-	end process;
+	cnt1_s	<= '1'	when value_q = 1	else '0';
+	cnt2_s	<= '1'	when value_q = 2	else '0';
 
-	-- Write control register
-	writing: process (reset_n_i, clocksys_i)
-		variable edge_w_v	: std_logic_vector(1 downto 0);
-		variable edge_r_v	: std_logic_vector(1 downto 0);
-		variable regnum_v	: std_logic_vector(1 downto 0);
-		variable r_w_v		: std_logic_vector(1 downto 0);
+	-- Write asynchronous
+	process (reset_n_i, clr_ncmd_s, clr_ce_s, cs_i)
+		variable temp_v	: std_logic_vector(2 downto 0);
 	begin
 		if reset_n_i = '0' then
-			edge_w_v			:= (others => '0');
-			edge_r_v			:= (others => '0');
-			cnt_mode_q		<= (others => '0');
-			cnt_latch_q		<= (others => '0');
-			cnt_rw_q			<= (others => '0');
-			cnt_read_q		<= '0';
-			cnt_lmr_q		<= '0';
-		elsif rising_edge(clocksys_i) then
-			edge_w_v := edge_w_v(0) & writer_i;
-			edge_r_v := edge_r_v(0) & read_i;
-
-			if edge_r_v = "10" then
-				if cnt_rw_q = "11" then
-					cnt_lmr_q <= not cnt_lmr_q;
-				end if;
-				cnt_latched_q	<= '0';
+			state_q		<= (others => '0');
+			mode_q		<= (others => '0');
+			initial_q	<= (others => '0');
+			rd_q			<= '0';
+			latched_q	<= '0';
+			--
+			ce_q			<= '0';
+			newcmd_q		<= '0';
+		elsif clr_ncmd_s = '1' or clr_ce_s = '1' then
+			if clr_ncmd_s = '1' then
+				newcmd_q		<= '0';
 			end if;
+			if clr_ce_s = '1' then
+				ce_q			<= '0';
+			end if;
+		elsif rising_edge(cs_i) then
 
-			if edge_w_v = "01" then
-				regnum_v	:= data_io(7 downto 6);
-				r_w_v		:= data_io(5 downto 4);
-
-				if r_w_v = "00" and regnum_v = addr_i then	-- Counter Latch
-					cnt_latch_q	<= std_logic_vector(cnt_value_q);
-					cnt_latched_q	<= '1';
-				else
-					if regnum_v = addr_i then
-						cnt_rw_q			<= r_w_v;
-						cnt_mode_q		<= data_io(3 downto 1);
-						cnt_latched_q	<= '0';
-					elsif regnum_v = "11" then
-						cnt_read_q <= data_io(bitnum_s);
+			if wr_i = '1' then						-- Write
+				ce_q	<= '1';
+				rd_q	<= '0';
+				if cmd_i = '0'	then					-- Counter data
+					temp_v := "0" & state_q(0) + "0" & (mode_q(5) xor mode_q(4)) + "01";
+					state_q <= temp_v(1 downto 0);
+					if state_q(0) = '1' then
+						initial_q(15 downto 8) <= data_i;
 					else
-						null;
+						initial_q( 7 downto 0) <= data_i;
 					end if;
+				else										-- Command
+					if data_i(5) = '1' or data_i(4) = '1' then
+						mode_q		<= data_i(5 downto 0);
+						newcmd_q		<= '1';
+						state_q		<= '0' & (data_i(5) and not data_i(4));
+					else
+						latched_q	<= mode_q(5) and mode_q(4);
+					end if;
+					
+				end if;
+			else											-- Read
+				rd_q <= not rd_q;
+				if rd_q = '1' then
+					latched_q <= '0';
 				end if;
 			end if;
 		end if;
 	end process;
 
-	-- Counter and write counter value
-	cnt: process (reset_n_i, clocksys_i)
-		variable edge_w_v	: std_logic_vector(1 downto 0);
-		variable edge_c_v	: std_logic_vector(1 downto 0);
+	-- Synchronous
+	process (reset_n_i, clock_c_i)
 	begin
 		if reset_n_i = '0' then
-			edge_w_v			:= (others => '0');
-			edge_c_v			:= (others => '0');
-			cnt_initial_q	<= (others => '0');
-			cnt_value_q	<= (others => '0');
-			cnt_out_q		<= '1';
-			cnt_lmw_q		<= '0';
-			loaded_q			<= false;
-		elsif rising_edge(clocksys_i) then
-			edge_w_v := edge_w_v(0) & writec_i;
-			edge_c_v := edge_c_v(0) & clock_i;
 
-			-- 
-			if edge_w_v = "01" then
-				if    cnt_rw_q = "01" then
-					cnt_initial_q( 7 downto 0)	<= data_io;
-					cnt_lmw_q <= '0';
-					loaded_q <= true;
-				elsif cnt_rw_q = "10" then
-					cnt_initial_q(15 downto 8)	<= data_io;
-					cnt_lmw_q <= '0';
-					loaded_q <= true;
-				elsif cnt_rw_q = "11" and cnt_lmw_q = '0' then
-					cnt_initial_q( 7 downto 0)	<= data_io;
-					cnt_lmw_q <= '1';
-				elsif cnt_rw_q = "11" and cnt_lmw_q = '1' then
-					cnt_initial_q(15 downto 8)	<= data_io;
-					cnt_lmw_q <= '0';
-					loaded_q <= true;
-				else
-					null;
+			out_q			<= '1';
+			clr_ncmd_s	<= '0';
+			clr_ce_s		<= '0';
+			value_q		<= (others => '0');
+			strobe_q		<= '0';
+
+		elsif rising_edge(clock_c_i) then
+
+			clr_ncmd_s	<= '0';
+			clr_ce_s		<= '0';
+			
+			if state_q(1) = '1' and latched_q = '0' then
+
+				if newcmd_q = '1' then
+					clr_ncmd_s	<= '1';
 				end if;
-				if loaded_q = true then
-					if    cnt_mode_q = "000" then		-- Mode 0
-						cnt_out_q <= '0';
-					elsif cnt_mode_q(1) = '1' then		-- Mode 2 and 3
-						cnt_out_q <= '1';
-					else
+
+				case mode_q(3 downto 1) is
+
+					when "000" | "001" =>
+						if ce_q = '1' then
+							out_q		<= '0';
+							clr_ce_s	<= '1';
+							value_q <= unsigned(initial_q);
+						else
+							value_q <= value_q - 1;
+							if cnt1_s = '1' then
+								out_q <= '1';
+							end if;
+						end if;
+
+					when "010" | "110" =>
+						out_q <= not cnt2_s;
+						if cnt1_s = '1' or newcmd_q = '1' then
+							if ce_q = '1' then
+								clr_ce_s	<= '1';
+							end if;
+							value_q <= unsigned(initial_q);
+						else
+							value_q <= value_q - 1;
+						end if;
+
+					when "011" | "111" =>
+						if cnt1_s = '1' or cnt2_s = '1' or newcmd_q = '1' then
+							out_q		<= not out_q or newcmd_q;
+							if ce_q = '1' then
+								clr_ce_s	<= '1';
+							end if;
+							value_q	<= unsigned(initial_q(15 downto 1) & ((not out_q or newcmd_q) and initial_q(0)));
+						else
+							value_q <= value_q - 2;
+						end if;
+
+					when "100" | "101" =>
+						if ce_q = '1' then
+							out_q		<= '1';
+							clr_ce_s	<= '1';
+							value_q	<= unsigned(initial_q);
+							strobe_q	<= '1';
+						else
+							value_q	<= value_q - 1;
+							if cnt1_s = '1' then
+								if strobe_q = '1' then
+									out_q	<= '0';
+								end if;
+								strobe_q <= '0';
+							else
+								out_q <= '1';
+							end if;
+						end if;
+
+					when others =>
 						null;
-					end if;
-				end if;
-			end if;
 
-			-- Counter Clock Rising
-			if edge_c_v = "01" then
-				if gate_i = '1' then
-					if    cnt_mode_q = "000" then					-- Mode 0
-					elsif cnt_mode_q(1 downto 0) = "10" then	-- Mode 2
-						if loaded_q = true then
-							cnt_value_q <= unsigned(cnt_initial_q);
-							loaded_q <= false;
-						else
-							cnt_value_q <= cnt_value_q - 1;
-						end if;
-						if cnt_value_q = 1 then
-							cnt_out_q <= '0';
-							loaded_q <= true;
-						else
-							cnt_out_q <= '1';
-						end if;
-					elsif cnt_mode_q(1 downto 0) = "11" then	-- Mode 3
-						if loaded_q = true then
-							cnt_value_q <= unsigned(cnt_initial_q);
-							loaded_q <= false;
-						else
-							cnt_value_q <= cnt_value_q - 1;
-						end if;
-						if cnt_value_q = 1 then
-							cnt_out_q <= not cnt_out_q;
-							loaded_q <= true;
-						end if;
-					end if;
-
-				end if;
+				end case;
 			end if;
 		end if;
 	end process;
 
-	out_o <= cnt_out_q;
+	out_o	<= out_q;
+
+	data_o	<= std_logic_vector(value_q(15 downto 8))	when mode_q(5) = '1' and  (mode_q(4) = '0' or rd_q = '1')	else
+					std_logic_vector(value_q( 7 downto 0));
+
 
 end architecture;

@@ -667,8 +667,7 @@ begin
 
 	midi3inst: entity work.Midi3
 	port map (
-		clocksys_i		=> clock_sdram_s,
-		clock_16m_i		=> clock_8m_s,
+		clock_i			=> clock_8m_s,
 		reset_n_i		=> not reset_s,
 		addr_i			=> bus_addr_s(2 downto 0),
 		data_i			=> bus_data_to_s,
