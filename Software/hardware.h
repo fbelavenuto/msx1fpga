@@ -52,6 +52,10 @@ static const unsigned char mymkid = 40;
 #define REG_VOLOPLL		0x24
 #define REG_VOLAUX1		0x25
 
+// Reg Reset
+#define RES_RELOAD		0x80
+#define RES_SOFTRES		0x01
+
 // PS/2 FIFO status
 #define FIFO_FULL		0x01
 #define FIFO_EMPTY		0x02

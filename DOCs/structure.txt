@@ -44,6 +44,7 @@ Registers (hex):
 (R )	04 => Hardware flags
 			bot 0 = Has Hardware disk-change
 ( W)	0A => Reset
+			bit 7 = Reload core (only for Xilinx boards)
 			bit 0 = Soft reset
 (R )	0B => PS/2 status
 			bit 1 = FIFO empty flag

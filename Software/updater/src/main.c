@@ -25,6 +25,7 @@ http://msx.atlantes.org/index_en.html#sdccmsxdos
 #include "spi.h"
 #include "conio.h"
 #include "msxdos.h"
+#include "hardware.h"
 
 /* Constants */
 
@@ -130,6 +131,9 @@ int main(char** argv, int argc)
 	SPI_sendcmd(cmd_write_disable);
 
 	puts("Flash updated, turn power off and on.\r\n");
+	SWIOP_REGNUM = REG_RESET;
+	SWIOP_REGVAL = RES_RELOAD;
+
 
 exit:
 	close(fhandle);

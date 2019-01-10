@@ -130,6 +130,7 @@ architecture behavior of wxedax_top is
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
 	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
+	signal reload_s			: std_logic;
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
@@ -289,6 +290,7 @@ begin
 		reset_i			=> reset_s,
 		por_i				=> por_s,
 		softreset_o		=> soft_reset_s_s,
+		reload_o			=> reload_s,
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> "00",
@@ -538,6 +540,16 @@ begin
 		adc_cs_n_o	=> adc_cs_n_o,
 		adc_clk_o	=> adc_clock_o
 	);
+
+	-- Multiboot
+	mb: entity work.multiboot
+	port map (
+		reset_i		=> por_s,
+		clock_i		=> clock_vdp_s,
+		start_i		=> reload_s,
+		spi_addr_i	=> X"6B000000"
+	);
+
 
 	-----------------------------------------------------------------------------
 	-- SNES Gamepads

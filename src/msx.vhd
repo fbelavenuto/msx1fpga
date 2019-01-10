@@ -78,6 +78,7 @@ entity msx is
 		reset_i			: in  std_logic;
 		por_i				: in  std_logic;
 		softreset_o		: out std_logic;
+		reload_o			: out std_logic;
 		-- Options
 		opt_nextor_i	: in  std_logic;
 		opt_mr_type_i	: in  std_logic_vector(1 downto 0);
@@ -508,6 +509,7 @@ begin
 		nextor_en_o		=> nextor_en_s,
 		mr_type_o		=> mr_type_s,
 		turbo_on_o		=> turbo_on_s,
+		reload_o			=> reload_o,
 		softreset_o		=> softreset_s,
 		vga_en_o			=> vga_en_s,
 		scanline_en_o	=> scanline_en_s,

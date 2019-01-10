@@ -72,14 +72,18 @@ architecture behavior of timer is
 	signal access_s			: std_logic;
 	signal write_s				: std_logic;
 	signal port_a0_s			: std_logic;
+	signal port_a1_s			: std_logic;
 	signal port_a2_s			: std_logic;
 	signal port_a3_s			: std_logic;
 	signal cmd0_s				: std_logic;
+	signal cmd1_s				: std_logic;
 	signal cmd2_s				: std_logic;
 
 	signal cnt0_cs_s			: std_logic;
+	signal cnt1_cs_s			: std_logic;
 	signal cnt2_cs_s			: std_logic;
 	signal cnt0_data_from_s	: std_logic_vector(7 downto 0);
+	signal cnt1_data_from_s	: std_logic_vector(7 downto 0);
 	signal cnt2_data_from_s	: std_logic_vector(7 downto 0);
 
 begin
@@ -88,12 +92,16 @@ begin
 	write_s		<= not wr_n_i;
 	access_s		<= '1'	when cs_n_i = '0' and (rd_n_i = '0' or wr_n_i = '0')	else '0';
 	port_a0_s	<= '1'	when addr_i = "00"	else '0';
+	port_a1_s	<= '1'	when addr_i = "01"	else '0';
 	port_a2_s	<= '1'	when addr_i = "10"	else '0';
 	port_a3_s	<= '1'	when addr_i = "11"	else '0';
+
 	cmd0_s		<= '1'	when port_a3_s = '1' and data_i(7 downto 6) = "00"	else '0';
+	cmd1_s		<= '1'	when port_a3_s = '1' and data_i(7 downto 6) = "01"	else '0';
 	cmd2_s		<= '1'	when port_a3_s = '1' and data_i(7 downto 6) = "10"	else '0';
 
 	cnt0_cs_s	<= '1'	when access_s = '1' and (port_a0_s = '1' or cmd0_s = '1')	else '0';
+	cnt1_cs_s	<= '1'	when access_s = '1' and (port_a1_s = '1' or cmd1_s = '1')	else '0';
 	cnt2_cs_s	<= '1'	when access_s = '1' and (port_a2_s = '1' or cmd2_s = '1')	else '0';
 
 	-- Counters
@@ -108,6 +116,19 @@ begin
 		cmd_i			=> cmd0_s,
 		clock_c_i	=> clk0_i,
 		out_o			=> out0_o
+	);
+
+	cnt1: entity work.counter
+	port map (
+		clock_i		=> clock_i,
+		reset_n_i	=> reset_n_i,
+		data_i		=> data_i,
+		data_o		=> cnt1_data_from_s,
+		cs_i			=> cnt1_cs_s,
+		wr_i			=> write_s,
+		cmd_i			=> cmd1_s,
+		clock_c_i	=> clk1_i,
+		out_o			=> out1_o
 	);
 
 	cnt2: entity work.counter
@@ -125,6 +146,7 @@ begin
 
 	data_o	<= (others => '1')	when rd_n_i = '1'	else
 					cnt0_data_from_s	when port_a0_s = '1' or cmd0_s = '1'	else
+					cnt1_data_from_s	when port_a1_s = '1' or cmd1_s = '1'	else
 					cnt2_data_from_s;
 
 end architecture;

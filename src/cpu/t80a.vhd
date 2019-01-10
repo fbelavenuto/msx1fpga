@@ -107,7 +107,7 @@ architecture rtl of T80a is
     signal write_s				: std_logic;
     signal mreq_s					: std_logic;
     signal mreq_inhibit_s		: std_logic;
-    signal ireq_inhibit_n_s	: std_logic;											-- 0247a
+--    signal ireq_inhibit_n_s	: std_logic;											-- 0247a
     signal req_inhibit_s		: std_logic;
     signal rd_s					: std_logic;
     signal mreq_n_s				: std_logic;
@@ -133,7 +133,7 @@ begin
 	busak_n_o	<= busak_n_s;
 	mreq_n_o		<= mreq_n_s								when busak_n_s = '1' else 'Z';
 --	iorq_n_o		<= iorq_n_s or ireq_inhibit_n_s	when busak_n_s = '1' else 'Z';	-- 0247a
-	iorq_n_o		<= iorq_n_s 	when busak_n_s = '1' else 'Z';	-- 0247a
+	iorq_n_o		<= iorq_n_s								when busak_n_s = '1' else 'Z';	-- 0247a
 	rd_n_o		<= rd_n_s								when busak_n_s = '1' else 'Z';
 	wr_n_o		<= wr_n_j_s								when busak_n_s = '1' else 'Z';	-- 0247a
 	refresh_n_o	<= rfsh_n_s								when busak_n_s = '1' else 'Z';
@@ -188,12 +188,12 @@ begin
 		end if;
 	end process;
 
-	process (clock_i)		-- 0247a
-	begin
-		if rising_edge(clock_i) then
-			ireq_inhibit_n_s <= not iorq_s;
-		end if;
-	end process;
+--	process (clock_i)		-- 0247a
+--	begin
+--		if rising_edge(clock_i) then
+--			ireq_inhibit_n_s <= not iorq_s;
+--		end if;
+--	end process;
 
 	process (reset_s, clock_i, clock_en_i)	-- 0247a
 	begin

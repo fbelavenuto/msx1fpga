@@ -78,6 +78,7 @@ entity swioports is
 		nextor_en_o		: out std_logic;
 		mr_type_o		: out std_logic_vector( 1 downto 0);
 		turbo_on_o		: out std_logic;
+		reload_o			: out std_logic;
 		softreset_o		: out std_logic;
 		vga_en_o			: out std_logic;
 		scanline_en_o	: out std_logic;
@@ -103,6 +104,7 @@ architecture Behavior of swioports is
 	signal nextor_en_q		: std_logic;
 	signal mapper_q			: std_logic_vector(1 downto 0);
 	signal turbo_on_q			: std_logic								:= '0';
+	signal reload_q			: std_logic								:= '0';
 	signal softreset_q		: std_logic								:= '0';
 	signal spulse_r_s			: std_logic_vector(1 downto 0)	:= (others => '0');
 	signal spulse_w_s			: std_logic_vector(1 downto 0)	:= (others => '0');
@@ -196,6 +198,7 @@ begin
 			vga_en_q			<= vga_on_i;
 			scanline_en_q	<= '0';
 			ntsc_pal_q		<= '0';
+			reload_q			<= '0';
 			-- default volumes
 			volumes_q.beep	<= std_logic_vector(to_unsigned(default_vol_beep, 8));
 			volumes_q.ear	<= std_logic_vector(to_unsigned(default_vol_ear, 8));
@@ -239,6 +242,7 @@ begin
 			elsif cs_i = '1' and wr_i = '1' and maker_id_s = MYMKID_C and addr_i = X"49" then
 				case reg_addr_q is
 					when X"0A" =>
+						reload_q			<= data_i(7);
 						softreset_q		<= data_i(0);
 					when X"0D" =>
 						keymap_addr_q(7 downto 0) <= unsigned(data_i);
@@ -428,6 +432,7 @@ begin
 	nextor_en_o		<= nextor_en_q;
 	mr_type_o		<= mapper_q;
 	turbo_on_o		<= turbo_on_q;
+	reload_o			<= reload_q;
 	softreset_o		<= softreset_q;
 	keymap_addr_o	<= std_logic_vector(keymap_addr_q);
 	keymap_data_o	<= keymap_data_q;

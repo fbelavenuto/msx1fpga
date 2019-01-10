@@ -474,7 +474,7 @@ int main(char *argv[], int argc)
 
 	if (boot) {
 		SWIOP_REGNUM = REG_RESET;
-		SWIOP_REGVAL = 1;
+		SWIOP_REGVAL = RES_SOFTRES;
 	}
 
 	if (reset) {
