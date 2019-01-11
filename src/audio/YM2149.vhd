@@ -101,7 +101,7 @@ architecture RTL of YM2149 is
 	signal busctrl_re_s		: std_logic;
 
 	signal reg_addr_q			: std_logic_vector(7 downto 0);
-	signal regs_q				: array_16x8_t	:= (others => (others => '0'));
+	signal regs_q				: array_16x8_t	:= (7 => (others => '1'), others => (others => '0'));
 	signal env_reset			: std_logic;
 
 	signal noise_gen_cnt		: unsigned(4 downto 0)		:= (others => '0');
@@ -191,8 +191,7 @@ begin
 	process(reset_i, busctrl_we_s, reg_addr_q)
 	begin
 		if reset_i = '1' then
-			regs_q <= (others => (others => '0'));
-			regs_q(7) <= x"ff";
+			regs_q <= (7 => (others => '1'), others => (others => '0'));
 		elsif falling_edge(busctrl_we_s) then
 			case reg_addr_q(3 downto 0) is
 				when x"0" => regs_q(0)  <= data_i;

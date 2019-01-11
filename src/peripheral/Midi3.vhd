@@ -131,7 +131,8 @@ begin
 
 	serial: entity work.UART
 	port map (
-		clock_i		=> out0_s,
+		clock_i		=> clock_i,
+		clock_c_i	=> out0_s,
 		reset_n_i	=> reset_n_i,
 		addr_i		=> addr_i(0),
 		data_i		=> data_i,

@@ -46,6 +46,7 @@ use ieee.std_logic_1164.all;
 entity UART is
 	port (
 		clock_i		: in  std_logic;
+		clock_c_i	: in  std_logic;
 		reset_n_i	: in  std_logic;
 		addr_i		: in  std_logic;
 		data_i		: in  std_logic_vector(7 downto 0);
@@ -65,6 +66,8 @@ end entity;
 
 architecture Behavior of UART is
 
+	signal last_cs1_s		: std_logic;
+	signal last_cs2_s		: std_logic;
 	signal baudclk_s		: std_logic;
 
 	signal regidx_q		: std_logic								:= '0';
@@ -110,7 +113,7 @@ begin
 
 	CLKDIV: entity work.clk_divider
 	port map (
-		clock_i		=> clock_i,
+		clock_i		=> clock_c_i,
 		reset_n_i	=> reset_n_i,
 		baudsel_i	=> baud_sel_a,
 		baudclk_o	=> baudclk_s
@@ -119,7 +122,7 @@ begin
 	XMIT: entity work.UART_transmitter
 	port map (
 		reset_n_i	=> reset_n_i,
-		clock_i		=> clock_i,
+		clock_i		=> clock_c_i,
 		baudclk_i	=> baudclk_s,
 		data_i		=> tx_data_s,
 		char_len_i	=> char_len_a,
@@ -133,7 +136,7 @@ begin
 	RCVR: entity work.UART_Receiver
 	port map (
 		reset_n_i	=> reset_n_i,
-		clock_i		=> clock_i,
+		clock_i		=> clock_c_i,
 		baudclk_i	=> baudclk_s,
 		enable_i		=> rx_en_a,
 		rdr_o			=> rx_data_q,
@@ -151,69 +154,86 @@ begin
 	datawrite_s	<= '1'	when cs_n_i = '0' and wr_n_i = '0' and addr_i = '0'	else '0';
 	ctrlwrite_s	<= '1'	when cs_n_i = '0' and wr_n_i = '0' and addr_i = '1'	else '0';
 
-	-- Write asynchronous
-	process (reset_n_i, softreset_a, clr_reserr_s, ctrlwrite_s)
+	-- Write semi-asynchronous
+	process (reset_n_i, softreset_a, clock_i)
 	begin
 		if reset_n_i = '0' or softreset_a = '1' then
 			mode_r	<= (others => '0');
 			ctrl_r	<= (others => '0');
 			regidx_q	<= '0';
-		elsif clr_reserr_s = '1' then
-			reseterr_a <= '0';
-		elsif rising_edge(ctrlwrite_s) then
-			if regidx_q = '0' then
-				regidx_q <= '1';
-				mode_r	<= data_i;
-			else
-				ctrl_r	<= data_i;
+		elsif rising_edge(clock_i) then
+
+			if clr_reserr_s = '1' then
+				reseterr_a <= '0';
 			end if;
+
+			if last_cs1_s = '0' and ctrlwrite_s = '1' then
+				if regidx_q = '0' then
+					regidx_q <= '1';
+					mode_r	<= data_i;
+				else
+					ctrl_r	<= data_i;
+				end if;
+			end if;
+
+			last_cs1_s <= ctrlwrite_s;
 		end if;
 	end process;
 
 	-- TX control
-	process (reset_n_i, datawrite_s, cts_n_i, data_i, clock_i)
+	process (reset_n_i, clock_i)
 	begin
 		if reset_n_i = '0' then
 			tx_empty_s	<= '1';
-		elsif datawrite_s = '1' and cts_n_i = '0' then
-			tx_empty_s	<= '0';
-			tx_data_s	<= data_i;
 		elsif rising_edge(clock_i) then
+
 			if clr_txe_s = '1' then
 				tx_empty_s	<= '1';
 			end if;
+
+			if last_cs2_s = '0' and datawrite_s = '1' and cts_n_i = '0' then
+				tx_empty_s	<= '0';
+				tx_data_s	<= data_i;
+			end if;
+
+			last_cs2_s	<= datawrite_s;
+
 		end if;
 	end process;
 
 	-- RX Control
-	process (reset_n_i, dataread_s, reseterr_a, clock_i)
+	process (reset_n_i, dataread_s, clock_i)
 	begin
 		if reset_n_i = '0' then
 			rx_ready_s		<= '0';
 			overrun_err_s	<= '0';
 			frame_err_s		<= '0';
 			parity_err_s	<= '0';
-		elsif dataread_s = '1' then
-			rx_ready_s	<= '0';
 		elsif rising_edge(clock_i) then
+
+			if dataread_s = '1' then
+				rx_ready_s	<= '0';
+			elsif set_rdy_s = '1' then
+				rx_ready_s	<= '1';
+			end if;
 
 			clr_reserr_s	<= '0';
 
 			if reseterr_a = '1' then
+				clr_reserr_s	<= '1';
 				overrun_err_s	<= '0';
 				frame_err_s		<= '0';
 				parity_err_s	<= '0';
-				clr_reserr_s	<= '1';
-			elsif set_oe_s = '1' then
-				overrun_err_s	<= '1';
-			elsif set_fe_s = '1' then
-				frame_err_s		<= '1';
-			elsif set_pe_s = '1' then
-				parity_err_s	<= '1';
-			end if;
-
-			if set_rdy_s = '1' then
-				rx_ready_s	<= '1';
+			else
+				if set_oe_s = '1' then
+					overrun_err_s	<= '1';
+				end if;
+				if set_fe_s = '1' then
+					frame_err_s		<= '1';
+				end if;
+				if set_pe_s = '1' then
+					parity_err_s	<= '1';
+				end if;
 			end if;
 
 		end if;
@@ -228,6 +248,6 @@ begin
 
 	data_o	<= (others => '1')	when access_s = '0' or rd_n_i = '1'	else
 					rx_data_q			when addr_i = '0'		else
-					status_s				when addr_i = '1';
+					status_s;
 
 end architecture;

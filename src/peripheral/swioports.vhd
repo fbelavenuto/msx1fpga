@@ -116,7 +116,7 @@ architecture Behavior of swioports is
 	signal keymap_addr_q		: unsigned(8 downto 0);
 	signal keymap_data_q		: std_logic_vector(7 downto 0);
 	signal keymap_we_s		: std_logic;
-	signal vga_en_q			: std_logic								:= '0';
+	signal vga_en_q			: std_logic;
 	signal scanline_en_q		: std_logic								:= '0';
 	signal ntsc_pal_q			: std_logic								:= '0';
 	signal volumes_q			: volumes_t;

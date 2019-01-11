@@ -78,11 +78,7 @@ begin
 		variable portc_addr_v	: integer range 0 to 7;
 	begin
 		if reset_i = '1' then
-			if ipl_en_i = '1' then
-				porta_r	<= (others => '1');	-- All slot 3
-			else
-				porta_r	<= (others => '0');	-- All slot 0
-			end if;
+			porta_r	<= (others => ipl_en_i);
 			portc_r	<= (7 => '0', others => '1');	-- beep silent
 		elsif falling_edge(wr_cs_s) then
 			if addr_i = "00" then

@@ -47,7 +47,7 @@ use ieee.numeric_std.all;
 
 entity timer is
 	port (
-		clock_i		: in  std_logic;
+		clock_i		: in  std_logic;							-- >= Z80 Clock
 		reset_n_i	: in  std_logic;
 		addr_i		: in  std_logic_vector(1 downto 0);
 		data_i		: in  std_logic_vector(7 downto 0);

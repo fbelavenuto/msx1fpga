@@ -679,7 +679,7 @@ begin
 		int_n_o			=> midi_int_n_s,
 		-- UART
 		rxd_i				=> '1',
-		txd_o				=> open
+		txd_o				=> uart_tx_o
 	);
 
 	-- DEBUG

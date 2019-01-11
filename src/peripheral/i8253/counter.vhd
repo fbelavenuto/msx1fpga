@@ -64,6 +64,7 @@ end entity;
 
 architecture Behavior of counter is
 
+	signal last_cs_s	: std_logic;
 	signal out_q		: std_logic;
 	signal ce_q			: std_logic;
 	signal rd_q			: std_logic;
@@ -84,8 +85,9 @@ begin
 	cnt1_s	<= '1'	when value_q = 1	else '0';
 	cnt2_s	<= '1'	when value_q = 2	else '0';
 
-	-- Write asynchronous
-	process (reset_n_i, clr_ncmd_s, clr_ce_s, cs_i)
+	-- Write (semi-asynchronous)
+	process (reset_n_i, clock_i)
+		variable temp_v	: std_logic_vector(2 downto 0);
 	begin
 		if reset_n_i = '0' then
 			state_q		<= (others => '0');
@@ -96,55 +98,55 @@ begin
 			--
 			ce_q			<= '0';
 			newcmd_q		<= '0';
-		elsif clr_ncmd_s = '1' or clr_ce_s = '1' then
+		elsif rising_edge(clock_i) then
+
 			if clr_ncmd_s = '1' then
 				newcmd_q		<= '0';
 			end if;
 			if clr_ce_s = '1' then
 				ce_q			<= '0';
 			end if;
-		elsif rising_edge(cs_i) then
 
-			if wr_i = '1' then						-- Write
-				ce_q	<= '1';
-				rd_q	<= '0';
-				if cmd_i = '0'	then					-- Counter data
-					if state_q(0) = '1' then
-						initial_q(15 downto 8) <= data_i;
-						if mode_q(5 downto 4) = "11" then
-							state_q <= "10";
-						else
-							state_q <= "11";
-						end if;
-					else
-						initial_q( 7 downto 0) <= data_i;
-						if mode_q(5 downto 4) = "11" then
-							state_q <= "01";
-						else
-							state_q <= "10";
-						end if;
-					end if;
+			--
+			temp_v	:= "0" & state_q(0) + 
+							"0" & (mode_q(5) xor mode_q(4)) +
+							"01";
 
-				else										-- Command
-					if data_i(5) = '1' or data_i(4) = '1' then
-						mode_q		<= data_i(5 downto 0);
-						newcmd_q		<= '1';
-						state_q		<= '0' & (data_i(5) and not data_i(4));
-					else
-						latched_q	<= mode_q(5) and mode_q(4);
+			if last_cs_s = '0' and cs_i = '1' then	-- Rising edge CS
+				if wr_i = '1' then						-- Write
+					ce_q	<= '1';
+					rd_q	<= '0';
+					if cmd_i = '0'	then					-- Counter data
+						if state_q(0) = '1' then
+							initial_q(15 downto 8) <= data_i;
+						else
+							initial_q( 7 downto 0) <= data_i;
+						end if;
+						state_q <= temp_v(1 downto 0);
+					else										-- Command
+						if data_i(5) = '1' or data_i(4) = '1' then
+							mode_q		<= data_i(5 downto 0);
+							newcmd_q		<= '1';
+							state_q		<= '0' & (data_i(5) and not data_i(4));
+						else
+							latched_q	<= mode_q(5) and mode_q(4);
+						end if;
+						
 					end if;
-					
+				else											-- Read
+					if rd_q = '1' then
+						latched_q <= '0';
+					end if;
+					rd_q <= not rd_q;
 				end if;
-			else											-- Read
-				if rd_q = '1' then
-					latched_q <= '0';
-				end if;
-				rd_q <= not rd_q;
 			end if;
+
+			last_cs_s	<= cs_i;
+
 		end if;
 	end process;
 
-	-- Synchronous
+	-- Counter (fully synchronous)
 	process (reset_n_i, clock_c_i)
 	begin
 		if reset_n_i = '0' then
