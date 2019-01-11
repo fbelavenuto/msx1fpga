@@ -44,22 +44,24 @@ use ieee.numeric_std.all;
 
 entity Midi3 is
 	port (
-		clock_i			: in    std_logic;							-- 8MHz
-		reset_n_i		: in    std_logic;
-		addr_i			: in    std_logic_vector(2 downto 0);
-		data_i			: in    std_logic_vector(7 downto 0);
-		data_o			: out   std_logic_vector(7 downto 0);
-		has_data_o		: out   std_logic;
-		cs_n_i			: in    std_logic;
-		wr_n_i			: in    std_logic;
-		rd_n_i			: in    std_logic;
-		int_n_o			: out   std_logic;
+		clock_i			: in  std_logic;							-- 8MHz
+		reset_n_i		: in  std_logic;
+		addr_i			: in  std_logic_vector(2 downto 0);
+		data_i			: in  std_logic_vector(7 downto 0);
+		data_o			: out std_logic_vector(7 downto 0);
+		has_data_o		: out std_logic;
+		cs_n_i			: in  std_logic;
+		wr_n_i			: in  std_logic;
+		rd_n_i			: in  std_logic;
+		int_n_o			: out std_logic;
 		-- UART
-		rxd_i				: in    std_logic;
-		txd_o				: out   std_logic;
+		rxd_i				: in  std_logic;
+		txd_o				: out std_logic;
 		-- Debug
-		D_out0_o			: out   std_logic;
-		D_out2_o			: out   std_logic
+		D_out0_o			: out std_logic;
+		D_out2_o			: out std_logic;
+		D_latch0_o		: out std_logic
+
 	);
 end entity;
 
@@ -79,6 +81,7 @@ architecture Behavior of Midi3 is
 	signal out2_s			: std_logic;
 	signal rts_s			: std_logic;
 	signal dtr_s			: std_logic;
+	signal tx_s				: std_logic;
 
 begin
 
@@ -121,7 +124,9 @@ begin
 		out1_o		=> open,
 		-- counter 2
 		clk2_i		=> clock_4m_s,
-		out2_o		=> out2_s
+		out2_o		=> out2_s,
+		-- Debug
+		D_latch0_o	=> D_latch0_o
 	);
 
 	serial: entity work.UART
@@ -135,7 +140,7 @@ begin
 		rd_n_i		=> rd_n_i,
 		wr_n_i		=> wr_n_i,
 		rxd_i			=> rxd_i,
-		txd_o			=> txd_o,
+		txd_o			=> tx_s,
 		dsr_n_i		=> ffint_n_s,
 		cts_n_i		=> '0',
 		rts_n_o		=> rts_s,
@@ -156,6 +161,7 @@ begin
 
 	ffint_n_s	<= not ffint_q;
 	int_n_o	<= ffint_q or not dtr_s;
+	txd_o		<= not tx_s;
 
 	-- Debug
 	D_out0_o		<= out0_s;

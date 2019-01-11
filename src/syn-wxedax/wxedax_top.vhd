@@ -547,7 +547,7 @@ begin
 		reset_i		=> por_s,
 		clock_i		=> clock_vdp_s,
 		start_i		=> reload_s,
-		spi_addr_i	=> X"6B000000"
+		spi_addr_i	=> X"0B000000"
 	);
 
 
@@ -721,14 +721,15 @@ begin
 		txd_o				=> uart_tx_o,
 		-- Debug
 		D_out0_o			=> gpio_io(0),
-		D_out2_o			=> gpio_io(1)
+		D_out2_o			=> gpio_io(1),
+		D_latch0_o		=> leds_n_o(1)
 	);
 
 	
 	-- DEBUG
 	leds_n_o(0) <= sdspi_cs_n_s;
-	leds_n_o(1) <= '1';--flspi_cs_n_s;
+	--leds_n_o(1) <= '1';
 	leds_n_o(2) <= '1';--not vga_en_s;
-	leds_n_o(3) <= midi_int_n_s;--not turbo_on_s;
+	leds_n_o(3) <= '1';--not turbo_on_s;
 
 end architecture;

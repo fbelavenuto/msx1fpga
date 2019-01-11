@@ -63,7 +63,9 @@ entity timer is
 		out1_o		: out std_logic;
 		-- counter 2
 		clk2_i		: in  std_logic;
-		out2_o		: out std_logic
+		out2_o		: out std_logic;
+		-- Debug
+		D_latch0_o	: out std_logic
 	);
 end entity;
 
@@ -115,7 +117,9 @@ begin
 		wr_i			=> write_s,
 		cmd_i			=> cmd0_s,
 		clock_c_i	=> clk0_i,
-		out_o			=> out0_o
+		out_o			=> out0_o,
+		-- Debug
+		D_latch_o	=> D_latch0_o
 	);
 
 	cnt1: entity work.counter

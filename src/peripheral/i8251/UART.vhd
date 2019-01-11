@@ -171,11 +171,11 @@ begin
 	end process;
 
 	-- TX control
-	process (reset_n_i, datawrite_s, data_i, clock_i)
+	process (reset_n_i, datawrite_s, cts_n_i, data_i, clock_i)
 	begin
 		if reset_n_i = '0' then
 			tx_empty_s	<= '1';
-		elsif datawrite_s = '1' then
+		elsif datawrite_s = '1' and cts_n_i = '0' then
 			tx_empty_s	<= '0';
 			tx_data_s	<= data_i;
 		elsif rising_edge(clock_i) then
