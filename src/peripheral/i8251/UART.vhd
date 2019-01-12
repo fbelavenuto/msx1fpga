@@ -133,7 +133,7 @@ begin
 		txd_o			=> txd_o
 	);
 
-	RCVR: entity work.UART_Receiver
+	RCVR: entity work.UART_receiver
 	port map (
 		reset_n_i	=> reset_n_i,
 		clock_i		=> clock_c_i,
@@ -191,9 +191,12 @@ begin
 				tx_empty_s	<= '1';
 			end if;
 
-			if last_cs2_s = '0' and datawrite_s = '1' and cts_n_i = '0' then
-				tx_empty_s	<= '0';
-				tx_data_s	<= data_i;
+			if cts_n_i = '0' then
+				if last_cs2_s = '0' and datawrite_s = '1' then
+					tx_data_s	<= data_i;
+				elsif last_cs2_s = '1' and datawrite_s = '0' then
+					tx_empty_s	<= '0';
+				end if;
 			end if;
 
 			last_cs2_s	<= datawrite_s;

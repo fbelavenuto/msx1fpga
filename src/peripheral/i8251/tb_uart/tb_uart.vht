@@ -53,6 +53,7 @@ architecture testbench of tb is
 	component UART
 	port(
 		clock_i		: in  std_logic;
+		clock_c_i	: in  std_logic;
 		reset_n_i	: in  std_logic;
 		addr_i		: in  std_logic;
 		data_i		: in  std_logic_vector(7 downto 0);
@@ -65,7 +66,8 @@ architecture testbench of tb is
 		dsr_n_i		: in  std_logic;
 		cts_n_i		: in  std_logic;
 		rts_n_o		: out std_logic;
-		dtr_n_o		: out std_logic
+		dtr_n_o		: out std_logic;
+		rx_rdy_o		: out std_logic
 	);
 	end component;
 
@@ -76,6 +78,7 @@ architecture testbench of tb is
 
 	signal wait_n_s		: std_logic								:= '1';
 	signal clock_s			: std_logic;
+	signal clock_c_s		: std_logic;
 	signal reset_n_s		: std_logic;
 	signal addr_s			: std_logic;
 	signal data_s			: std_logic_vector( 7 downto 0);
@@ -163,8 +166,22 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for clock500k_period_c / 2;
+		wait for clock8_period_c / 2;
 		clock_s <= '1';
+		wait for clock8_period_c / 2;
+	end process;
+
+	-- ----------------------------------------------------- --
+	--  clock generator                                      --
+	-- ----------------------------------------------------- --
+	process
+	begin
+		if tb_end = '1' then
+			wait;
+		end if;
+		clock_c_s <= '0';
+		wait for clock500k_period_c / 2;
+		clock_c_s <= '1';
 		wait for clock500k_period_c / 2;
 	end process;
 
@@ -184,6 +201,7 @@ begin
 	u_target: UART
 	port map (
 		clock_i		=> clock_s,
+		clock_c_i	=> clock_c_s,
 		reset_n_i	=> reset_n_s,
 		addr_i		=> addr_s,
 		data_i		=> data_s,
@@ -246,13 +264,17 @@ begin
 		-- I/O write port #00 value #55
 		z80_io_write('0', X"55", addr_s, data_s, cs_n_s, wr_n_s);
 
+		wait for 1 us;
+
 		-- I/O read port #01
 		z80_io_read('1',         addr_s, data_s, cs_n_s, rd_n_s);
 
-		wait for 1 us;
+		wait for 100 us;
 
 		-- I/O write port #00 value #AA
 		z80_io_write('0', X"AA", addr_s, data_s, cs_n_s, wr_n_s);
+
+		wait for 1 us;
 
 		-- I/O read port #01
 		z80_io_read('1',         addr_s, data_s, cs_n_s, rd_n_s);

@@ -3,8 +3,8 @@ IF ERRORLEVEL 1 GOTO error
 
 vcom ..\clk_divider.vhd
 IF ERRORLEVEL 1 GOTO error
-rem vcom ..\UART_Receiver.vhd
-rem IF ERRORLEVEL 1 GOTO error
+vcom ..\UART_receiver.vhd
+IF ERRORLEVEL 1 GOTO error
 vcom ..\UART_transmitter.vhd
 IF ERRORLEVEL 1 GOTO error
 vcom ..\UART.vhd

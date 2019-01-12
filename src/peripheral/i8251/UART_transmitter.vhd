@@ -77,8 +77,8 @@ architecture xmit of UART_transmitter is
 begin
 
 	txd_o 		<= tsr_q(0);
-	clr_txe_o	<= load_tsr_s;
-	tx_ready_o	<= '0'	when state_s /= IDLE	else '1';
+	clr_txe_o	<= start_s;
+	tx_ready_o	<= '0'	when state_s /= IDLE or load_tsr_s = '1'	else '1';
 
 	bclk_rising_s	<= baudclk_i and (not bclk_dlayed_s); -- indicates the rising edge of bit clock
 	bitmax_s			<= to_unsigned(5, 4) + unsigned(char_len_i) + unsigned(stop_bits_i);
