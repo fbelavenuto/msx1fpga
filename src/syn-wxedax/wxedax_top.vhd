@@ -114,7 +114,7 @@ entity wxedax_top is
 		pad_data_i				: in    std_logic;
 		-- Others
 --		irda_o					: out   std_logic									:= '0';
-		gpio_io					: inout std_logic_vector(1 downto 0)
+		gpio_io					: inout std_logic_vector(1 downto 0)		:= (others => 'Z')
 	);
 end;
 
@@ -239,7 +239,6 @@ architecture behavior of wxedax_top is
 	signal midi_cs_n_s		: std_logic								:= '1';
 	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
 	signal midi_hd_s			: std_logic								:= '0';
---	signal midi_wait_n_s		: std_logic								:= '1';
 	signal midi_int_n_s		: std_logic								:= '1';
 
 begin
@@ -543,11 +542,14 @@ begin
 
 	-- Multiboot
 	mb: entity work.multiboot
+	generic map (
+		bit_g			=> 2
+	)
 	port map (
 		reset_i		=> por_s,
 		clock_i		=> clock_vdp_s,
 		start_i		=> reload_s,
-		spi_addr_i	=> X"0B000000"
+		spi_addr_i	=> X"000000"
 	);
 
 
@@ -702,33 +704,30 @@ begin
 	end generate;
 
 	-- MIDI3
-	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 3) = "11101" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0xE8 - 0xEF
+	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111111" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7E - 0x7F
 
-	midi3inst: entity work.Midi3
+	-- MIDI interface
+	midi: entity work.midiIntf
 	port map (
 		clock_i			=> clock_8m_s,
-		reset_n_i		=> reset_n_s,
-		addr_i			=> bus_addr_s(2 downto 0),
-		data_i			=> bus_data_to_s,
-		data_o			=> midi_data_from_s,
-		has_data_o		=> midi_hd_s,
+		reset_i			=> reset_s,
+		addr_i			=> bus_addr_s(0),
 		cs_n_i			=> midi_cs_n_s,
 		wr_n_i			=> bus_wr_n_s,
 		rd_n_i			=> bus_rd_n_s,
+		data_i			=> bus_data_to_s,
+		data_o			=> midi_data_from_s,
+		has_data_o		=> midi_hd_s,
+		-- Outs
 		int_n_o			=> midi_int_n_s,
-		-- UART
-		rxd_i				=> '1',
-		txd_o				=> uart_tx_o,
-		-- Debug
-		D_out0_o			=> gpio_io(0),
-		D_out2_o			=> gpio_io(1),
-		D_latch0_o		=> leds_n_o(1)
+		wait_n_o			=> open,
+		tx_o				=> uart_tx_o
 	);
 
 	
 	-- DEBUG
 	leds_n_o(0) <= sdspi_cs_n_s;
-	--leds_n_o(1) <= '1';
+	leds_n_o(1) <= '1';
 	leds_n_o(2) <= '1';--not vga_en_s;
 	leds_n_o(3) <= '1';--not turbo_on_s;
 

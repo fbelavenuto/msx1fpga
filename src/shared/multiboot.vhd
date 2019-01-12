@@ -48,11 +48,14 @@ library UNISIM;
 use UNISIM.VComponents.all;
 
 entity multiboot is
+	generic (
+		bit_g			: integer	:= 4		-- 1 or 2 or 4
+	);
 	port(
 		reset_i		: in  std_logic;
 		clock_i		: in  std_logic;
 		start_i		: in  std_logic;
-		spi_addr_i	: in  std_logic_vector(31 downto 0)	:= X"6B000000"		-- 0B = Fast Read, 3B = Dual Fast Read, 6B = Quad Fast Read
+		spi_addr_i	: in  std_logic_vector(23 downto 0)	:= X"000000"
 	);
 end entity;
 
@@ -77,8 +80,15 @@ architecture Behavioral of multiboot is
 	constant CMD_WR_CMD_C	: std_logic_vector(15 downto 0) := X"30A1";	-- 
 	constant CMD_WR_MOD_C	: std_logic_vector(15 downto 0) := X"3301";	-- 
 	constant CMD_IPROG_C		: std_logic_vector(15 downto 0) := X"000E";	--
+	constant BIT1X_C			: std_logic_vector(15 downto 0) := X"2100";	-- 
+	constant BIT2X_C			: std_logic_vector(15 downto 0) := X"2900";	-- 	
 	constant BIT4X_C			: std_logic_vector(15 downto 0) := X"3100";	-- 
+	-- SPI commands
+	constant FASTREAD_C		: std_logic_vector( 7 downto 0)	:= X"0B";	-- 1x
+	constant DUALREAD_C		: std_logic_vector( 7 downto 0)	:= X"3B";	-- 2x
+	constant QUADREAD_C		: std_logic_vector( 7 downto 0)	:= X"6B";	-- 4x
 
+	--
    type states_t is (IDLE, SYNC_H, SYNC_L, GEN1_H, GEN1_L, GEN2_H, GEN2_L, NUL_H,
 				NUL_L, MOD_H, MOD_L, RBT_H, RBT_L, NOOP_0, NOOP_1, NOOP_2, NOOP_3);
 
@@ -91,6 +101,8 @@ architecture Behavioral of multiboot is
    signal icap_wr_s		: std_logic;
    signal icap_i_r_s		: std_logic_vector(15 downto 0);
    signal icap_i_s		: std_logic_vector(15 downto 0);
+	signal modereg_s		: std_logic_vector(15 downto 0);
+	signal spi_cmd_s		: std_logic_vector( 7 downto 0);
 
 begin
 
@@ -101,6 +113,14 @@ begin
 		I		=> icap_i_s,			-- 16-bit input: Configuration data input bus
 		WRITE	=> icap_wr_s			-- 1-bit input: Read/Write control input
 	);
+
+	spi_cmd_s	<= FASTREAD_C	when bit_g = 1	else
+						DUALREAD_C	when bit_g = 2	else
+						QUADREAD_C;
+
+	modereg_s	<= BIT1X_C		when bit_g = 1	else
+						BIT2X_C		when bit_g = 2	else
+						BIT4X_C;
 
 	-- assign values
 	process(clock_i)
@@ -190,7 +210,7 @@ begin
 				next_state_s	<= MOD_H;
 				icap_ce_r_s		<= '0';
 				icap_wr_r_s		<= '0';
-				icap_i_r_s		<= spi_addr_i(31 downto 16);
+				icap_i_r_s		<= spi_cmd_s & spi_addr_i(23 downto 16);
 			when MOD_H =>
 				next_state_s	<= MOD_L;
 				icap_ce_r_s		<= '0';
@@ -200,7 +220,7 @@ begin
 				next_state_s	<= NUL_L;
 				icap_ce_r_s		<= '0';
 				icap_wr_r_s		<= '0';
-				icap_i_r_s		<= BIT4X_C;
+				icap_i_r_s		<= modereg_s;
 			when NUL_L =>
 				next_state_s	<= RBT_H;
 				icap_ce_r_s		<= '0';
