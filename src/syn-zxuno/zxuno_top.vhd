@@ -471,11 +471,14 @@ begin
 
 	-- Multiboot
 	mb: entity work.multiboot
+	generic map (
+		bit_g			=> 4
+	)
 	port map (
 		reset_i		=> por_s,
 		clock_i		=> clock_vdp_s,
 		start_i		=> reload_core_s,
-		spi_addr_i	=> X"6B000000"
+		spi_addr_i	=> X"000000"
 	);
 
 	-- Glue logic

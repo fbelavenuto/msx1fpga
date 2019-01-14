@@ -58,6 +58,7 @@
 -- CLK_OUT1____21.429______0.000______50.0______320.961____213.839
 -- CLK_OUT2____85.714______0.000______50.0______240.962____213.839
 -- CLK_OUT3____85.714____-90.000______50.0______240.962____213.839
+-- CLK_OUT4_____8.000______0.000______50.0______389.784____213.839
 --
 ------------------------------------------------------------------------------
 -- "Input Clock   Freq (MHz)    Input Jitter (UI)"
@@ -80,13 +81,14 @@ port
   -- Clock out ports
   CLK_OUT1          : out    std_logic;
   CLK_OUT2          : out    std_logic;
-  CLK_OUT3          : out    std_logic
+  CLK_OUT3          : out    std_logic;
+  CLK_OUT4          : out    std_logic
  );
 end pll1;
 
 architecture xilinx of pll1 is
   attribute CORE_GENERATION_INFO : string;
-  attribute CORE_GENERATION_INFO of xilinx : architecture is "pll1,clk_wiz_v3_6,{component_name=pll1,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,feedback_source=FDBK_AUTO,primtype_sel=PLL_BASE,num_out_clk=3,clkin1_period=20.000,clkin2_period=20.000,use_power_down=false,use_reset=false,use_locked=false,use_inclk_stopped=false,use_status=false,use_freeze=false,use_clk_valid=false,feedback_type=SINGLE,clock_mgr_type=MANUAL,manual_override=false}";
+  attribute CORE_GENERATION_INFO of xilinx : architecture is "pll1,clk_wiz_v3_6,{component_name=pll1,use_phase_alignment=true,use_min_o_jitter=false,use_max_i_jitter=false,use_dyn_phase_shift=false,use_inclk_switchover=false,use_dyn_reconfig=false,feedback_source=FDBK_AUTO,primtype_sel=PLL_BASE,num_out_clk=4,clkin1_period=20.000,clkin2_period=20.000,use_power_down=false,use_reset=false,use_locked=false,use_inclk_stopped=false,use_status=false,use_freeze=false,use_clk_valid=false,feedback_type=SINGLE,clock_mgr_type=MANUAL,manual_override=false}";
   -- Input clock buffering / unused connectors
   signal clkin1      : std_logic;
   -- Output clock buffering / unused connectors
@@ -95,7 +97,7 @@ architecture xilinx of pll1 is
   signal clkout0          : std_logic;
   signal clkout1          : std_logic;
   signal clkout2          : std_logic;
-  signal clkout3_unused   : std_logic;
+  signal clkout3          : std_logic;
   signal clkout4_unused   : std_logic;
   signal clkout5_unused   : std_logic;
   -- Unused status signals
@@ -135,6 +137,9 @@ begin
     CLKOUT2_DIVIDE       => 7,
     CLKOUT2_PHASE        => -90.000,
     CLKOUT2_DUTY_CYCLE   => 0.500,
+    CLKOUT3_DIVIDE       => 75,
+    CLKOUT3_PHASE        => 0.000,
+    CLKOUT3_DUTY_CYCLE   => 0.500,
     CLKIN_PERIOD         => 20.000,
     REF_JITTER           => 0.010)
   port map
@@ -143,7 +148,7 @@ begin
     CLKOUT0             => clkout0,
     CLKOUT1             => clkout1,
     CLKOUT2             => clkout2,
-    CLKOUT3             => clkout3_unused,
+    CLKOUT3             => clkout3,
     CLKOUT4             => clkout4_unused,
     CLKOUT5             => clkout5_unused,
     LOCKED              => locked_unused,
@@ -176,5 +181,10 @@ begin
   port map
    (O   => CLK_OUT3,
     I   => clkout2);
+
+  clkout4_buf : BUFG
+  port map
+   (O   => CLK_OUT4,
+    I   => clkout3);
 
 end xilinx;

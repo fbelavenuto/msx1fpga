@@ -79,8 +79,9 @@ NET "ps2_clk_io"        LOC="E7"  | IOSTANDARD = LVCMOS33 | PULLUP;
 NET "ps2_dat_io"        LOC="F7"  | IOSTANDARD = LVCMOS33 | PULLUP;
 
 # Sound output
-NET "audio_dac_l_o"     LOC="D6"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
-NET "audio_dac_r_o"     LOC="P4"  | IOSTANDARD = LVCMOS33 | DRIVE = 16;
+NET "i2s_bclk_o"        LOC="D6"  | IOSTANDARD = LVCMOS33;
+NET "i2s_lrclk_o"       LOC="P4"  | IOSTANDARD = LVCMOS33;
+NET "i2s_data_o"        LOC="N9"  | IOSTANDARD = LVCMOS33;
 
 # SD/MMC
 NET "sd_cs_n_o"         LOC="P5"  | IOSTANDARD = LVCMOS33;

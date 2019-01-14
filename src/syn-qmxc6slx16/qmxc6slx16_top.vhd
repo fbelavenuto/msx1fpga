@@ -79,18 +79,18 @@ entity qmxc6slx16_top is
 		ps2_dat_io		 		: inout std_logic									:= 'Z';
 		-- Audio
 		ear_i						: in    std_logic;
-		audio_dac_l_o			: out   std_logic									:= '0';
-		audio_dac_r_o			: out   std_logic									:= '0';
+		i2s_bclk_o				: out   std_logic									:= '0';
+		i2s_lrclk_o				: out   std_logic									:= '0';
+		i2s_data_o				: out   std_logic									:= '0';
 		-- SD Card
 		sd_cs_n_o				: out   std_logic									:= '1';
 		sd_sclk_o				: out   std_logic									:= '0';
 		sd_mosi_o				: out   std_logic									:= '0';
 		sd_miso_i				: in    std_logic;
 		sd_pres_n_i				: in    std_logic;
-		sd_wp_i					: in    std_logic
+		sd_wp_i					: in    std_logic;
 		-- Others
---		irda_o					: out   std_logic									:= '0';
---		gpio_io					: inout std_logic_vector(1 downto 0)
+		uart_tx_o				: out   std_logic									:= '1'
 	);
 end;
 
@@ -105,6 +105,7 @@ architecture behavior of qmxc6slx16_top is
 	signal soft_reset_k_s	: std_logic;
 	signal soft_reset_s_s	: std_logic;
 	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
+	signal reload_s			: std_logic;
 
 	-- Clocks
 	signal clock_master_s	: std_logic;
@@ -114,6 +115,7 @@ architecture behavior of qmxc6slx16_top is
 	signal clock_psg_en_s	: std_logic;
 	signal clock_3m_s			: std_logic;
 	signal turbo_on_s			: std_logic;
+	signal clock_8m_s			: std_logic;
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
@@ -178,16 +180,26 @@ architecture behavior of qmxc6slx16_top is
 	signal bus_mreq_n_s		: std_logic;
 	signal bus_sltsl1_n_s	: std_logic;
 	signal bus_sltsl2_n_s	: std_logic;
+	signal bus_int_n_s		: std_logic;
+	signal bus_wait_n_s		: std_logic;
 
 	-- JT51
 	signal jt51_cs_n_s		: std_logic;
-	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
+	signal jt51_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal jt51_hd_s			: std_logic								:= '0';
+	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
+	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
 
 	--- OPLL
 	signal opll_cs_n_s		: std_logic := '1';
-	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
-	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
+	signal opll_mo_s			: signed(12 downto 0)				:= (others => '0');
+	signal opll_ro_s			: signed(12 downto 0)				:= (others => '0');
+
+	-- MIDI interface
+	signal midi_cs_n_s		: std_logic								:= '1';
+	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal midi_hd_s			: std_logic								:= '0';
+	signal midi_int_n_s		: std_logic								:= '1';
 
 begin
 
@@ -197,7 +209,8 @@ begin
 		CLK_IN1	=> clock_50M_i,
 		CLK_OUT1	=> clock_master_s,		-- 21.429 MHz (6x NTSC)
 		CLK_OUT2	=> clock_sdram_s,			-- 85.716 MHz (4x master)
-		CLK_OUT3	=> sdram_clock_o			-- 85.716 MHz -90°
+		CLK_OUT3	=> sdram_clock_o,			-- 85.716 MHz -90°
+		CLK_OUT4	=> clock_8m_s				-- 8 MHz (for MIDI)
 	);
 
 	-- Clocks
@@ -236,6 +249,7 @@ begin
 		reset_i			=> reset_s,
 		por_i				=> por_s,
 		softreset_o		=> soft_reset_s_s,
+		reload_o			=> reload_s,
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> "00",
@@ -263,9 +277,9 @@ begin
 		bus_mreq_n_o	=> bus_mreq_n_s,
 		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
 		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
-		bus_wait_n_i	=> '1',
+		bus_wait_n_i	=> bus_wait_n_s,
 		bus_nmi_n_i		=> '1',
-		bus_int_n_i		=> '1',
+		bus_int_n_i		=> bus_int_n_s,
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
 		vram_data_i		=> vram_do_s,
@@ -423,29 +437,38 @@ begin
 		audio_mix_r_o	=> audio_r_s
 	);
 
-	-- Left Channel
-	audiol : entity work.dac_dsm2v
+	-- I2S out
+	i2s : entity work.i2s_transmitter
 	generic map (
-		nbits_g	=> 16
+		mclk_rate		=> 10714500,		-- unusual values
+		sample_rate		=> 167414,
+		preamble			=> 0,
+		word_length		=> 16
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_l_s,
-		dac_o		=> audio_dac_l_o
+		clock_i			=> clock_master_s,	-- 21.477 MHz (2xMCLK)
+		reset_i			=> reset_s,
+		-- Parallel input
+		pcm_l_i			=> std_logic_vector(audio_l_s),
+		pcm_r_i			=> std_logic_vector(audio_r_s),
+		i2s_mclk_o		=> open,
+		i2s_lrclk_o		=> i2s_lrclk_o,
+		i2s_bclk_o		=> i2s_bclk_o,
+		i2s_d_o			=> i2s_data_o
 	);
 
-	-- Right Channel
-	audior : entity work.dac_dsm2v
+	-- Multiboot
+	mb: entity work.multiboot
 	generic map (
-		nbits_g	=> 16
+		bit_g			=> 2
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
-		dac_i		=> audio_r_s,
-		dac_o		=> audio_dac_r_o
+		reset_i		=> por_s,
+		clock_i		=> clock_vdp_s,
+		start_i		=> reload_s,
+		spi_addr_i	=> X"000000"
 	);
+
 
 	-- Glue logic
 
@@ -492,7 +515,14 @@ begin
 	flash_clk_o	<= spi_sclk_s;
 	flash_cs_n_o	<= flspi_cs_n_s;
 
-	-- JT51 tests
+	-- Peripheral BUS control
+	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
+							   midi_data_from_s	when midi_hd_s = '1'	else
+								(others => '1');
+	bus_wait_n_s	<= '1';
+	bus_int_n_s		<= midi_int_n_s;
+
+	-- JT51
 	jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
 
 	jt51: entity work.jt51_wrapper
@@ -504,7 +534,8 @@ begin
 		wr_n_i			=> bus_wr_n_s,
 		rd_n_i			=> bus_rd_n_s,
 		data_i			=> bus_data_to_s,
-		data_o			=> bus_data_from_s,
+		data_o			=> jt51_data_from_s,
+		has_data_o		=> jt51_hd_s,
 		ct1_o				=> open,
 		ct2_o				=> open,
 		irq_n_o			=> open,
@@ -521,7 +552,7 @@ begin
 		dacright_o		=> open
 	);
 
-	-- OPLL tests
+	-- OPLL
 	opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
 	
 	opll1 : entity work.opll 
@@ -535,6 +566,27 @@ begin
 		we_n			=> bus_wr_n_s,
 		melody_o		=> opll_mo_s,
 		rythm_o		=> opll_ro_s
+	);
+
+	-- MIDI3
+	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111111" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7E - 0x7F
+
+	-- MIDI interface
+	midi: entity work.midiIntf
+	port map (
+		clock_i			=> clock_8m_s,
+		reset_i			=> reset_s,
+		addr_i			=> bus_addr_s(0),
+		cs_n_i			=> midi_cs_n_s,
+		wr_n_i			=> bus_wr_n_s,
+		rd_n_i			=> bus_rd_n_s,
+		data_i			=> bus_data_to_s,
+		data_o			=> midi_data_from_s,
+		has_data_o		=> midi_hd_s,
+		-- Outs
+		int_n_o			=> midi_int_n_s,
+		wait_n_o			=> open,
+		tx_o				=> uart_tx_o
 	);
 
 	-- DEBUG
