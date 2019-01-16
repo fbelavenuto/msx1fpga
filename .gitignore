@@ -375,3 +375,6 @@ greybox_tmp
 /src/peripheral/tb_midi3/vsim.wlf
 /src/peripheral/tb_midi3/work
 /DOCs/bugs_todo
+/src/peripheral/uart/tb_uart/transcript
+/src/peripheral/uart/tb_uart/vsim.wlf
+/src/peripheral/uart/tb_uart/work

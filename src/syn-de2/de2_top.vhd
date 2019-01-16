@@ -291,11 +291,11 @@ architecture behavior of de2_top is
 	signal opll_mo_s			: signed(12 downto 0)				:= (others => '0');
 	signal opll_ro_s			: signed(12 downto 0)				:= (others => '0');
 
-		-- MIDI interface
-	signal midi_cs_n_s		: std_logic								:= '1';
-	signal midi_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
-	signal midi_hd_s			: std_logic								:= '0';
-	signal midi_int_n_s		: std_logic								:= '1';
+	-- Serial interface
+	signal serial_cs_s		: std_logic								:= '0';
+	signal serial_data_from_s: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal serial_hd_s		: std_logic								:= '0';
+
 
 	-- Debug
 	signal D_display_s		: std_logic_vector(15 downto 0);
@@ -598,10 +598,10 @@ begin
 	vga_clk_o		<= clock_master_s;
 
 	-- Peripheral BUS control
-	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
-							   midi_data_from_s	when midi_hd_s = '1'	else
+	bus_data_from_s	<= jt51_data_from_s		when jt51_hd_s = '1'		else
+							   serial_data_from_s	when serial_hd_s = '1'	else
 								(others => '1');
-	bus_int_n_s		<= midi_int_n_s;
+	bus_int_n_s		<= '1';
 
 	ptjt: if per_jt51_g generate
 		-- JT51 tests
@@ -653,34 +653,29 @@ begin
 		);
 	end generate;
 
-	-- MIDI3
-	midi_cs_n_s	<= '0' when bus_addr_s(7 downto 3) = "11101" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0xE8 - 0xEF
-
-	process(reset_s, clock_16m_s)
-	begin
-		if reset_s = '1' then
-			clock_8m_s	<= '0';
-		elsif rising_edge(clock_16m_s) then
-			clock_8m_s	<= not clock_8m_s;
-		end if;
-	end process;
-
-	midi3inst: entity work.Midi3
+	-- Tests UART
+	serial_cs_s	<= '1'	when bus_addr_s(7 downto 2) = "110010" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '0';	-- 0xC8 - 0xCB
+	
+	serial: entity work.uart
 	port map (
-		clock_i			=> clock_8m_s,
-		reset_n_i		=> not reset_s,
-		addr_i			=> bus_addr_s(2 downto 0),
-		data_i			=> bus_data_to_s,
-		data_o			=> midi_data_from_s,
-		has_data_o		=> midi_hd_s,
-		cs_n_i			=> midi_cs_n_s,
-		wr_n_i			=> bus_wr_n_s,
-		rd_n_i			=> bus_rd_n_s,
-		int_n_o			=> midi_int_n_s,
-		-- UART
-		rxd_i				=> '1',
-		txd_o				=> uart_tx_o
+		clock_i		=> clock_16m_s,
+		reset_i		=> reset_s,
+		addr_i		=> bus_addr_s(1 downto 0),
+		data_i		=> bus_data_to_s,
+		data_o		=> serial_data_from_s,
+		has_data_o	=> serial_hd_s,
+		cs_i			=> serial_cs_s,
+		rd_i			=> not bus_rd_n_s,
+		wr_i			=> not bus_wr_n_s,
+		--
+		rxd_i			=> uart_rx_i,
+		txd_o			=> uart_tx_o,
+		dsr_n_i		=> '0',
+		cts_n_i		=> '0',
+		rts_n_o		=> open,
+		dtr_n_o		=> open
 	);
+
 
 	-- DEBUG
 	D_display_s	<= bus_addr_s;
