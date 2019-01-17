@@ -45,39 +45,42 @@ entity uart_tx is
 	port (
 		clock_i		: in  std_logic;
 		reset_i		: in  std_logic;
-		baud_i		: in  std_logic_vector(7 downto 0);
-		char_len_i	: in  std_logic_vector(1 downto 0);
-		stop_bits_i	: in  std_logic_vector(1 downto 0);
-		parity_i		: in  std_logic_vector(1 downto 0);
-		data_i		: in  std_logic_vector(7 downto 0);
+		baud_i		: in  std_logic_vector(10 downto 0);
+		char_len_i	: in  std_logic_vector( 1 downto 0);
+		stop_bits_i	: in  std_logic;
+		parity_i		: in  std_logic_vector( 1 downto 0);
+		data_i		: in  std_logic_vector( 7 downto 0);
 		tx_empty_i	: in  std_logic;
 		fifo_rd_o	: out std_logic;
+		cts_n_i		: in  std_logic;
 		txd_o			: out std_logic
 	);
 end entity;
 
 architecture xmit of uart_tx is
 
-	type state_t is (stIdle, stLoad, stLoad2, stStart, stData, stParity);
+	type state_t is (stIdle, stLoad, stLoad2, stStart, stData, stParity, stStop2, stStop1);
 	signal state_s			: state_t;
-	signal baudr_cnt_q	: integer range 0 to 256;
-	signal max_cnt_s		: integer range 0 to 256;
-	signal mcnt_rel_s		: integer range 0 to 256;
+	signal baudr_cnt_q	: integer range 0 to 2049;
+	signal max_cnt_s		: integer range 0 to 2049;
 	signal bit_cnt_q		: integer range 0 to 9;
 	signal bitmax_s		: unsigned(3 downto 0);
 	signal bitmask_s		: std_logic_vector(2 downto 0);
-	signal shift_q			: std_logic_vector(8 downto 0);
-	signal parity_q		: std_logic;
+	signal shift_q			: std_logic_vector(7 downto 0);
+	signal tx_s				: std_logic;
+	signal datapar_s		: std_logic_vector(7 downto 0);
+	signal parity_s		: std_logic;
 
 begin
 
-	bitmask_s	<= "111"		when char_len_i = "00"	else		-- 5 bits
-						"110"		when char_len_i = "01"	else		-- 6 bits
-						"100"		when char_len_i = "10"	else		-- 7 bits
-						"000";												-- 8 bits
+	bitmask_s	<= "000"		when char_len_i = "00"	else		-- 5 bits
+						"001"		when char_len_i = "01"	else		-- 6 bits
+						"011"		when char_len_i = "10"	else		-- 7 bits
+						"111";												-- 8 bits
 
-	bitmax_s		<= to_unsigned(5, 4) + unsigned(char_len_i) + unsigned(stop_bits_i);
-	max_cnt_s	<= to_integer(unsigned(baud_i));
+	parity_s		<= parity_i(1) xor datapar_s(7) xor datapar_s(6) xor
+						datapar_s(5) xor datapar_s(4) xor datapar_s(3) xor
+						datapar_s(2) xor datapar_s(1) xor datapar_s(0);
 
 	-- Main process
 	process(clock_i)
@@ -87,9 +90,9 @@ begin
 			if reset_i = '1' then
 				baudr_cnt_q <= 0;
 				shift_q		<= (others => '1');
+				tx_s			<= '1';
 				bit_cnt_q	<= 0;
 				state_s		<= stIdle;
-				mcnt_rel_s	<= 0;
 			else
 
 				fifo_rd_o	<= '0';
@@ -97,48 +100,51 @@ begin
 				case state_s is
 
 					when stIdle =>
-						if tx_empty_i = '0' then
+						if tx_empty_i = '0' and cts_n_i = '0' then
 							fifo_rd_o	<= '1';
 							state_s		<= stLoad;
 						end if;
 
 					when stLoad =>
-						baudr_cnt_q	<= mcnt_rel_s;
+						baudr_cnt_q	<= 0;
 						bit_cnt_q	<= 0;
-						parity_q		<= '0';
+						bitmax_s		<= to_unsigned(4, 4) + unsigned(char_len_i);
+						max_cnt_s	<= to_integer(unsigned(baud_i));
 						state_s		<= stLoad2;
 
 					when stLoad2 =>
-						shift_q(8 downto 6)	<= data_i(7 downto 5) or bitmask_s;		-- Add stop bits
-						shift_q(5 downto 0)	<= data_i(4 downto 0) & '0';				-- Start bit
+						tx_s			<= '0';								-- Start bit
+						shift_q <= data_i;
+						datapar_s(7 downto 5)	<= data_i(7 downto 5) and bitmask_s;
+						datapar_s(4 downto 0)	<= data_i(4 downto 0);
 						state_s		<= stStart;
 
 					when stStart =>
-						if baudr_cnt_q = max_cnt_s then
+						if baudr_cnt_q >= max_cnt_s then
 							baudr_cnt_q <= 0;
-							shift_q	<= '1' & shift_q(8 downto 1);							-- '1' is stop bit
+							tx_s			<= shift_q(0);
+							shift_q		<= '1' & shift_q(7 downto 1);
 							state_s		<= stData;
 						else
 							baudr_cnt_q <= baudr_cnt_q + 1;
 						end if;
 
 					when stData =>
-						if baudr_cnt_q = max_cnt_s then
+						if baudr_cnt_q >= max_cnt_s then
 							baudr_cnt_q <= 0;
-							if parity_i /= "00" then
-								parity_q <= parity_q xor shift_q(0);						-- update Parity bit
-							end if;
-							shift_q	<= '1' & shift_q(8 downto 1);							-- '1' is stop bit
-							if bit_cnt_q = bitmax_s then
-								mcnt_rel_s	<= 0;
-								if tx_empty_i = '0' then
-									mcnt_rel_s <= 3;
-								end if;
+							tx_s			<= shift_q(0);
+							shift_q		<= '1' & shift_q(7 downto 1);
+							if bit_cnt_q >= bitmax_s then
 								if parity_i /= "00" then
-									shift_q(0)	<= parity_q xor parity_i(1);				-- Send parity bit
+									tx_s			<= parity_s;
 									state_s		<= stParity;
 								else
-									state_s		<= stIdle;
+									tx_s			<= '1';
+									if stop_bits_i = '0' then
+										state_s		<= stStop1;
+									else
+										state_s		<= stStop2;
+									end if;
 								end if;
 							else
 								bit_cnt_q <= bit_cnt_q + 1;
@@ -148,11 +154,32 @@ begin
 						end if;
 
 					when stParity =>
-						if baudr_cnt_q = max_cnt_s then
+						if baudr_cnt_q >= max_cnt_s then
+							baudr_cnt_q <= 0;
+							tx_s			<= '1';
+							if stop_bits_i = '0' then
+								state_s		<= stStop1;
+							else
+								state_s		<= stStop2;
+							end if;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
+
+					when stStop2 =>
+						if baudr_cnt_q >= max_cnt_s then
+							baudr_cnt_q <= 0;
+							state_s	<= stStop2;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
+
+					when stStop1 =>
+						if baudr_cnt_q >= max_cnt_s - 3 then
 							baudr_cnt_q <= 0;
 							state_s	<= stIdle;
 						else
-							bit_cnt_q <= bit_cnt_q + 1;
+							baudr_cnt_q <= baudr_cnt_q + 1;
 						end if;
 
 				end case;
@@ -160,6 +187,6 @@ begin
 		end if;
 	end process;
 
-	txd_o 		<= shift_q(0);
+	txd_o 		<= tx_s;
 
 end architecture;

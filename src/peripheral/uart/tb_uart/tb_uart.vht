@@ -54,19 +54,20 @@ architecture testbench of tb is
 	port(
 		clock_i		: in  std_logic;
 		reset_i		: in  std_logic;
-		addr_i		: in  std_logic_vector(1 downto 0);
+		addr_i		: in  std_logic_vector(2 downto 0);
 		data_i		: in  std_logic_vector(7 downto 0);
 		data_o		: out std_logic_vector(7 downto 0);
 		has_data_o	: out std_logic;
 		cs_i			: in  std_logic;
 		rd_i			: in  std_logic;
 		wr_i			: in  std_logic;
+		int_n_o		: out std_logic;
 		--
 		rxd_i			: in  std_logic;
 		txd_o			: out std_logic;
-		dsr_n_i		: in  std_logic;
 		cts_n_i		: in  std_logic;
 		rts_n_o		: out std_logic;
+		dsr_n_i		: in  std_logic;
 		dtr_n_o		: out std_logic
 	);
 	end component;
@@ -79,21 +80,22 @@ architecture testbench of tb is
 	signal wait_n_s		: std_logic								:= '1';
 	signal clock_s			: std_logic;
 	signal reset_s			: std_logic;
-	signal addr_s			: std_logic_vector( 1 downto 0);
+	signal addr_s			: std_logic_vector( 2 downto 0);
 	signal data_i_s		: std_logic_vector( 7 downto 0);
 	signal data_o_s		: std_logic_vector( 7 downto 0);
 	signal hd_s				: std_logic;
 	signal cs_s				: std_logic;
 	signal rd_s				: std_logic;
 	signal wr_s				: std_logic;
+	signal int_n_s			: std_logic;
 	signal rxd_s			: std_logic;
 	signal txd_s			: std_logic;
 	signal rts_n_s			: std_logic;
 	signal dtr_n_s			: std_logic;
 
 	procedure z80_io_read(
-		addr_i				: in  std_logic_vector( 1 downto 0);
-		signal addr_s		: out std_logic_vector( 1 downto 0);
+		addr_i				: in  std_logic_vector( 2 downto 0);
+		signal addr_s		: out std_logic_vector( 2 downto 0);
 		signal data_o_s	: in  std_logic_vector( 7 downto 0);
 		signal cs_s			: out std_logic;
 		signal rd_s			: out std_logic
@@ -118,9 +120,9 @@ architecture testbench of tb is
 	end;
 
 	procedure z80_io_write(
-		addr_i				: in  std_logic_vector( 1 downto 0);
+		addr_i				: in  std_logic_vector( 2 downto 0);
 		data_i				: in  std_logic_vector( 7 downto 0);
-		signal addr_s		: out std_logic_vector( 1 downto 0);
+		signal addr_s		: out std_logic_vector( 2 downto 0);
 		signal data_i_s	: out std_logic_vector( 7 downto 0);
 		signal cs_s			: out std_logic;
 		signal wr_s			: out std_logic
@@ -192,12 +194,13 @@ begin
 		cs_i			=> cs_s,
 		rd_i			=> rd_s,
 		wr_i			=> wr_s,
+		int_n_o		=> int_n_s,
 		--
 		rxd_i			=> rxd_s,
 		txd_o			=> txd_s,
-		dsr_n_i		=> '0',
 		cts_n_i		=> '0',
 		rts_n_o		=> rts_n_s,
+		dsr_n_i		=> '0',
 		dtr_n_o		=> dtr_n_s
 	);
 
@@ -213,7 +216,6 @@ begin
 		cs_s			<= '0';
 		rd_s			<= '0';
 		wr_s			<= '0';
-		rxd_s			<= '1';
 
 		wait for 4 us;
 
@@ -221,43 +223,103 @@ begin
 
 		wait for 4 us;
 
-		-- I/O write port #00 value #C0	-- Reg 0 write		(8 bits, 1 stop, no parity)
-		z80_io_write("00", X"C0", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write port #00 value #18	-- Reg 0 write		(Mode REG: 8 bits, 1 stop, no parity)
+		z80_io_write("000", X"18", addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write port #01 value #44	-- Reg 1 write
-		z80_io_write("01", X"44", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write port #01 value #C0	-- Reg 1 write		(Ctrl REG: IRQ enabled, RX disabled and TX enabled, DSR=0)
+		z80_io_write("001", X"C0", addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write port #02 value #00	-- Reg 2 write		(baud rate)
-		z80_io_write("10", X"00", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write port #02 value #00	-- Reg 2 write		(TX BAUD rate LSB)
+		z80_io_write("010", X"00", addr_s, data_i_s, cs_s, wr_s);
 
-		wait for 1 us;
-
-		-- I/O write port #03 value #55	-- Data write
-		z80_io_write("11", X"55", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write port #03 value #AA	-- Data write
-		z80_io_write("11", X"AA", addr_s, data_i_s, cs_s, wr_s);
-
+		-- I/O write port #03 value #01	-- Reg 3 write		(TX BAUD rate MSB)
+		z80_io_write("011", X"01", addr_s, data_i_s, cs_s, wr_s);
 
 		wait for 1 us;
 
-		-- I/O read port #00
-		z80_io_read("00",         addr_s, data_o_s, cs_s, rd_s);
+		-- I/O write port #07 value #55	-- Data write
+		z80_io_write("111", X"55", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #07 value #AA	-- Data write
+		z80_io_write("111", X"AA", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #06 value #00	-- Reg 6 write		(Clear IRQs)
+		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 1 us;
+
+		-- I/O read port #00	(Status)
+		z80_io_read("000",         addr_s, data_o_s, cs_s, rd_s);
 
 		wait for 100 us;
 
-		-- I/O read port #03
-		z80_io_read("11",         addr_s, data_o_s, cs_s, rd_s);
+		-- I/O read port #07
+		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
 
-		-- I/O read port #03
-		z80_io_read("11",         addr_s, data_o_s, cs_s, rd_s);
-
+		-- I/O read port #07
+		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
 
 		wait for 1 ms;
 
+		-- I/O write port #06 value #00	-- Reg 6 write		(Clear IRQs)
+		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 1 ms;
+
+		-- I/O write port #00 value #19	-- Reg 0 write		(Mode REG: 8 bits, 1 stop, parity even)
+		z80_io_write("000", X"19", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #01 value #00	-- Reg 1 write		(Ctrl REG: no IRQ, DSR=0)
+		z80_io_write("001", X"C0", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #02 value #00	-- Reg 2 write		(TX BAUD rate LSB)
+		z80_io_write("010", X"10", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #03 value #01	-- Reg 3 write		(TX BAUD rate MSB)
+		z80_io_write("011", X"00", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 1 us;
+
+		-- I/O write port #07 value #90	-- Data write
+		z80_io_write("111", X"90", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #07 value #91	-- Data write
+		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 100 us;
+
+		-- I/O write port #00 value #19	-- Reg 0 write		(Mode REG: 8 bits, 1 stop, parity odd)
+		z80_io_write("000", X"1A", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #07 value #90	-- Data write
+		z80_io_write("111", X"90", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #07 value #91	-- Data write
+		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 100 us;
+
+		-- I/O write port #00 value #10	-- Reg 0 write		(Mode REG: 7 bits, 1 stop, no parity)
+		z80_io_write("000", X"10", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #07 value #90	-- Data write
+		z80_io_write("111", X"90", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write port #07 value #91	-- Data write
+		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 1 ms;
 
 		-- wait
 		tb_end <= '1';
+		wait;
+	end process;
+
+	-- RX simulation
+	process
+	begin
+		rxd_s			<= '1';
+
 		wait;
 	end process;
 

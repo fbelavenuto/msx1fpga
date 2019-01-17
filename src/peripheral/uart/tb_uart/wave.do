@@ -4,7 +4,7 @@ add wave -noupdate /tb/reset_s
 add wave -noupdate /tb/wait_n_s
 add wave -noupdate /tb/clock_s
 add wave -noupdate /tb/clock_cpu_s
-add wave -noupdate /tb/addr_s
+add wave -noupdate -radix unsigned /tb/addr_s
 add wave -noupdate -radix hexadecimal /tb/data_i_s
 add wave -noupdate -radix hexadecimal -childformat {{/tb/data_o_s(7) -radix hexadecimal} {/tb/data_o_s(6) -radix hexadecimal} {/tb/data_o_s(5) -radix hexadecimal} {/tb/data_o_s(4) -radix hexadecimal} {/tb/data_o_s(3) -radix hexadecimal} {/tb/data_o_s(2) -radix hexadecimal} {/tb/data_o_s(1) -radix hexadecimal} {/tb/data_o_s(0) -radix hexadecimal}} -subitemconfig {/tb/data_o_s(7) {-height 15 -radix hexadecimal} /tb/data_o_s(6) {-height 15 -radix hexadecimal} /tb/data_o_s(5) {-height 15 -radix hexadecimal} /tb/data_o_s(4) {-height 15 -radix hexadecimal} /tb/data_o_s(3) {-height 15 -radix hexadecimal} /tb/data_o_s(2) {-height 15 -radix hexadecimal} /tb/data_o_s(1) {-height 15 -radix hexadecimal} /tb/data_o_s(0) {-height 15 -radix hexadecimal}} /tb/data_o_s
 add wave -noupdate /tb/cs_s
@@ -14,6 +14,7 @@ add wave -noupdate /tb/dtr_n_s
 add wave -noupdate /tb/rts_n_s
 add wave -noupdate /tb/rxd_s
 add wave -noupdate /tb/txd_s
+add wave -noupdate /tb/int_n_s
 add wave -noupdate -divider Internal
 add wave -noupdate /tb/u_target/access_s
 add wave -noupdate /tb/u_target/last_read_s
@@ -22,8 +23,16 @@ add wave -noupdate /tb/u_target/last_write_s
 add wave -noupdate /tb/u_target/awrite_s
 add wave -noupdate -radix hexadecimal /tb/u_target/mode_r
 add wave -noupdate -radix hexadecimal /tb/u_target/ctrl_r
-add wave -noupdate -radix hexadecimal /tb/u_target/baud_r
 add wave -noupdate -radix hexadecimal /tb/u_target/status_s
+add wave -noupdate -radix unsigned /tb/u_target/baudrx_r
+add wave -noupdate -radix unsigned /tb/u_target/baudtx_r
+add wave -noupdate /tb/u_target/last_rxempty_s
+add wave -noupdate /tb/u_target/last_txempty_s
+add wave -noupdate /tb/u_target/irq_en_a
+add wave -noupdate /tb/u_target/irq_rx_a
+add wave -noupdate /tb/u_target/irq_rx_q
+add wave -noupdate /tb/u_target/irq_tx_a
+add wave -noupdate /tb/u_target/irq_tx_q
 add wave -noupdate -divider TX
 add wave -noupdate -radix hexadecimal /tb/u_target/txfifo_data_s
 add wave -noupdate /tb/u_target/txfifo_empty_s
@@ -54,7 +63,7 @@ add wave -noupdate /tb/u_target/tx/fifo_rd_o
 add wave -noupdate -radix hexadecimal /tb/u_target/tx/shift_q
 add wave -noupdate /tb/u_target/tx/txd_o
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {4030 ns} 0}
+WaveRestoreCursors {{Cursor 1} {8494 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 198
 configure wave -valuecolwidth 41
@@ -70,4 +79,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {37152 ns}
+WaveRestoreZoom {0 ns} {74304 ns}

@@ -241,6 +241,11 @@ architecture behavior of wxedax_top is
 	signal midi_hd_s			: std_logic								:= '0';
 	signal midi_int_n_s		: std_logic								:= '1';
 
+	-- Serial interface
+	signal serial_cs_s		: std_logic								:= '0';
+	signal serial_data_from_s: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal serial_hd_s		: std_logic								:= '0';
+
 begin
 
 	-- PLL
@@ -647,8 +652,9 @@ begin
 	flashf_cs_n_o	<= flspi_cs_n_s;
 
 	-- Peripheral BUS control
-	bus_data_from_s	<= jt51_data_from_s	when jt51_hd_s = '1'	else
-							   midi_data_from_s	when midi_hd_s = '1'	else
+	bus_data_from_s	<= jt51_data_from_s		when jt51_hd_s = '1'		else
+							   midi_data_from_s		when midi_hd_s = '1'		else
+								serial_data_from_s	when serial_hd_s = '1'	else
 								(others => '1');
 	bus_wait_n_s	<= '1';
 	bus_int_n_s		<= midi_int_n_s;
@@ -724,6 +730,28 @@ begin
 		tx_o				=> uart_tx_o
 	);
 
+	-- Tests UART
+	serial_cs_s	<= '1'	when bus_addr_s(7 downto 3) = "11001" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '0';	-- 0xC8 - 0xCF
+	
+	serial: entity work.uart
+	port map (
+		clock_i		=> clock_8m_s,
+		reset_i		=> reset_s,
+		addr_i		=> bus_addr_s(2 downto 0),
+		data_i		=> bus_data_to_s,
+		data_o		=> serial_data_from_s,
+		has_data_o	=> serial_hd_s,
+		cs_i			=> serial_cs_s,
+		rd_i			=> not bus_rd_n_s,
+		wr_i			=> not bus_wr_n_s,
+		--
+		rxd_i			=> gpio_io(0),
+		txd_o			=> gpio_io(1),
+		dsr_n_i		=> '0',
+		cts_n_i		=> '0',
+		rts_n_o		=> open,
+		dtr_n_o		=> open
+	);
 	
 	-- DEBUG
 	leds_n_o(0) <= sdspi_cs_n_s;
