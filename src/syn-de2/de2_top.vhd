@@ -654,25 +654,26 @@ begin
 	end generate;
 
 	-- Tests UART
-	serial_cs_s	<= '1'	when bus_addr_s(7 downto 2) = "110010" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '0';	-- 0xC8 - 0xCB
+	serial_cs_s	<= '1'	when bus_addr_s(7 downto 3) = "11001" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '0';	-- 0xC8 - 0xCF
 	
 	serial: entity work.uart
 	port map (
 		clock_i		=> clock_16m_s,
 		reset_i		=> reset_s,
-		addr_i		=> bus_addr_s(1 downto 0),
+		addr_i		=> bus_addr_s(2 downto 0),
 		data_i		=> bus_data_to_s,
 		data_o		=> serial_data_from_s,
 		has_data_o	=> serial_hd_s,
 		cs_i			=> serial_cs_s,
 		rd_i			=> not bus_rd_n_s,
 		wr_i			=> not bus_wr_n_s,
+		int_n_o		=> open,
 		--
 		rxd_i			=> uart_rx_i,
 		txd_o			=> uart_tx_o,
 		dsr_n_i		=> '0',
-		cts_n_i		=> '0',
 		rts_n_o		=> open,
+		cts_n_i		=> '0',
 		dtr_n_o		=> open
 	);
 

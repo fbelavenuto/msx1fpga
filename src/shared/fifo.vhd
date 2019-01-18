@@ -72,13 +72,14 @@ begin
 		variable tail_v	: natural range 0 to FIFO_DEPTH_G - 1;
 		variable looped_v	: boolean;
 	begin
-		if rising_edge(clock_i) then
+		if falling_edge(clock_i) then		--
 			if reset_i = '1' then
 				head_v	:= 0;
 				tail_v	:= 0;
 				looped_v	:= false;
 				full_o	<= '0';
 				empty_o	<= '1';
+				data_o	<= (others => '0');
 			else
 				if read_en_i = '1' then
 					if looped_v = true or head_v /= tail_v then

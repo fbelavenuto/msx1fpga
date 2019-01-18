@@ -262,14 +262,14 @@ begin
 	-- Clocks
 	clks: entity work.clocks
 	port map (
-		clock_i			=> clock_master_s,
+		clock_i			=> clock_master_s,	-- 21.429
 		por_i				=> por_clock_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s			-- 3571500
 	);
 
 	-- The MSX1
@@ -736,7 +736,7 @@ begin
 	
 	serial: entity work.uart
 	port map (
-		clock_i		=> clock_8m_s,
+		clock_i		=> clock_master_s,			-- 21.429 MHz
 		reset_i		=> reset_s,
 		addr_i		=> bus_addr_s(2 downto 0),
 		data_i		=> bus_data_to_s,

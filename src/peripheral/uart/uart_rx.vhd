@@ -40,127 +40,161 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.numeric_std.all;
 
 entity uart_rx is
 	port(
-		reset_n_i	: in  std_logic;
 		clock_i		: in  std_logic;
-		baudclk_i	: in  std_logic;
-		enable_i		: in  std_logic;
-		rdr_o			: out std_logic_vector(7 downto 0);
-		ready_i		: in  std_logic;
-		set_ready_o	: out std_logic;
-		set_pe_o		: out std_logic;
-		set_oe_o		: out std_logic;
-		set_fe_o		: out std_logic;
+		reset_i		: in  std_logic;
+		baud_i		: in  std_logic_vector(15 downto 0);
+		char_len_i	: in  std_logic_vector( 1 downto 0);
+		stop_bits_i	: in  std_logic;
+		parity_i		: in  std_logic_vector( 1 downto 0);
+		data_o		: out std_logic_vector( 7 downto 0);
+		rx_full_i	: in  std_logic;
+		fifo_wr_o	: out std_logic;
+		errors_o		: out std_logic_vector( 2 downto 0);
 		rx_i			: in  std_logic
 	);
 end entity;
 
 architecture rcvr of uart_rx is
 
-	type stateType_t is (IDLE, START_DETECTED, RECV_DATA);
-	signal state_s				: stateType_t;
-	signal nextstate_s		: stateType_t;
-	signal rsr_r				: std_logic_vector (7 downto 0);		-- receive shift register
-	signal ct1_q				: integer range 0 to 8;		-- counts number of bits read
-	signal inc1_s				: std_logic;
-	signal inc2_s				: std_logic;
-	signal clr1_s				: std_logic;
-	signal clr2_s				: std_logic;
-	signal shift_rsr_s		: std_logic;
-	signal load_rdr_s			: std_logic;
-	signal bclk_dlayed_s		: std_logic;
-	signal bclk_rising_s		: std_logic;
+	type state_t is (stIdle, stStart, stData, stParity, stStop2, stStop1);
+	signal state_s			: state_t;
+	signal baudr_cnt_q	: integer range 0 to 65536			:= 0;
+	signal max_cnt_s		: integer range 0 to 65536			:= 0;
+	signal mid_cnt_s		: integer range 0 to 32768			:= 0;
+	signal bit_cnt_q		: integer range 0 to 9				:= 0;
+	signal bitmax_s		: unsigned(3 downto 0)				:= (others => '0');
+	signal shift_q			: std_logic_vector(7 downto 0)	:= (others => '0');
+	signal parity_s		: std_logic;
 
 begin
 
-	bclk_rising_s <= baudclk_i and (not bclk_dlayed_s);
+	parity_s		<= parity_i(1) xor shift_q(7) xor shift_q(6) xor
+						shift_q(5) xor shift_q(4) xor shift_q(3) xor
+						shift_q(2) xor shift_q(1) xor shift_q(0);
 
-	-- indicates the rising edge of bitX8 clock
-	Rcvr_Control: process(state_s, rx_i, enable_i, ready_i, ct1_q, bclk_rising_s)
+	-- Main process
+	process(clock_i)
 	begin
-		-- reset control signals
-		inc1_s		<= '0';
-		clr1_s		<= '0';
-		shift_rsr_s	<= '0';
-		load_rdr_s	<= '0';
-		set_ready_o	<= '0';
-		set_oe_o		<= '0';
-		set_fe_o		<= '0';
-		set_pe_o		<= '0';	-- not implemented yet
-		case state_s is
-			when IDLE =>
-				if rx_i = '0' and enable_i = '1' then
-					nextstate_s <= START_DETECTED;
-				else
-					nextstate_s <= IDLE;
-				end if;
+		if rising_edge(clock_i) then
 
-			when START_DETECTED =>
-				if bclk_rising_s = '0' then
-					nextstate_s	<= START_DETECTED;
-				elsif rx_i = '1' then
-					clr1_s		<= '1';
-					nextstate_s	<= IDLE;
-				else
-					clr1_s		<= '1';
-					nextstate_s	<= RECV_DATA;
-				end if;
+			if reset_i = '1' then
+				baudr_cnt_q <= 0;
+				shift_q		<= (others => '0');
+				bit_cnt_q	<= 0;
+				state_s		<= stIdle;
+				fifo_wr_o	<= '0';
+				errors_o		<= (others => '0');
+			else
 
-			when RECV_DATA =>
-				if bclk_rising_s = '0' then
-					nextstate_s		<= RECV_DATA;
-				else
-					if ct1_q /= 8 then					-- wait for 8 clock cycles
-						shift_rsr_s	<= '1';
-						inc1_s		<= '1';
-						nextstate_s	<= RECV_DATA;
-					else
-						nextstate_s	<= IDLE;
-						set_ready_o <= '1';
-						clr1_s		<= '1';
-						if ready_i = '1' then		-- If there is a byte without read,
-							set_oe_o <= '1';			-- set Overrun Error
-						elsif rx_i = '0' then
-							set_fe_o <= '1';			-- No Stop Bit, set Framming Error
-						else
-							load_rdr_s <= '1';		-- load recv data register
+				fifo_wr_o	<= '0';
+				errors_o		<= (others => '0');
+
+				case state_s is
+
+					when stIdle =>
+						if rx_i = '0' then							-- Start bit detected
+							baudr_cnt_q	<= 0;
+							bit_cnt_q	<= 0;
+							bitmax_s		<= to_unsigned(4, 4) + unsigned(char_len_i);
+							max_cnt_s	<= to_integer(unsigned(baud_i));
+							mid_cnt_s	<= to_integer(unsigned(baud_i)) / 2;
+							state_s		<= stStart;
 						end if;
-					end if;
-				end if;
-			end case;
-	end process;
 
-	Rcvr_update: process (reset_n_i, clock_i)
-	begin
-		if (reset_n_i = '0') then
-			state_s			<= IDLE;
-			bclk_dlayed_s	<= '0';
-			ct1_q				<= 0;
-			rdr_o				<= (others => '1');
-		elsif rising_edge(clock_i) then
+					when stStart =>
+						if rx_i = '1' then
+							state_s		<= stIdle;					-- Is not start bit, return
+						elsif baudr_cnt_q >= max_cnt_s-1 then
+							baudr_cnt_q <= 0;
+							state_s		<= stData;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
 
-			state_s	<= nextstate_s;
+					when stData =>
+						if baudr_cnt_q = mid_cnt_s then
+							shift_q(bit_cnt_q)	<= rx_i;
+						end if;
+						if baudr_cnt_q >= max_cnt_s then
+							baudr_cnt_q <= 0;
+							if bit_cnt_q >= bitmax_s then
+								if parity_i /= "00" then
+									state_s		<= stParity;
+								else
+									if stop_bits_i = '0' then
+										state_s		<= stStop1;
+									else
+										state_s		<= stStop2;
+									end if;
+								end if;
+							else
+								bit_cnt_q <= bit_cnt_q + 1;
+							end if;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
 
-			if clr1_s = '1' then
-				ct1_q <= 0;
-			elsif inc1_s = '1' then
-				ct1_q <= ct1_q + 1;
+					when stParity =>
+						if baudr_cnt_q = mid_cnt_s then
+							if parity_s /= rx_i then
+								errors_o(0)	<= '1';							-- Parity Error
+								state_s		<= stIdle;
+							end if;
+						end if;
+						if baudr_cnt_q >= max_cnt_s then
+							baudr_cnt_q <= 0;
+							if stop_bits_i = '0' then
+								state_s		<= stStop1;
+							else
+								state_s		<= stStop2;
+							end if;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
+
+					when stStop2 =>
+						if baudr_cnt_q = mid_cnt_s then
+							if rx_i = '0' then
+								errors_o(1)	<= '1';							-- Frame error
+								state_s		<= stIdle;
+							end if;
+						end if;
+						if baudr_cnt_q >= max_cnt_s then
+							baudr_cnt_q <= 0;
+							state_s	<= stStop2;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
+
+					when stStop1 =>
+						if baudr_cnt_q = mid_cnt_s then
+							if rx_i = '0' then
+								errors_o(1)	<= '1';							-- Frame error
+								state_s		<= stIdle;
+							end if;
+						end if;
+						if baudr_cnt_q >= max_cnt_s - 5 then
+							baudr_cnt_q <= 0;
+							if rx_full_i = '1' then
+								errors_o(2)	<= '1';							-- Overrun error
+							else
+								fifo_wr_o	<= '1';							-- No errors, write data
+							end if;
+							state_s		<= stIdle;
+						else
+							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
+
+				end case;
 			end if;
-
-			if shift_rsr_s = '1' then
-				rsr_r <= rx_i & rsr_r(7 downto 1);
-			end if;
-
-			-- update shift reg.
-			if load_rdr_s = '1' then
-				rdr_o <= rsr_r;
-			end if;
-
-			bclk_dlayed_s <= baudclk_i;				-- baud clock delayed by 1 sysclk
-
 		end if;
 	end process;
 
-end rcvr;
+	data_o	<= shift_q;
+
+end architecture;

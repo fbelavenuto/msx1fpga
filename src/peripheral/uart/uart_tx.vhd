@@ -45,7 +45,7 @@ entity uart_tx is
 	port (
 		clock_i		: in  std_logic;
 		reset_i		: in  std_logic;
-		baud_i		: in  std_logic_vector(10 downto 0);
+		baud_i		: in  std_logic_vector(15 downto 0);
 		char_len_i	: in  std_logic_vector( 1 downto 0);
 		stop_bits_i	: in  std_logic;
 		parity_i		: in  std_logic_vector( 1 downto 0);
@@ -61,13 +61,13 @@ architecture xmit of uart_tx is
 
 	type state_t is (stIdle, stLoad, stLoad2, stStart, stData, stParity, stStop2, stStop1);
 	signal state_s			: state_t;
-	signal baudr_cnt_q	: integer range 0 to 2049;
-	signal max_cnt_s		: integer range 0 to 2049;
-	signal bit_cnt_q		: integer range 0 to 9;
-	signal bitmax_s		: unsigned(3 downto 0);
+	signal baudr_cnt_q	: integer range 0 to 65536			:= 0;
+	signal max_cnt_s		: integer range 0 to 65536			:= 0;
+	signal bit_cnt_q		: integer range 0 to 9				:= 0;
+	signal bitmax_s		: unsigned(3 downto 0)				:= (others => '0');
 	signal bitmask_s		: std_logic_vector(2 downto 0);
 	signal shift_q			: std_logic_vector(7 downto 0);
-	signal tx_s				: std_logic;
+	signal tx_s				: std_logic								:= '1';
 	signal datapar_s		: std_logic_vector(7 downto 0);
 	signal parity_s		: std_logic;
 
