@@ -88,7 +88,6 @@ architecture testbench of tb is
 	signal rd_s				: std_logic;
 	signal wr_s				: std_logic;
 	signal int_n_s			: std_logic;
-	signal rxd_s			: std_logic;
 	signal txd_s			: std_logic;
 	signal rts_n_s			: std_logic;
 	signal dtr_n_s			: std_logic;
@@ -149,32 +148,6 @@ architecture testbench of tb is
 		data_i_s	<= (others => 'Z');
 	end;
 
-	procedure serial_tx_data (
-		data_i		: in  std_logic_vector( 7 downto 0);
-		baud_c		: in  time;
-		signal tx_s	: out std_logic
-	) is 
-		variable temp_v	: std_logic_vector(7 downto 0);
-	begin
-		temp_v	:= data_i;
-		-- Start bit
-		tx_s	<= '0';
-		wait for baud_c;
-		for i in 0 to 7 loop
-			tx_s	<= temp_v(0);
-			wait for baud_c;
-			temp_v	:= '1' & temp_v(7 downto 1);
-		end loop;
-		-- Stop bit
-		tx_s	<= '1';
-		wait for baud_c;
-	end;
-
-	constant baud_100k_c			: time	:= 10 us;
-	constant baud_115200_c		: time	:= 8680 ns;
-	constant baud_4000_c			: time	:= 250 us;
-
-
 	constant clock21_period_c	: time	:= 46.66 ns;
 	constant clock8_period_c	: time	:= 125 ns;
 	constant clock7_period_c	: time	:= 139.68 ns;
@@ -223,7 +196,7 @@ begin
 		wr_i			=> wr_s,
 		int_n_o		=> int_n_s,
 		--
-		rxd_i			=> rxd_s,
+		rxd_i			=> txd_s,
 		txd_o			=> txd_s,
 		cts_n_i		=> '0',
 		rts_n_o		=> rts_n_s,
@@ -250,11 +223,18 @@ begin
 
 		wait for 4 us;
 
-		-- I/O write (Mode REG: 8 bits, 1 stop, no parity)
-		z80_io_write("000", X"18", addr_s, data_i_s, cs_s, wr_s);
+--		-- I/O write (Mode REG: 8 bits, 1 stop, no parity)
+--		z80_io_write("000", X"18", addr_s, data_i_s, cs_s, wr_s);
+--		-- I/O write (Mode REG: 8 bits, 1 stop, parity even)
+--		z80_io_write("000", X"19", addr_s, data_i_s, cs_s, wr_s);
+--		-- I/O write (Mode REG: 8 bits, 1 stop, parity odd)
+--		z80_io_write("000", X"1A", addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write (Ctrl REG: IRQ enabled, RX disabled and TX enabled, DSR=0)
-		z80_io_write("001", X"C0", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write (Mode REG: 5 bits, 2 stop, no parity)
+		z80_io_write("000", X"00", addr_s, data_i_s, cs_s, wr_s);
+
+		-- I/O write (Ctrl REG: No IRQ, DSR=0)
+		z80_io_write("001", X"00", addr_s, data_i_s, cs_s, wr_s);
 
 		-- I/O write (TX BAUD rate LSB) 21429000 / 115200 = 186
 		z80_io_write("010", X"BA", addr_s, data_i_s, cs_s, wr_s);
@@ -270,110 +250,29 @@ begin
 
 		wait for 1 us;
 
-		-- I/O write (Data write)
-		z80_io_write("111", X"55", addr_s, data_i_s, cs_s, wr_s);
+		for i in 0 to 31 loop
+			-- I/O write (Data write)
+			z80_io_write("111", std_logic_vector(to_unsigned(i, 8)), addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write (Data write)
-		z80_io_write("111", X"AA", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
-
-		wait for 1 us;
+		end loop;
 
 		-- I/O read (Status)
 		z80_io_read("000",         addr_s, data_o_s, cs_s, rd_s);
 
-		wait for 1 ms;
+		wait for 3 ms;
 
-		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O read (Status)
+		z80_io_read("000",         addr_s, data_o_s, cs_s, rd_s);
 
-		wait for 100 us;
-
-		-- I/O read (Data read)
-		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
-
-		-- I/O read (Data read)
-		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
-
-		-- I/O read (Data read)
-		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
-
-		-- I/O read (Data read)
-		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
-
-		-- I/O read (Data read)
-		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
-
-		-- I/O read (Data read)
-		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
-
-		wait for 1 ms;
-
-		-- I/O write (Mode REG: 8 bits, 1 stop, parity even)
-		z80_io_write("000", X"19", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Ctrl REG: no IRQ, DSR=0)
-		z80_io_write("001", X"C0", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (TX BAUD rate LSB)
-		z80_io_write("010", X"10", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (TX BAUD rate MSB)
-		z80_io_write("011", X"00", addr_s, data_i_s, cs_s, wr_s);
-
-		wait for 1 us;
-
-		-- I/O write (Data write)
-		z80_io_write("111", X"90", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Data write)
-		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
-
-		wait for 100 us;
-
-		-- I/O write (Mode REG: 8 bits, 1 stop, parity odd)
-		z80_io_write("000", X"1A", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Data write)
-		z80_io_write("111", X"90", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Data write)
-		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
-
-		wait for 100 us;
-
-		-- I/O write (Mode REG: 7 bits, 1 stop, no parity)
-		z80_io_write("000", X"10", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Data write)
-		z80_io_write("111", X"90", addr_s, data_i_s, cs_s, wr_s);
-
-		-- I/O write (Data write)
-		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
+		for i in 0 to 31 loop
+			-- I/O read (Data)
+			z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);
+		end loop;
 
 		wait for 1 ms;
 
 		-- wait
 		tb_end <= '1';
-		wait;
-	end process;
-
-	-- RX simulation
-	process
-	begin
-		rxd_s			<= '1';
-
-		wait for 100 us;
-
-		serial_tx_data(X"AA", baud_115200_c, rxd_s);
-		serial_tx_data(X"55", baud_115200_c, rxd_s);
-		serial_tx_data(X"A0", baud_115200_c, rxd_s);
-		serial_tx_data(X"0A", baud_115200_c, rxd_s);
-		serial_tx_data(X"00", baud_115200_c, rxd_s);
-		serial_tx_data(X"FF", baud_115200_c, rxd_s);
-
 		wait;
 	end process;
 

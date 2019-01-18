@@ -261,14 +261,14 @@ begin
 	-- Clocks
 	clks: entity work.clocks
 	port map (
-		clock_i			=> clock_master_s,
+		clock_i			=> clock_master_s,	-- 21.429
 		por_i				=> por_clock_s,
 		turbo_on_i		=> turbo_on_s,
 		clock_vdp_o		=> clock_vdp_s,
 		clock_5m_en_o	=> open,
 		clock_cpu_o		=> clock_cpu_s,
 		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_3m_o		=> clock_3m_s			-- 3571500
 	);
 
 	-- The MSX1
@@ -735,7 +735,7 @@ begin
 	
 	serial: entity work.uart
 	port map (
-		clock_i		=> clock_8m_s,
+		clock_i		=> clock_master_s,			-- 21.429 MHz
 		reset_i		=> reset_s,
 		addr_i		=> bus_addr_s(2 downto 0),
 		data_i		=> bus_data_to_s,
@@ -744,18 +744,19 @@ begin
 		cs_i			=> serial_cs_s,
 		rd_i			=> not bus_rd_n_s,
 		wr_i			=> not bus_wr_n_s,
+		int_n_o		=> leds_n_o(1),
 		--
 		rxd_i			=> gpio_io(0),
 		txd_o			=> gpio_io(1),
-		dsr_n_i		=> '0',
 		cts_n_i		=> '0',
 		rts_n_o		=> open,
+		dsr_n_i		=> '0',
 		dtr_n_o		=> open
 	);
 	
 	-- DEBUG
 	leds_n_o(0) <= sdspi_cs_n_s;
-	leds_n_o(1) <= '1';
+	--leds_n_o(1) <= '1';
 	leds_n_o(2) <= '1';--not vga_en_s;
 	leds_n_o(3) <= '1';--not turbo_on_s;
 

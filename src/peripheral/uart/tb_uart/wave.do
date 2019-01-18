@@ -23,7 +23,6 @@ add wave -noupdate /tb/u_target/last_write_s
 add wave -noupdate /tb/u_target/awrite_s
 add wave -noupdate -radix hexadecimal /tb/u_target/mode_r
 add wave -noupdate -radix hexadecimal /tb/u_target/ctrl_r
-add wave -noupdate -radix hexadecimal /tb/u_target/status_s
 add wave -noupdate -radix unsigned /tb/u_target/baudrx_r
 add wave -noupdate -radix unsigned /tb/u_target/baudtx_r
 add wave -noupdate /tb/u_target/last_rxempty_s
@@ -33,18 +32,17 @@ add wave -noupdate /tb/u_target/irq_rx_a
 add wave -noupdate /tb/u_target/irq_rx_q
 add wave -noupdate /tb/u_target/irq_tx_a
 add wave -noupdate /tb/u_target/irq_tx_q
+add wave -noupdate /tb/u_target/char_len_a
+add wave -noupdate /tb/u_target/parity_a
+add wave -noupdate /tb/u_target/stop_bits_a
+add wave -noupdate /tb/u_target/status1_s
+add wave -noupdate /tb/u_target/status2_s
 add wave -noupdate -divider TX
 add wave -noupdate -radix hexadecimal /tb/u_target/txfifo_data_s
 add wave -noupdate /tb/u_target/txfifo_empty_s
 add wave -noupdate /tb/u_target/txfifo_full_s
 add wave -noupdate /tb/u_target/txfifo_rd_s
 add wave -noupdate /tb/u_target/txfifo_wr_s
-add wave -noupdate -divider RX
-add wave -noupdate -radix hexadecimal /tb/u_target/rxfifo_data_s
-add wave -noupdate /tb/u_target/rxfifo_empty_s
-add wave -noupdate /tb/u_target/rxfifo_full_s
-add wave -noupdate /tb/u_target/rxfifo_rd_s
-add wave -noupdate /tb/u_target/rxfifo_wr_s
 add wave -noupdate -divider uart_tx
 add wave -noupdate /tb/u_target/tx/reset_i
 add wave -noupdate /tb/u_target/tx/clock_i
@@ -62,8 +60,28 @@ add wave -noupdate /tb/u_target/tx/max_cnt_s
 add wave -noupdate /tb/u_target/tx/fifo_rd_o
 add wave -noupdate -radix hexadecimal /tb/u_target/tx/shift_q
 add wave -noupdate /tb/u_target/tx/txd_o
+add wave -noupdate -divider RX
+add wave -noupdate -radix hexadecimal /tb/u_target/rxfifo_datai_s
+add wave -noupdate -radix hexadecimal /tb/u_target/rxfifo_datao_s
+add wave -noupdate /tb/u_target/rxfifo_empty_s
+add wave -noupdate /tb/u_target/rxfifo_full_s
+add wave -noupdate /tb/u_target/rxfifo_rd_s
+add wave -noupdate /tb/u_target/rxfifo_wr_s
+add wave -noupdate /tb/u_target/last_rxerror_s
+add wave -noupdate /tb/u_target/rx_set_errors_s
+add wave -noupdate /tb/u_target/rx_errors_q
+add wave -noupdate -divider uart_rx
+add wave -noupdate /tb/u_target/rx/rx_i
+add wave -noupdate /tb/u_target/rx/baudr_cnt_q
+add wave -noupdate /tb/u_target/rx/bit_cnt_q
+add wave -noupdate -radix unsigned /tb/u_target/rx/bitmax_s
+add wave -noupdate /tb/u_target/rx/mid_cnt_s
+add wave -noupdate /tb/u_target/rx/max_cnt_s
+add wave -noupdate /tb/u_target/rx/parity_s
+add wave -noupdate -radix hexadecimal /tb/u_target/rx/shift_q
+add wave -noupdate /tb/u_target/rx/state_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {8494 ns} 0}
+WaveRestoreCursors {{Cursor 1} {100000 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 198
 configure wave -valuecolwidth 41
@@ -79,4 +97,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {74304 ns}
+WaveRestoreZoom {0 ns} {594432 ns}
