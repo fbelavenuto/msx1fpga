@@ -132,15 +132,16 @@ architecture behavior of wxedax_top is
 	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
 	signal reload_s			: std_logic;
 
+	attribute clock_signal : string;
 	-- Clocks
-	signal clock_master_s	: std_logic;
-	signal clock_sdram_s		: std_logic;
-	signal clock_vdp_s		: std_logic;
-	signal clock_cpu_s		: std_logic;
+	signal clock_master_s	: std_logic;	attribute clock_signal of clock_master_s : signal is "yes";
+	signal clock_sdram_s		: std_logic;	attribute clock_signal of clock_sdram_s  : signal is "yes";
+	signal clock_vdp_s		: std_logic;	attribute clock_signal of clock_vdp_s    : signal is "yes";
+	signal clock_cpu_s		: std_logic;	attribute clock_signal of clock_cpu_s    : signal is "yes";
 	signal clock_psg_en_s	: std_logic;
-	signal clock_3m_s			: std_logic;
+	signal clock_3m_s			: std_logic;	attribute clock_signal of clock_3m_s     : signal is "yes";
 	signal turbo_on_s			: std_logic;
-	signal clock_8m_s			: std_logic;
+	signal clock_8m_s			: std_logic;	attribute clock_signal of clock_8m_s     : signal is "yes";
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
@@ -744,18 +745,19 @@ begin
 		cs_i			=> serial_cs_s,
 		rd_i			=> not bus_rd_n_s,
 		wr_i			=> not bus_wr_n_s,
+		int_n_o		=> leds_n_o(1),
 		--
 		rxd_i			=> gpio_io(0),
 		txd_o			=> gpio_io(1),
-		dsr_n_i		=> '0',
 		cts_n_i		=> '0',
 		rts_n_o		=> open,
+		dsr_n_i		=> '0',
 		dtr_n_o		=> open
 	);
 	
 	-- DEBUG
 	leds_n_o(0) <= sdspi_cs_n_s;
-	leds_n_o(1) <= '1';
+--	leds_n_o(1) <= '1';
 	leds_n_o(2) <= '1';--not vga_en_s;
 	leds_n_o(3) <= '1';--not turbo_on_s;
 

@@ -158,3 +158,6 @@ TIMESPEC TS_clks_clock_3m_s = PERIOD "clks/clock_3m_s" 279.365 ns HIGH 50%;
 
 NET "clks/clock_vdp_s" TNM_NET = clks/clock_vdp_s;
 TIMESPEC TS_clks_clock_vdp_s = PERIOD "clks/clock_vdp_s" 93.121 ns HIGH 50%;
+
+NET "clock_8m_s" TNM_NET = clock_8m_s;
+TIMESPEC TS_clock_8m_s = PERIOD "clock_8m_s" 125 ns HIGH 50%;
