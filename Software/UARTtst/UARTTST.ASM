@@ -5,6 +5,8 @@
 
 ; -----------------------------------------------------------
 ; Constants
+CLOCK = 21429000
+BAUDRATE = CLOCK / 115200
 
 	db	#FE
 	dw	start
@@ -16,10 +18,12 @@
 start:
 	ld	a, #18
 	out	(#C8), a
-	ld	a, #D0
+	ld	a, LOW BAUDRATE
 	out	(#CA), a
-	ld	a, #07
+	out	(#CC), a
+	ld	a, HIGH BAUDRATE
 	out	(#CB), a
+	out	(#CD), a
 	xor	a
 loop:
 	ld	b, a

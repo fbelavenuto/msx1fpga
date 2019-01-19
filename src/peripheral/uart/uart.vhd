@@ -38,7 +38,8 @@
 -- Register map:
 -- 0 = MODE (W) / Status1 (R)
 --  Mode:
---    b7-b5 = reserved (write 0 to compatibility)
+--    b7-b6 = reserved (write 0 to compatibility)
+--    b5    = Hardware CTS/RTS (1 = enable)
 --    b4-b3 = Char data size (00 = 5 bits, 01 = 6 bits, 10 = 7 bits, 11 = 8 bits)
 --    b2    = Stop bits (0 = 1 stop bit, 1 = 2 stop bits)
 --    b1-b0 = Parity (00 = none, 01 = even, 1x = odd)
@@ -115,6 +116,7 @@ architecture Behavior of uart is
 	signal awrite_s			: std_logic;
 
 	signal mode_r				: std_logic_vector( 7 downto 0)	:= (others => '0');
+	alias  hwflux_a			: std_logic								is mode_r(5);
 	alias  char_len_a			: std_logic_vector( 1 downto 0)	is mode_r(4 downto 3);
 	alias  stop_bits_a		: std_logic								is mode_r(2);
 	alias  parity_a			: std_logic_vector( 1 downto 0)	is mode_r(1 downto 0);
@@ -195,6 +197,7 @@ begin
 		char_len_i	=> char_len_a,
 		stop_bits_i	=> stop_bits_a,
 		parity_i		=> parity_a,
+		hwflux_i		=> hwflux_a,
 		data_i		=> txfifo_data_s,
 		tx_empty_i	=> txfifo_empty_s,
 		fifo_rd_o	=> txfifo_rd_s,
@@ -294,7 +297,7 @@ begin
 		end if;
 	end process;
 
-	rts_n_o	<= rxfifo_full_s;
+	rts_n_o	<= rxfifo_full_s and not hwflux_a;
 	dtr_n_o	<= dtr_n_a;
 
 	-- IRQ
@@ -311,10 +314,10 @@ begin
 	data_o	<= (others => '1')						when access_s = '0' or rd_i = '0'	else
 					status1_s								when addr_i = "000"						else
 					ctrl_r									when addr_i = "001"						else
-					baudtx_r(7 downto 0)					when addr_i = "010"						else
-					"00000" & baudtx_r(10 downto 8)	when addr_i = "011"						else
-					baudrx_r(7 downto 0)					when addr_i = "100"						else
-					"00000" & baudrx_r(10 downto 8)	when addr_i = "101"						else
+					baudtx_r( 7 downto 0)				when addr_i = "010"						else
+					baudtx_r(15 downto 8)				when addr_i = "011"						else
+					baudrx_r( 7 downto 0)				when addr_i = "100"						else
+					baudrx_r(15 downto 8)				when addr_i = "101"						else
 					status2_s								when addr_i = "110"						else
 					rxfifo_datao_s;
 

@@ -3,7 +3,7 @@
 
 import serial
 
-ser = serial.Serial('COM5', 4000)
+ser = serial.Serial('COM5', 115200)
 print(ser.name)
 
 while 1:
@@ -21,4 +21,4 @@ while 1:
 		a=a+1
 		if a==256:
 			a=0
-			print "loop"
+			#print "loop"
