@@ -68,7 +68,9 @@ architecture testbench of tb is
 		cts_n_i		: in  std_logic;
 		rts_n_o		: out std_logic;
 		dsr_n_i		: in  std_logic;
-		dtr_n_o		: out std_logic
+		dtr_n_o		: out std_logic;
+		dcd_i			: in  std_logic;
+		ri_i			: in  std_logic
 	);
 	end component;
 
@@ -91,6 +93,8 @@ architecture testbench of tb is
 	signal txd_s			: std_logic;
 	signal rts_n_s			: std_logic;
 	signal dtr_n_s			: std_logic;
+	signal dcd_s			: std_logic;
+	signal ri_s				: std_logic;
 
 	procedure z80_io_read(
 		addr_i				: in  std_logic_vector( 2 downto 0);
@@ -201,7 +205,9 @@ begin
 		cts_n_i		=> '0',
 		rts_n_o		=> rts_n_s,
 		dsr_n_i		=> '0',
-		dtr_n_o		=> dtr_n_s
+		dtr_n_o		=> dtr_n_s,
+		dcd_i			=> dcd_s,
+		ri_i			=> ri_s
 	);
 
 	-- ----------------------------------------------------- --
@@ -216,6 +222,8 @@ begin
 		cs_s			<= '0';
 		rd_s			<= '0';
 		wr_s			<= '0';
+		dcd_s			<= '0';
+		ri_s			<= '0';
 
 		wait for 4 us;
 
@@ -223,17 +231,17 @@ begin
 
 		wait for 4 us;
 
---		-- I/O write (Mode REG: 8 bits, 1 stop, no parity)
+--		-- I/O write (Mode REG: no HW flux, 8 bits, 1 stop, no parity)
 --		z80_io_write("000", X"18", addr_s, data_i_s, cs_s, wr_s);
---		-- I/O write (Mode REG: 8 bits, 1 stop, parity even)
+--		-- I/O write (Mode REG: no HW flux, 8 bits, 1 stop, parity even)
 --		z80_io_write("000", X"19", addr_s, data_i_s, cs_s, wr_s);
---		-- I/O write (Mode REG: 8 bits, 1 stop, parity odd)
+--		-- I/O write (Mode REG: no HW flux, 8 bits, 1 stop, parity odd)
 --		z80_io_write("000", X"1A", addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write (Mode REG: 5 bits, 2 stop, no parity)
+		-- I/O write (Mode REG: no HW flux, 5 bits, 2 stop, no parity)
 		z80_io_write("000", X"00", addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write (Ctrl REG: No IRQ, DSR=0)
+		-- I/O write (Ctrl REG: DSR=0, No IRQs)
 		z80_io_write("001", X"00", addr_s, data_i_s, cs_s, wr_s);
 
 		-- I/O write (TX BAUD rate LSB) 21429000 / 115200 = 186

@@ -53,12 +53,14 @@
 --    b1 = RX FIFO Empty
 --    b0 = RX FIFO Full
 -- 1 = CTRL
---    b7 = INT enabled (1 = Generate IRQs)
---    b6 = TX INT enabled (1 = enabled)
---    b5 = RX INT enabled (1 = enabled)
---    b4 = RX Errors INT enabled (1 = enabled)
---    b3-b1 = reserved (write 0 to compatibility / always 0)
---    b0 = /DTR pin (out)
+--    b7 = /DTR pin
+--    b6 = INT enabled (1 = Generate IRQs)
+--    b5 = reserved (write 0 to compatibility / always 0)
+--    b4 = RI change INT enabled (1 = enabled)
+--    b3 = DCD change INT enabled (1 = enabled)
+--    b2 = RX Errors INT enabled (1 = enabled)
+--    b1 = RX INT enabled (1 = enabled)
+--    b0 = TX INT enabled (1 = enabled)
 -- 2 = TX BAUD LSB
 --   b7-b0 = LSB value
 -- 3 = TX BAUD MSB
@@ -71,8 +73,8 @@
 --  Write any value to clear IRQ/Error flags
 --  Status:
 --    b7 = reserved (always 0)
---    b6 = reserved (always 0)
---    b5 = reserved (always 0)
+--    b6 = 1 if IRQ RI changed
+--    b5 = 1 if IRQ DCD changed
 --    b4 = 1 if RX Parity Error
 --    b3 = 1 if RX Frame Error
 --    b2 = 1 if RX Overrun error
@@ -103,7 +105,9 @@ entity uart is
 		cts_n_i		: in  std_logic;
 		rts_n_o		: out std_logic;
 		dsr_n_i		: in  std_logic;
-		dtr_n_o		: out std_logic
+		dtr_n_o		: out std_logic;
+		dcd_i			: in  std_logic;
+		ri_i			: in  std_logic
 	);
 end entity;
 
@@ -122,11 +126,13 @@ architecture Behavior of uart is
 	alias  parity_a			: std_logic_vector( 1 downto 0)	is mode_r(1 downto 0);
 
 	signal ctrl_r				: std_logic_vector( 7 downto 0);
-	alias  irq_en_a			: std_logic								is ctrl_r(7);
-	alias  irq_tx_a			: std_logic								is ctrl_r(6);
-	alias  irq_rx_a			: std_logic								is ctrl_r(5);
-	alias  irq_rxerr_a		: std_logic								is ctrl_r(4);
-	alias  dtr_n_a				: std_logic								is ctrl_r(0);
+	alias  dtr_n_a				: std_logic								is ctrl_r(7);
+	alias  irq_en_a			: std_logic								is ctrl_r(6);
+	alias  irq_ri_en_a		: std_logic								is ctrl_r(4);
+	alias  irq_dcd_en_a		: std_logic								is ctrl_r(3);
+	alias  irq_rxerr_en_a	: std_logic								is ctrl_r(2);
+	alias  irq_rx_en_a		: std_logic								is ctrl_r(1);
+	alias  irq_tx_en_a		: std_logic								is ctrl_r(0);
 
 	signal baudtx_r			: std_logic_vector(15 downto 0);
 	signal baudrx_r			: std_logic_vector(15 downto 0);
@@ -134,24 +140,29 @@ architecture Behavior of uart is
 	signal status2_s			: std_logic_vector( 7 downto 0);
 	signal irq_tx_q			: std_logic;
 	signal irq_rx_q			: std_logic;
+	signal rx_errors_q		: std_logic_vector(2 downto 0)	:= (others => '0');
+	signal irq_dcd_q			: std_logic;
+	signal irq_ri_q			: std_logic;
+	signal last_txempty_s	: std_logic;
+	signal last_rxempty_s	: std_logic;
+	signal last_rxerror_s	: std_logic;
+	signal last_dcd_s			: std_logic;
+	signal last_ri_s			: std_logic;
 
 	signal txfifo_wr_s		: std_logic								:= '0';
 	signal txfifo_rd_s		: std_logic								:= '0';
 	signal txfifo_data_s		: std_logic_vector(7 downto 0);
 	signal txfifo_empty_s	: std_logic;
 	signal txfifo_full_s		: std_logic;
-	signal last_txempty_s	: std_logic;
 
 	signal rxfifo_wr_s		: std_logic								:= '0';
 	signal rxfifo_rd_s		: std_logic								:= '0';
 	signal rxfifo_datai_s	: std_logic_vector(7 downto 0);
 	signal rxfifo_datao_s	: std_logic_vector(7 downto 0);
 	signal rxfifo_empty_s	: std_logic;
+	signal rxfifo_half_s		: std_logic;
 	signal rxfifo_full_s		: std_logic;
 	signal rx_set_errors_s	: std_logic_vector(2 downto 0);
-	signal rx_errors_q		: std_logic_vector(2 downto 0)	:= (others => '0');
-	signal last_rxempty_s	: std_logic;
-	signal last_rxerror_s	: std_logic;
 
 begin
 
@@ -169,6 +180,7 @@ begin
 		read_en_i	=> txfifo_rd_s,
 		data_o		=> txfifo_data_s,
 		empty_o		=> txfifo_empty_s,
+		half_o		=> open,
 		full_o		=> txfifo_full_s
 	);
 
@@ -185,6 +197,7 @@ begin
 		read_en_i	=> rxfifo_rd_s,
 		data_o		=> rxfifo_datao_s,
 		empty_o		=> rxfifo_empty_s,
+		half_o		=> rxfifo_half_s,
 		full_o		=> rxfifo_full_s
 	);
 
@@ -234,13 +247,15 @@ begin
 			rxfifo_rd_s	<= '0';
 
 			if reset_i = '1' then
-				mode_r	<= (others => '0');
-				ctrl_r	<= (others => '0');
-				baudtx_r	<= (others => '0');
-				baudrx_r	<= (others => '0');
-				irq_tx_q	<= '0';
-				irq_rx_q	<= '0';
+				mode_r		<= (others => '0');
+				ctrl_r		<= (others => '0');
+				baudtx_r		<= (others => '0');
+				baudrx_r		<= (others => '0');
+				irq_tx_q		<= '0';
+				irq_rx_q		<= '0';
 				rx_errors_q	<= (others => '0');
+				irq_dcd_q	<= '0';
+				irq_ri_q		<= '0';
 
 			elsif last_write_s = '0' and awrite_s = '1' then		-- Rising
 				case addr_i is
@@ -263,9 +278,11 @@ begin
 						baudrx_r(15 downto 8)	<= data_i;
 
 					when "110" =>													-- Register 6 = clear IRQ flags
-						irq_tx_q	<= '0';
-						irq_rx_q	<= '0';
+						irq_tx_q		<= '0';
+						irq_rx_q		<= '0';
 						rx_errors_q	<= (others => '0');
+						irq_dcd_q	<= '0';
+						irq_ri_q		<= '0';
 						
 					when others =>
 						txfifo_wr_s	<= '1';
@@ -276,16 +293,26 @@ begin
 				if addr_i = "111" then
 					rxfifo_rd_s	<= '1';
 				end if;
-			elsif last_txempty_s = '0' and txfifo_empty_s = '1' then		-- TX FIFO empty
-				irq_tx_q <= '1';
-			elsif last_rxempty_s = '1' and rxfifo_empty_s = '0' then		-- RX FIFO not empty
-				irq_rx_q <= '1';
-			elsif last_rxerror_s = '0' and rx_set_errors_s /= "000" then	-- RX Error
-				for i in 0 to 2 loop
-					if rx_set_errors_s(i) = '1' then
-						rx_errors_q(i) <= '1';
-					end if;
-				end loop;
+			elsif irq_en_a = '1' then
+				if last_txempty_s = '0' and txfifo_empty_s = '1' then		-- TX FIFO empty
+					irq_tx_q <= '1';
+				end if;
+				if last_rxempty_s = '1' and rxfifo_empty_s = '0' then		-- RX FIFO not empty
+					irq_rx_q <= '1';
+				end if;
+				if last_rxerror_s = '0' and rx_set_errors_s /= "000" then	-- RX Error
+					for i in 0 to 2 loop
+						if rx_set_errors_s(i) = '1' then
+							rx_errors_q(i) <= '1';
+						end if;
+					end loop;
+				end if;
+				if last_dcd_s	/= dcd_i then										-- DCD change
+					irq_dcd_q	<= '1';
+				end if;
+				if last_ri_s	/= ri_i then										-- RI change
+					irq_ri_q	<= '1';
+				end if;
 			end if;
 
 			last_read_s		<= aread_s;
@@ -293,23 +320,27 @@ begin
 			last_txempty_s	<= txfifo_empty_s;
 			last_rxempty_s <= rxfifo_empty_s;
 			last_rxerror_s	<= rx_set_errors_s(2) or rx_set_errors_s(1) or rx_set_errors_s(0);
+			last_dcd_s		<= dcd_i;
+			last_ri_s		<= ri_i;
 
 		end if;
 	end process;
 
-	rts_n_o	<= rxfifo_full_s and not hwflux_a;
+	rts_n_o	<= rxfifo_half_s and hwflux_a;
 	dtr_n_o	<= dtr_n_a;
 
 	-- IRQ
 	int_n_o	<= not (irq_en_a and (
-						  (irq_tx_a and irq_tx_q) or
-						  (irq_rx_a and irq_rx_q) or
-						  (irq_rxerr_a and (rx_errors_q(2) or rx_errors_q(1) or rx_errors_q(0)))
+						  (irq_tx_en_a    and irq_tx_q)  or
+						  (irq_rx_en_a    and irq_rx_q)  or
+						  (irq_rxerr_en_a and (rx_errors_q(2) or rx_errors_q(1) or rx_errors_q(0))) or
+						  (irq_dcd_en_a   and irq_dcd_q) or
+						  (irq_ri_en_a    and irq_ri_q)
 					));
 
-	-- Status byte
+	-- Status bytes
 	status1_s	<= dsr_n_i & "000" & txfifo_empty_s & txfifo_full_s & rxfifo_empty_s & rxfifo_full_s;
-	status2_s	<= "000" & rx_errors_q & irq_tx_q & irq_rx_q;
+	status2_s	<= "0" & irq_ri_q & irq_dcd_q & rx_errors_q & irq_tx_q & irq_rx_q;
 
 	data_o	<= (others => '1')						when access_s = '0' or rd_i = '0'	else
 					status1_s								when addr_i = "000"						else

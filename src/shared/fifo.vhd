@@ -56,6 +56,7 @@ entity fifo is
 		read_en_i	: in  std_logic;
 		data_o		: out std_logic_vector(DATA_WIDTH_G - 1 downto 0);
 		empty_o		: out std_logic;
+		half_o		: out std_logic;
 		full_o		: out std_logic
 	);
 end entity;
@@ -70,21 +71,26 @@ begin
 		variable memory_v	: FIFOMEM_t;
 		variable head_v	: natural range 0 to FIFO_DEPTH_G - 1;
 		variable tail_v	: natural range 0 to FIFO_DEPTH_G - 1;
+		variable size_v	: natural range 0 to FIFO_DEPTH_G;
 		variable looped_v	: boolean;
 	begin
 		if falling_edge(clock_i) then		--
 			if reset_i = '1' then
-				head_v	:= 0;
-				tail_v	:= 0;
-				looped_v	:= false;
-				full_o	<= '0';
-				empty_o	<= '1';
-				data_o	<= (others => '0');
+				head_v		:= 0;
+				tail_v		:= 0;
+				size_v		:= 0;
+				looped_v		:= false;
+				half_o		<= '0';
+				full_o		<= '0';
+				empty_o		<= '1';
+				data_o		<= (others => '0');
 			else
 				if read_en_i = '1' then
 					if looped_v = true or head_v /= tail_v then
 						-- Update data output
 						data_o <= memory_v(tail_v);
+						size_v := size_v - 1;
+
 						-- Update Tail pointer as needed
 						if tail_v = FIFO_DEPTH_G - 1 then
 							tail_v := 0;
@@ -99,6 +105,7 @@ begin
 					if looped_v = false or head_v /= tail_v then
 						-- Write Data to Memory
 						memory_v(head_v) := data_i;
+						size_v := size_v + 1;
 						
 						-- Increment Head pointer as needed
 						if head_v = FIFO_DEPTH_G - 1 then
@@ -120,6 +127,10 @@ begin
 				else
 					empty_o	<= '0';
 					full_o	<= '0';
+				end if;
+				half_o <= '0';
+				if size_v > (FIFO_DEPTH_G / 2) then
+					half_o <= '1';
 				end if;
 			end if;
 		end if;

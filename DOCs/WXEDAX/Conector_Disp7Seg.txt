@@ -1,21 +1,22 @@
-+---------------- EN1			P66		SD_/CS
++---------------- EN1			P66		SD_CS_N
 | +-------------- A				P80		SD_MOSI
 | | +------------ F				P78		SD_SCLK
 | | | +---------- EN2			P74		SD_MISO
-| | | | +-------- EN3			P67		DAC_R
-| | | | | +------ B				P79		DAC_L
+| | | | +-------- EN3			P67		I2S_LRCLK
+| | | | | +------ B				P79		I2S_BCLK
 | | | | | |
 0 0 0 0 0 0
 
 D 0 0 0 0 0
 | | | | | |
-| | | | | +------ EN4			P75
-| | | | +-------- G				P84
-| | | +---------- C				P83
-| | +------------ DP			P85
-| +-------------- D				P82
-+---------------- E				P81
+| | | | | +------ EN4			P75		I2S_DATA
+| | | | +-------- G				P84		SNES_PAD_DATA
+| | | +---------- C				P83		SNES_PAD_LATCH
+| | +------------ DP			P85		SNES_PAD_CLK
+| +-------------- D				P82		SD_WP_N
++---------------- E				P81		SD_PRES_N
 
 Todos os pinos tem um resistor de 330R em série com os pinos do FPGA
 
-IRDA = P62
+IRDA = P62		I2S_MCLK
+

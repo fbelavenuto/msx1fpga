@@ -728,7 +728,7 @@ begin
 		-- Outs
 		int_n_o			=> midi_int_n_s,
 		wait_n_o			=> open,
-		tx_o				=> uart_tx_o
+		tx_o				=> open
 	);
 
 	-- Tests UART
@@ -747,12 +747,14 @@ begin
 		wr_i			=> not bus_wr_n_s,
 		int_n_o		=> leds_n_o(1),
 		--
-		rxd_i			=> gpio_io(0),
-		txd_o			=> gpio_io(1),
-		cts_n_i		=> '0',
-		rts_n_o		=> open,
+		rxd_i			=> uart_rx_i,
+		txd_o			=> uart_tx_o,
+		cts_n_i		=> gpio_io(0),
+		rts_n_o		=> gpio_io(1),
 		dsr_n_i		=> '0',
-		dtr_n_o		=> open
+		dtr_n_o		=> open,
+		dcd_i			=> '0',
+		ri_i			=> '0'
 	);
 	
 	-- DEBUG
