@@ -1,0 +1,109 @@
+Documentação da UART genérica
+
+O componente UART é uma implementação de um sistema de comunicação serial assíncrono genérico com FIFOs.
+
+A interface com o CPU foi pensado para FPGA e é internamente síncrono, devendo o clock do UART ser maior que o clock do CPU.
+
+Para se comunicar com a UART, foram implementados registros lineares, onde a configuração, comandos e status podem ser enviados/lidos.
+
+A UART implementa o básico da comunicação serial, como controle de fluxo por HW (CTS/RTS ou DSR/DTR), detecção da entrada Ring Indicator, detecção do Data Carrier Detect, detecção/geração de BREAK condition, 5 a 8 bits de dados por quadro, 1 ou 2 stop bits e paridade desligada, par ou ímpar.
+
+As interrupções podem ser geradas para várias condições, e cada uma pode ser mascarada. O registro de controle pode habilitar ou não a geração de interrupção e mascarar as interrupções que não forem necessárias.
+
+É possível ler o status de alguns dos pinos de entrada e informações para controle via software, como o DSR, DCD e RI, condição de Break e o status dos FIFOs.
+
+Para a recepção há um FIFO separado da transmissão, onde o tamanho de cada um deles pode ser configurado pelo usuário. O FIFO de recepção receberá os dados até ficar cheio, gerando um erro de Overrun se caso ocorrer uma recepção e o FIFO não for lido a tempo pelo CPU. O FIFO de transmissão começa a transmitir dados assim que for colocado um byte nele, e ignorará dados adicionais escritos caso ele esteja cheio e o CPU enviar um byte.
+
+A taxa de transmissão e recepção pode ser configurada por registros independentes, sendo possível transmitir a uma taxa diferente da recepção. Os registros de taxa são de 16 bits e contém o divisor do clock, então a taxa usada será definida pela fórmula "Clock / Valor do registro".
+
+Os pinos do UART são explicados abaixo:
+ - clock_i = Entrada de clock principal;
+ - reset_i = Entrada de reset síncrona, se 1 durante a subida do clock reseta o sistema;
+ - addr_i = Entrada de endereço dos registros da UART;
+ - data_i = Entrada de dados vindo do CPU;
+ - data_o = Saída de dados para o CPU;
+ - has_data_o = Informa que há dados para serem lidos pelo CPU;
+ - cs_i = Sinal de seleção da UART, deve ser 1;
+ - rd_i = Indica leitura de registro se for 1;
+ - wr_i = Indica escrita no registro se for 1;
+ - int_n_o = Saída de interrupção para o CPU;
+ - rxd_i = Entrada da linha de comunicação UART;
+ - txd_o = Saída da linha de comunicação UART;
+ - cts_n_i = Entrada Clear do Send (fluxo por hardware);
+ - rts_n_o = Saída Request to Send (fluxo por hardware);
+ - dsr_n_i = Entrada Data Set Ready;
+ - dtr_n_o = Saída Data Terminal Ready;
+ - dcd_i = Entrada Data Carrier Detect;
+ - ri_i = Entrada Ring Indicator;
+
+A entrada genérica 'fifo_size_g' define a quantidade de bytes para o FIFO, tanto de entrada quanto de saída.
+
+Os registros se dividem conforme mapa abaixo, alguns tem funções diferentes dependendo se é uma escrita ou leitura:
+
+0 = Mode Register (escrita) e Status 1 (leitura)
+1 = Control register
+2 = Bits 0 a 7 (LSB) da taxa de transmissão
+3 = Bits 8 a 15 (MSB) da taxa de transmissão
+4 = Bits 0 a 7 (LSB) da taxa de recepção
+5 = Bits 8 a 15 (MSB) da taxa de recepção
+6 = Limpar flags de interrupções (escrita) e Status 2 (leitura)
+7 = Recepção ou envio de dados
+
+Para configurar o UART, o registro de modo (0) deve ser configurado:
+ - bit 0 e 1 configuram o modo de paridade (00 = nenhum, 01 = par, 10 e 11 = ímpar)
+ - bit 2 configura a quantidade de Stop Bits (0 = 1 stop, 1 = 2 stops)
+ - bit 3 e 4 configura o tamanho do caracter a ser enviado em bits (00 = 5, 01 = 6, 10 = 7, 11 = 8)
+ - bit 5 habilita (se escrito 1) o controle de fluxo por hardware (uso dos pinos CTS/RTS);
+ - bit 6 ativa a geração de BREAK se for escrito 1, mantendo a geração até o software escrever 0 nesse bit;
+ - bit 7 é reservado e deve ser escrito 0;
+
+A leitura do registro 0 informa o status de algumas condições internas do chip e pinos externos:
+ - bit 0 = Informa se o FIFO de recepção está cheio (1 = cheio)
+ - bit 1 = Informa se o FIFO de recepção está vazio (1 = vazio)
+ - bit 2 = Informa se o FIFO de transmissão está cheio (1 = cheio)
+ - bit 3 = Informa se o FIFO de transmissão está vazio (1 = vazio)
+ - bit 4 = Informa se há uma condição de BREAK na linha de recepção (1 enquanto RXD for 0)
+ - bit 5 = Status do pino externo DCD
+ - bit 6 = Status do pino externo RI
+ - bit 7 = Status do pino externo DSR
+
+O registro 1 pode ser lido/escrito e tem sua definição descrita abaixo:
+ - bit 0 = Ligado diretamente ao pino externo DTR
+ - bit 1 = Habilita (se 1) a geração de interrupção
+ - bit 2 = 
+ - bit 3 = 
+ - bit 4 = 
+ - bit 5 = 
+ - bit 6 = 
+ - bit 7 = 
+
+
+-- 1 = CTRL
+--    b7 = /DTR pin
+--    b6 = INTs mask (1 = Generate IRQs)
+--    b5 = RI change INT mask (1 = enabled)
+--    b4 = DCD change INT mask (1 = enabled)
+--    b3 = Break char INT mask (1 = enabled)
+--    b2 = RX Errors INT mask (1 = enabled)
+--    b1 = RX INT mask (1 = enabled)
+--    b0 = TX INT mask (1 = enabled)
+-- 2 = TX BAUD LSB
+--   b7-b0 = LSB value
+-- 3 = TX BAUD MSB
+--   b7-b0 = MSB value
+-- 4 = RX BAUD LSB
+--   b7-b0 = LSB value
+-- 5 = RX BAUD MSB
+--   b7-b0 = MSB value
+-- 6 = Clear IRQ/Error Flags (W) / Status 2
+--  Write any value to clear IRQ/Error flags
+--  Status:
+--    b7 = 1 if IRQ RI occured
+--    b6 = 1 if IRQ DCD occured
+--    b5 = 1 if Break char detected
+--    b4 = 1 if RX Parity Error
+--    b3 = 1 if RX Frame Error
+--    b2 = 1 if RX Overrun error
+--    b1 = 1 if IRQ RX not Empty occured
+--    b0 = 1 if IRQ TX Empty occured
+-- 7 = Data

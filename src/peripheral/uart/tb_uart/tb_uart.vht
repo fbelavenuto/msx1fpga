@@ -397,6 +397,16 @@ begin
 		-- I/O write (Data write)
 		z80_io_write("111", X"91", addr_s, data_i_s, cs_s, wr_s);
 
+		wait for 100 us;
+
+		-- I/O write (Mode REG: generate BREAK)
+		z80_io_write("000", X"40", addr_s, data_i_s, cs_s, wr_s);
+
+		wait for 5 ms;
+
+		-- I/O write (Mode REG: Disabe BREAK, no HW flux, 8 bits, 1 stop, no parity)
+		z80_io_write("000", X"18", addr_s, data_i_s, cs_s, wr_s);
+
 		wait for 1 ms;
 
 		-- wait
@@ -417,6 +427,12 @@ begin
 		serial_tx_data(X"0A", baud_115200_c, rxd_s);
 		serial_tx_data(X"00", baud_115200_c, rxd_s);
 		serial_tx_data(X"FF", baud_115200_c, rxd_s);
+
+		wait for 5 ms;
+
+		rxd_s	<= '0';
+		wait for 1 ms;
+		rxd_s	<= '1';
 
 		wait;
 	end process;

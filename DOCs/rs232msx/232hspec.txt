@@ -1,0 +1,365 @@
+                                                        Page 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        MSX RS232C interface hardware specification
+
+
+
+
+
+        ASCII Microsoft
+        May 29th, 1984
+
+
+
+
+
+
+
+
+
+
+
+  (c) ASCII Corp. All right reserved
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MSX RS232C interface hardware specifaction                      Page 2
+
+
+This  document describes  the hardware  requirements of RS-232C interface for
+MSX home presonal computers.
+
+
+
+
+1.0  LSI COMPONENTS
+
+  i-8251 Communication interface
+  i-8253 Programmable interval timer
+
+  At least 4Kbyte of ROM storage for the support software.
+
+
+
+
+2.0  PORT ADDRESS
+
+  80H  R/W  8251 data port
+  81H  R/W  8251 command/status port
+  82H   R   Status sense port for CTS, Timer/Counter 2, RI and CD
+  82H   W   Interrupt mask register
+  83H       * not specified
+  84H  R/W  8253 counter 0
+  85H  R/W  8253 counter 1
+  86H  R/W  8253 counter 2
+  87H   W   8253 mode register
+
+
+
+
+*  The port  whose address  is 83H  can be  used for  the monufacturer's  own
+   purpose.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MSX RS232C interface hardware specifaction                      Page 3
+
+
+
+3.0  THE USAGE OF PORT AT ADRESS 82H
+
+
+  82H read - Get system status
+
+
+        +--------+-------------------------------------+
+        | data   |                                     |
+        |   bit  |   Description                       |
+        +--------+-------------------------------------+
+        |   D7   |   CTS ( Clear To Send )             |
+        |        |     0 - CTS is asserted             |
+        |        |     1 - CTS is negated              |
+        |   D6   |   Timer/counter output-2 from i8253 |
+        |   D5   |  --+                                |
+        |   D4   |    |                                |
+        |   D3   |    | Reserved                       |
+        |   D2   |  --+                                |
+        |   D1   | + RI ( Ring Indicator )             |
+        |        |     0 - RI is asserted              |
+        |        |     1 - RI is negated               |
+        |   D0   | + CD ( Carrier Detect )             |
+        |        |     0 - CD is asserted              |
+        |        |     1 - CD is negated               |
+        +--------+-------------------------------------+
+
+          NOTE:  Signals  with +  sign are  optional. If  only one of then is
+                 implented, it must be a 'CD' signal.
+
+
+
+
+                                NOTE
+
+                The CTS is not sensed through 8251, but
+                sensed through the prot as described above
+                because of the problem in CTS lopic in
+                some versions of 8251 and make the software
+                handling possible.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MSX RS232C interface hardware specifaction                      Page 4
+
+
+
+  82H write - Interrupt mask register
+      +--------+----------------------------------------+
+      | data   |                                        |
+      |   bit  |   Description                          |
+      +--------+----------------------------------------+
+      |   D7   |  --+                                   |
+      |   D6   |    |                                   |
+      |   D5   |    | Reserved                          |
+      |   D4   |  --+                                   |
+      |   D3   | + Timer interrupt from i8253 channel-2 |
+      |        |     1 - mask interrupt (initial value) |
+      |        |     0 - enable interrupt               |
+      |   D2   | + Sync character detect/Break detect   |
+      |        |     1 - mask interrupt (initial value) |
+      |        |     0 - enable interrupt               |
+      |   D1   | + Transmit data ready (TxReady)        |
+      |        |     1 - mask interrupt (initial value) |
+      |        |     0 - enable interrupt               |
+      |   D0   |   Receive data ready (RxReady)         |
+      |        |     1 - mask interrupt (initial value) |
+      |        |     0 - enable interrupt               |
+      +--------+----------------------------------------+
+
+        NOTE  :   Signals  with +  sign are  optional. That  is, the  minimum
+                  requirement for the interrupt signal is RxReady.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MSX RS232C interface hardware specifaction                      Page 5
+
+
+
+4.0  THE USAGE OF 8253 TIMER-COUNTER TO GENERATE BAUD RATE CLOCK FOR 8251
+
+4.1  Frequency Of X'tal
+
+       The frequency of the crystal :
+                1.8432Mhz
+
+      +------------------+------------------------------+
+      | baud rate (baud) | scale factor and error (x16) |
+      +------------------+------------------------------+
+      |           50     |    2304                      |
+      |           75     |    1536                      |
+      |          110     |    1047  110.0287 +0.3%      |
+      |          150     |     768                      |
+      |          300     |     384                      |
+      |          600     |     192                      |
+      |         1200     |      96                      |
+      |         1800     |      64                      |
+      |         2000     |      58  1986.2   -0.7%      |
+      |         2400     |      48                      |
+      |         3600     |      32                      |
+      |         4800     |      24                      |
+      |         7200     |      16                      |
+      |         9600     |      12                      |
+      |        19200     |       6                      |
+      +------------------+------------------------------+
+
+
+
+4.2  The Usage Of Counter Channel
+
+        CH0 - Rx baud rate clock
+        CH1 - Tx baud rate clock
+        CH2 - Used by application
+               Optionally generates interrupt
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MSX RS232C interface hardware specifaction                      Page 6
+
+
+
+5.0  THE CONNECTION OF DB25 CONNECTOR
+
+     +-------+------------------+   +-------+--------------------+
+     | PIN   |    SIGNAL        |   | PIN   |       SIGNAL       |
+     +-------+------------------+   +-------+--------------------+
+     |   1   | Frame ground     |   |  14   |                    |
+     |   2   | Transmit data    |   |  15   |                    |
+     |   3   | Receive data     |   |  16   |                    |
+     |   4   | Request To Send  |   |  17   |                    |
+     |   5   | Clear To Send    |   |  18   |                    |
+     |   6   | Data Set Ready   |   |  19   |                    |
+     |   7   | Signal ground    |   |  20   | Data Terminal Ready|
+     |   8   | Carrier detect   |   |  21   |                    |
+     |   9   |                  |   |  22   | Ring indicator     |
+     |  10   |                  |   |  23   |                    |
+     |  11   |                  |   |  24   |                    |
+     |  12   |                  |   |  25   |                    |
+     |  13   |                  |   |       |                    |
+     +-------+------------------+   +-------+--------------------+
+
+
+
+
+
+
+
+
+
+
+
+

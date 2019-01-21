@@ -1,0 +1,14 @@
+Only ESP:
+RX - 12
+TX - 14
+RTS - 29
+RESET - 15
+CH_PD - 21
+GPIO0 - 23
+GPIO2 - 27
+
+VGA&ESP:
+RX - 16
+TX - 12
+RTS - 22
+RESET - 26

@@ -50,6 +50,7 @@ entity uart_tx is
 		stop_bits_i	: in  std_logic;
 		parity_i		: in  std_logic_vector( 1 downto 0);
 		hwflux_i		: in  std_logic;
+		break_i		: in  std_logic;
 		data_i		: in  std_logic_vector( 7 downto 0);
 		tx_empty_i	: in  std_logic;
 		fifo_rd_o	: out std_logic;
@@ -60,7 +61,7 @@ end entity;
 
 architecture xmit of uart_tx is
 
-	type state_t is (stIdle, stLoad, stLoad2, stStart, stData, stParity, stStop2, stStop1);
+	type state_t is (stIdle, stLoad, stLoad2, stBreak, stStart, stData, stParity, stStop2, stStop1);
 	signal state_s			: state_t;
 	signal parity_cfg_s	: std_logic_vector(1 downto 0)	:= (others => '0');
 	signal stop_bits_s	: std_logic								:= '0';
@@ -108,6 +109,9 @@ begin
 								fifo_rd_o	<= '1';
 								state_s		<= stLoad;
 							end if;
+						elsif break_i = '1' then
+							tx_s				<= '0';
+							state_s			<= stBreak;
 						end if;
 
 					when stLoad =>
@@ -121,10 +125,16 @@ begin
 
 					when stLoad2 =>
 						tx_s			<= '0';								-- Start bit
-						shift_q <= data_i;
+						shift_q 		<= data_i;
 						datapar_s(7 downto 5)	<= data_i(7 downto 5) and bitmask_s;
 						datapar_s(4 downto 0)	<= data_i(4 downto 0);
 						state_s		<= stStart;
+
+					when stBreak =>
+						if break_i = '0' then
+							tx_s		<= '1';
+							state_s	<= stIdle;
+						end if;					
 
 					when stStart =>
 						if baudr_cnt_q >= max_cnt_s then

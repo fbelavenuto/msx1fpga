@@ -1,0 +1,1482 @@
+
+
+;  MSX  RS232  Control software 2.0
+;
+; Copyright (C) 1984, 1985 by ASCII Microsoft FEHQ
+;           (C) 1987 by TELEMATICA SA
+;
+;             1984/7/9    by Akira Matsumoto  	      Ver 1.00
+;             1984/10/22                     		  1.01
+;             1984/12/21                     		  1.02
+;             1985/01/18                     		  1.03
+;             1985/08/09                  		  1.04
+;             1985/09/21                      		  1.05
+;             1985/11/05                     		  1.06
+;             1987/12/14  by Carlos Alberto Ranalli   Ver 2.00
+;	      1988/05/26  by R. Tokuda
+;			  Se cambio la referencia "Modem" por "RS232"
+;			  Se saco la rutina NETINI
+;			  El programa original de carlitos es RS232.MAC
+;			  esta version es RS232C.MAC
+
+	.Z80
+
+
+	SUBTTL  Constants definition
+
+FALSE   EQU     0
+TRUE    EQU     NOT FALSE
+
+
+;=======================
+; Physical device No. (What kind of device) definition
+;
+PHYDVN  EQU     8       ; this value is decided by ASCII MSFE
+
+
+;=======================
+; Control character definition
+;
+SO      EQU     'N'-'@'         ; shift-out ( to KANA mode )
+SI      EQU     'O'-'@'         ; shift-in ( to ALPHA mode )
+XON     EQU     'Q'-'@'
+XOFF    EQU     'S'-'@'
+EOF     EQU     'Z'-'@'         ; end of file
+LF      EQU     'J'-'@'         ; line feed
+CR      EQU     'M'-'@'         ; carriage return
+ESC     EQU     1BH             ; escape
+DEL     EQU     7FH             ; delete
+
+;=======================
+; Constants definition
+;
+BRKDEF  EQU     10              ; default number of break character
+LOFKEY  EQU     16*3            ; string length of function key 6-8
+FKEY    EQU     0A0H            ; function key code
+XOFTMC  EQU     16              ; number of left character when send XOFF timing
+
+	SUBTTL  I/O device definition
+
+;
+; System I/O declaration
+;
+PSLTRG  EQU     0A8H            ; I/O port address of primary slot register
+;
+; IO macro definition
+;
+write	MACRO	port
+	push	hl
+	ld	hl,8000h+port
+	call	wrsltl
+	pop	hl
+	ENDM
+
+read	MACRO	port
+	push	hl
+	ld	hl,8000h+port
+	call	rdsltl
+	pop	hl
+	ENDM
+
+;
+; Commands mask data
+;
+BDFACT  EQU     00000010B       ; baud rate factor (16X) for mode instruction
+
+;
+; control & status bits, for i8251 emulation
+;
+TREBIT	EQU	00000001B	; transmit enable bit
+DTRBIT	EQU	00000010B	; DTR bit
+RVEBIT	EQU	00000100B	; receive enable bit
+RTSNBT	EQU	5		; RTS bit
+
+PERBIT  EQU     00001000B       ; parity error bit
+OERBIT  EQU     00010000B       ; over run error bit
+FERBIT  EQU     00100000B       ; framing error bit
+ERRBIT  EQU     PERBIT OR OERBIT OR FERBIT
+BOENBT  EQU     7               ; buffer over flow error bit
+				; this bit is set by software, not UART status
+
+
+	SUBTTL  Work area and system area definition
+
+
+NULBUF  EQU     0F862H          ; pointer to receive buffer
+BUF     EQU     0F55EH          ; working space
+ESCCNT  EQU     BUF             ; escape code counter
+ASTFLG  EQU     BUF+1           ; asterisk flashing flag at down load
+SAVLCM  EQU     BUF+2           ; saved area for last command to i8251
+LITFLG  EQU     BUF+3           ; literal/Non-literal flag
+HFLFLG  EQU     BUF+4           ; half/Hull duplex flag
+LPTFLG  EQU     BUF+5           ; printer echo on/off flag
+SCSFLG  EQU     BUF+6           ; last cursor on/off flag saved
+TRMTPR  EQU     BUF+7           ; text pointer saved area. used by _COMTERM
+FNKSAV  EQU     BUF+16          ; function key string saved  area
+CINWR1  EQU     BUF+9           ; working area of COMINI routine (LOESTB bytes)
+
+;
+; Interrupt hook address declaration
+;
+H.KEYI  EQU     0FD9AH          ; all MASKABLE interrupt entry
+H.NEWS  EQU     0FF3EH          ; hook at NEWSTT
+
+;
+; System area declaration
+;
+EXPTBL  EQU     0FCC1H          ; indicates which slot is expanded
+PROCNM  EQU     0FD89H          ; indicates statement name or device name
+PTRFIL  EQU     0F864H          ; system file pointer
+DAC     EQU     0F7F6H          ; decimal ACcumulator
+VALTYP  EQU     0F663H          ; VALue TYPe
+FNKSTR  EQU     0F87FH          ; function key string area
+CSRSW   EQU     0FCA9H          ; cursor on/off switch in BASIC
+INTFLG  EQU     0FC9BH          ; BASIC pause flag
+
+;
+; RS232C work area definition
+;
+RS2IQ   EQU     0FAF5H          ; work area top address
+
+; RS2IQ has  64  bytes  memory  area.   But  RS2IQ+43~RS2IQ+63 is
+; reserved by system.  Device driver can't use the area.
+
+LSTMOD  EQU     RS2IQ+42        ; data for `last mode instruction to i8251'
+LSTCOM  EQU     LSTMOD-1        ; data for `last command instruction to i8251'
+COMMSK  EQU     LSTCOM-1        ; see "COMMSK"
+ESTBLS  EQU     COMMSK-1        ; see "ESTBLS"
+FLAGS   EQU     ESTBLS-1        ; see "FLAGS"
+ERRORS  EQU     FLAGS-1         ; error status at get character
+DATCNT  EQU     ERRORS-3        ; number of data stored in queue
+				; +1 get pointer into COMBUF
+				; +2 put pointer into COMBUF
+DEVNUM  EQU     DATCNT-1        ; this cartridge's channel No.
+OLDINT  EQU     DEVNUM-5        ; old interrupt hook saved area
+OLDSTT  EQU     OLDINT-5        ; old NEWSTT hook saved area
+MEXBIH  EQU     OLDSTT-5        ; old Extended BIOS Call hook saved area
+RSIQLN  EQU     MEXBIH-1        ; length of receive data queue (Maximum 254)
+RSFCB   EQU     RSIQLN-2        ; pointer to RS232C FCB
+TOCNT   EQU     RSFCB-1         ; time out count initial value
+
+
+
+	.COMMENT %
+
+	"RS2IQ" area
+
+		+OFFSET +-----------------------+
+	RS2IQ -->   0   |                       |
+		    |   |     Not used          |
+		   13   |                       |
+			+-----------------------+
+	TOCNT -->  14   |      byte data        |
+			+-----------------------+
+	RSFCB -->  15   |Address of RS232C (low)|
+			+-- FCB               --+
+		   16   |                 (high)|
+			+-----------------------+
+	RSIQLN-->  17   |      byte data        |
+			+-----------------------+
+	MEXBIH-->  18   |   `RST 30H' (0F7H)    |
+			+--                   --+
+		   19   |      byte data        |
+			+--                   --+
+		   20   |                (low)  |
+			+--   word data       --+
+		   21   |               (high)  |
+			+--                   --+
+		   22   |    `RET'    (0C9H)    |
+			+-----------------------+
+	OLDSTT-->  23   |   `RST 30H' (0F7H)    |
+			+--                   --+
+		   24   |      byte data        |
+			+--                   --+
+		   25   |                (low)  |
+			+--   word data       --+
+		   26   |               (high)  |
+			+--                   --+
+		   27   |    `RET'    (0C9H)    |
+			+-----------------------+
+	OLDINT-->  28   |   `RST 30H' (0F7H)    |
+			+--                   --+
+		   29   |      byte data        |
+			+--                   --+
+		   30   |                (low)  |
+			+--   word data       --+
+		   31   |               (high)  |
+			+--                   --+
+		   32   |    `RET'    (0C9H)    |
+			+-----------------------+
+	DEVNUM-->  33   |     byte offset       |
+			+-----------------------+
+	DATCNT-->  34   |     byte data         |\
+			+--                   --+ \
+		   35   |     byte pointer      |  \
+			+--                   --+   >-- must to continued
+		   36   |     byte pointer      |  /
+			+-----------------------+ /
+	ERRORS-->  37   |     byte data         |/
+			+-----------------------+
+	FLAGS -->  38   |     bit boolean       |
+			+-----------------------+
+	ESTBLS-->  39   |     bit boolean       |
+			+-----------------------+
+	COMMSK-->  40   |     byte data         |
+			+-----------------------+
+	LSTCOM-->  41   |     byte data         |
+			+-----------------------+
+	LSTMOD-->  42   |     byte data         |
+			+-----------------------+
+		   43   |                       |\
+		    |   |    Used by system     | >--> Device driver can not use
+		   63   |                       |/
+			+-----------------------+
+
+
+			       NOTE
+
+		RECEIVE QUEUE
+
+		This RS232C  driver  uses a queue buffer
+		for receive data.   Received  characters
+		and its  status  are  stored into queue.
+		So, if  queue  has  256  bytes   length,
+		number of  maximum  character into queue
+		is 128.
+
+	%
+;
+; Slot work address definition
+;  But, this software don't use there.
+;
+SLTWRK  EQU     0FD09H  ; top address of slot work area
+
+
+
+
+; Establishment byte definition
+
+XCNNBT  EQU     0       ; see following
+CCSNBT  EQU     1
+SALNBT  EQU     2
+RALNBT  EQU     3
+SIONBT  EQU     4
+OMDNBT  EQU     5
+
+
+	.COMMENT %
+
+	Label "ESTBLS" is establishment for real receive/transmit control
+
+	bit No. 76543210
+		||||||||
+		|||||||+-----XON / XOFF control ( XCNNBT )
+		|||||||         0 - don't control
+		|||||||         1 - do control
+		||||||+------CTS control        ( CCSNBT )
+		||||||          0 - don't control
+		||||||          1 - do control
+		|||||+-------Auto LF control when send    ( SALNBT )
+		|||||           0 - don't control
+		|||||           1 - do control
+		||||+--------Auto LF control when receive ( RALNBT )
+		||||            0 - don't control
+		||||            1 - do control
+		|||+---------Shift-in shift-out control ( SIONBT )
+		|||             0 - don't control
+		|||             1 - do control
+		||+----------Open mode flag ( OMDNBT )
+		||              0 - not raw mode ( FOR INPUT/OUTPUT )
+		||              1 - raw mode ( without FOR clause )
+		|+-----------not used
+		|
+		+------------not used
+
+	%
+
+SDSNBT  EQU     0       ; see following
+SAXNBT  EQU     1
+XRVNBT  EQU     2
+FAONBT  EQU     3
+BKDNBT  EQU     4
+CRRNBT  EQU     5
+RCSNBT  EQU     7
+
+	.COMMENT %
+
+	Label "FLAGS" is flags for real receive/transmit control
+
+	bit No. 76543210
+		||||||||
+		|||||||+----- shift status for send ( SDSNBT )
+		|||||||          0 - Now shift-out mode
+		|||||||          1 - Now shift-in mode
+		||||||+------ sent already XOFF  ( SAXNBT )
+		||||||           0 - Not sent XOFF
+		||||||           1 - Sent already XOFF
+		|||||+------- XOFF received      ( XRVNBT )
+		|||||            0 - Not received XOFF
+		|||||            1 - Received XOFF
+		||||+-------- RS232C open flag  ( FAONBT )
+		||||             0 - not yet open
+		||||             1 - already opened
+		|||+--------- break detect       ( BKDNBT)
+		|||              0 - not yet detect
+		|||              1 - already detect
+		||+---------- CR (0DH) code received ( CRRNBT )
+		||               0 - last character wasn't CR
+		||               1 - last character was CR
+		|+----------- not used
+		|
+		+------------ shift status for receive ( RCSNBT )
+				0 - Now shift-out mode
+				1 - Now shift-in mode
+
+
+	Label "COMMSK" is mask byte for receive data
+
+
+	bit No. 76543210
+		||||||||
+		++++++++----Data mask      character length
+				00011111 - 5 bits
+				00111111 - 6 bits
+				01111111 - 7 bits
+				11111111 - 8 bits
+
+	%
+
+;-----------------------
+; Device information byte definition
+;
+DVINFB  EQU     00010000B       ; this cartridge has CD
+
+
+	.COMMENT %
+
+      Device information byte indicates following options are installed or not:
+	bits #  76543210
+		||||||||
+		|||||||+----- reserved
+		|||||||
+		||||||+------ TXREADY interrupt
+		||||||
+		|||||+------- sync/break character detected
+		|||||
+		||||+-------- timer interrupt
+		||||
+		|||+--------- carrier detect
+		|||
+		||+---------- ring indicator
+		||
+		|+----------- reserved
+		|
+		+------------ reserved
+
+	%
+
+; Establishment table offset definition
+
+CHRLEN  EQU     0               ; character length              (CHAR)
+PARGEN  EQU     CHRLEN+1        ; parity generation / check     (CHAR)
+STPBTL  EQU     PARGEN+1        ; stop bit length               (CHAR)
+XCNTRL  EQU     STPBTL+1        ; XON / XOFF control            (CHAR)
+LOKCTS  EQU     XCNTRL+1        ; CTS control                   (CHAR)
+RALCTL  EQU     LOKCTS+1        ; auto LF control when receive  (CHAR)
+SALCTL  EQU     RALCTL+1        ; auto LF control when send     (CHAR)
+
+SCNTRL  EQU     SALCTL+1        ; SI / SO control               (CHAR)
+RECVBR  EQU     SCNTRL+1        ; receiver baud rate            (WORD)
+
+TRNSBR  EQU     RECVBR+2        ; transmitter baud rate         (WORD)
+TMOUT   EQU     TRNSBR+2        ; time out count                (BYTE)
+
+
+	.COMMENT %
+
+		parameter table items
+	   offset
+	     0  Character length (`5',`6',`7' or `8' by ASCII character)
+	     1  Parity (`E'-even parity, `O'-odd parity
+			`I'-Ignore parity {illegal if, character length is `8'},
+			`N'-no parity )
+	     2  Number of stop bits (`1'-1 bit, `2'-1.5 bits, `3'-2 bits )
+	     3  XON / XOFF control (`X'-execute XON/XOFF control,
+				    `N'-don't it )
+	     4  CTS control (`H'-Look CTS when transmit data,
+			     `N'-Don't look CTS when transmit data )
+	     5  Auto LF (`A'-execute auto LF control,
+			 `N'-don't it )
+  (IF SIO)   6  SI / SO control (`S'-execute SI/SO control,
+				 `N'-don't it )
+	     7 (Low)  Receive baud rate (at 16 bit binary)
+	     8 (High)
+	     9 (Low)  Transmit baud rate (at 16 bit binary)
+	    10 (High)
+	    11 Time out count (at 8bit binary)
+	%
+
+
+	SUBTTL  Command and mode definition
+
+;=======================
+; FCB organization
+;
+
+	.COMMENT %
+
+	These offsets  are  not  used.   This  program  access  them  by
+	calculate from FCB top address.
+
+FL.MOD  EQU     0       ; mode which the file was opened for
+FL.FCA  EQU     1       ; not used
+FL.LCA  EQU     2       ; error status for back up character
+FL.LSA  EQU     3       ; back up character
+FL.DSK  EQU     4       ; device ID number
+FL.SLB  EQU     5
+FL.BPS  EQU     6       ; used by BASIC interpreter
+FL.FLG  EQU     7       ; holds various information
+FL.OPS  EQU     8       ; pseudo head position
+	%
+
+FL.BUF  EQU     9       ; 256 bytes buffer for RS232C receive queue
+
+; open mode
+
+MD.SQI  EQU     1       ; sequential input      (FOR INPUT)
+MD.SQO  EQU     2       ; sequential output     (FOR OUTPUT)
+MD.RIO  EQU     4       ; random access mode    (without FOR clause)
+MD.APP  EQU     8       ; append mode           (FOR APPEND)
+
+;=======================
+; Device driver command
+;
+
+; command
+
+	.COMMENT %
+
+	These constants are not used in this program.
+
+CM.OPN  EQU     0       ; open
+CM.CLS  EQU     2       ; close
+CM.RIO  EQU     4       ; random I/O
+CM.SQO  EQU     6       ; sequential output
+CM.SQI  EQU     8       ; sequential input
+CM.LOC  EQU     10      ; LOC function
+CM.LOF  EQU     12      ; LOF function
+CM.EOF  EQU     14      ; EOF function
+CM.FPS  EQU     16      ; FPOS function
+	%
+
+CM.BUP  EQU     18      ; back up a character
+
+
+	SUBTTL  System programs declaration
+
+
+; BIOS section
+
+RDSLT   EQU     000CH           ; inter-slot read from a specified address
+WRSLT   EQU     0014H           ; inter-slot write a specified data
+BREAKX  EQU     00B7H           ; check CTRL-BREAK routine
+;
+CALSLT  EQU     001CH           ; inter-slot call routine
+;
+CHSNS   EQU     009CH           ; sense there's any character in key buffer
+CHGET   EQU     009FH           ; get a character from key buffer
+CHPUT   EQU     00A2H           ; put a character to console
+LPTOUT  EQU     00A5H           ; put a character to printer
+
+; BASIC interpreter section
+
+CHRGTR  EQU     4666H           ; skip spaces
+FRMEVL  EQU     4C64H           ; general purpose formula-evaluation routine
+FRMQNT  EQU     542FH           ; get 16 bit signed integer
+GETBYT  EQU     521CH           ; get 8 bit unsigned integer
+FRESTR  EQU     67D0H           ; gets the address of string descriptor
+PTRGET  EQU     5EA4H           ; gets a variable name starting at the current
+				; text pointer, and returns the pointer to the
+				; value field for the variable via DE register
+DOCNVF  EQU     517AH           ; transfer DAC to variable with change type
+SNERR   EQU     4055H           ; entry of `Syntax error'
+FCERR   EQU     475AH           ; entry of `Illegal function call'
+USERR   EQU     481CH           ; entry of `Undefined line number'
+TMERR   EQU     406DH           ; entry of `Type mismatch'
+DIOERR  EQU     73B2H           ; entry of `Device I/O error'
+
+DERFAO  EQU     6E6EH           ; entry of `File already open'
+DERFNO  EQU     6E77H           ; entry of `File not open'
+DERIER  EQU     6E80H           ; entry of `Internal error'
+
+DERSOO  EQU     6E86H           ; entry of `Sequential I/O only'
+DERBFN  EQU     6E6BH           ; entry of `Bad file name'
+
+
+	SUBTTL  Extended BIOS Call address definition
+
+
+HOKVLD  EQU     RS2IQ+43        ; flag table for 'hook valid'
+;
+LASTRAM EQU     0FFCAH          ; beginning of free RAM at the end
+FCALL   EQU     LASTRAM         ; extended BIOS Call entry for devices
+
+DISINT  EQU     LASTRAM+5       ; disable interrupt call from DOS
+ENAINT  EQU     LASTRAM+10      ; enable interrupt call from DOS
+
+;-----------------------
+; Extended BIOS Call command definition
+;
+
+TRPCMD  EQU     1               ; 'How many trap entries are you using?'
+DICMD   EQU     2               ; 'Disable interrupt long time'
+EICMD   EQU     3               ; 'Enable interrupt'
+HMCCMD  EQU     1               ; 'How many RS232C channels do you have ?'
+ASCIIMS EQU     0               ; cartridge maker ID
+
+	SUBTTL  Macros definition
+
+
+CHRGET  MACRO           ; skip spaces and get next character
+	CALL    BCHRGTR
+	ENDM
+
+SYNCHK  MACRO   CHAR    ; syntax check specified character
+	CALL    SYNCHR
+	DEFB    CHAR    ; character to check
+	ENDM
+
+NOENT   MACRO           ; no jump entry
+	RET
+	RET
+	RET
+	ENDM
+
+WAITSD  MACRO                   ; wait for slow device
+	PUSH    AF              ; slow `NOP'
+	POP     AF
+	ENDM
+
+IWRSLT  MACRO   DAT             ; write immediate data
+	LD      A,DAT           ; get data to write
+	CALL    BWRSLT          ; write it
+	ENDM
+
+	SUBTTL
+
+
+;=======================
+; Beginning of program
+
+
+	CSEG
+
+;
+; ROM head trailer
+;
+
+TRAILR:
+	DEFB    'AB'    ; ROM ID byte
+
+	DEFW    INIT    ; initialize entry point
+	DEFW    STTMNT  ; statement entry point
+	DEFW    RS2DVE  ; device entry point
+	DEFW    0       ; text entry point (Not used at RS232C control routine)
+
+	DEFW    0       ; reserved area
+	DEFW    0
+	DEFW    0
+
+
+;=======================
+; Extended BIOS Call section
+;
+
+
+;-----------------------
+; Jump table for application program calling RS232C device driver
+;    This area is structured by one device information and 15 entries
+EXBTBL:
+	DEFB    DVINFB,0,0      ; device information
+	JP      SETUPI          ; initialize
+	JP      OPEN            ; open RS232C port
+	JP      RDSTAT          ; ReaD STATus
+	JP      RSSQI           ; receive data
+	JP      SD232C          ; send data
+	JP      RS2CLS          ; close RS232C port
+	JP      EXTEOF          ; tell EOF code coming
+	JP      LOCX            ; tell number of character in receive queue
+	JP      LOFX            ; tell number of free byte in receive queue
+	JP      RS2BCK          ; back up a character
+	JP      SNDBRK          ; send break character
+	JP      DTRONF          ; turn on/off DTR line
+	NOENT                   ; no program
+	NOENT
+	NOENT
+
+
+;-----------------------
+; Extended BIOS Call Entry interface routine
+;
+;  Entry: B =slot address of establishment table
+;         HL=address of establishment table
+;  Return:Flag, carry flag is set if illegal parameter comes
+;  Modify:AF, IY
+;
+
+SETUPI:
+	EI
+	PUSH    BC              ; save environment
+	PUSH    DE
+	PUSH    HL
+
+	LD      IY,-LOESTB      ; set length of memory allocate
+	ADD     IY,SP           ; get address of allocated memory
+	LD      SP,IY           ; set to [SP]
+	PUSH    IY              ; set to [DE]
+	POP     DE
+
+	LD      C,LOESTB        ; set loop counter
+SETUPL:
+	CALL    BRDSLT          ; get a data
+	LD      (DE),A          ; set to allocated memory
+	INC     DE              ; retrieve pointer
+	DEC     C               ; loop counter -1
+	JR      NZ,SETUPL       ; transfer next data until [C]=0
+
+	CALL    SETLSI          ; set up initialize LSIS
+
+	PUSH    AF              ; save [F]
+	LD      IY,LOESTB+2     ; set length of memory allocate and stack adjust
+	ADD     IY,SP           ; get address of allocated memory
+	POP     AF              ; restore [F]
+	LD      SP,IY           ; set to [SP]
+
+	POP     HL              ; restore environments
+	POP     DE
+	POP     BC
+	RET
+
+;-----------------------
+; Check the EOF code is coming or not
+;  Entry: No
+;  Return: HL= 0 and carry flag is reset if no EOF code is coming
+;              0FFFFH and carry flag is set if the EOF code is coming
+;          sign flag is set if any error occurred
+;  Modify: AF
+;
+
+EXTEOF:
+	LD      HL,0            ; set initial value
+	CALL    RCVY            ; get number of character in receive buffer
+				; and back up character
+	RET     Z               ; no character, the EOF code is not coming
+	CALL    EOFX            ; yes, check EOF or not
+	RET
+
+
+;-----------------------
+; Start-up initialize entry
+;    This procedure will be called when system initializing.
+;
+INIT:
+	CALL    INTOFF          ; disable interrupt
+
+; Please insert other initialize routine here, if you need.
+
+	LD      IY,DEFTBL       ; set address of default parameter table
+	CALL    SETLSI          ; set-up LSI
+
+; Software initialization
+;
+;  Action: 1) Set interrupt hook
+;          2) Set BASIC's device No.
+;          3) Get/Put Extended BIOS Call hook
+;          4) Set DISINT ENAINT program to hook area
+;          5) Initialize ON COM GOSUB
+;          6) Clear flags
+
+; Clear data
+
+	CALL    CLPTRF          ; clear pointers and flag
+
+; Set interrupt entry
+
+	DI                      ; start of critical region
+
+; Get old interrupt entry inter-slot call hook
+
+	LD      DE,OLDINT       ; set address of old interrupt hook saved area
+	LD      HL,H.KEYI       ; set address of interrupt entry hook
+	LD      BC,5            ; length of hook is 5 bytes
+	LDIR                    ; transfer
+
+; Get old NEWSTT entry inter-slot call hook
+
+	LD      DE,OLDSTT       ; set address of old NEWSTT hook saved area
+	LD      HL,H.NEWS       ; set address of NEWSTT entry hook
+	LD      BC,5            ; length of hook is 5 bytes
+	LDIR                    ; transfer
+
+; What slot address is this cartridge placed
+
+	CALL    GTMSLT          ; get my slot address
+
+; Set new inter-slot call of interrupt and NEWSTT entry
+
+	LD      (H.KEYI+1),A    ; set slot address
+	LD      (H.NEWS+1),A
+	LD      A,0F7H          ; `RST 30H' inter-slot call operation code
+	LD      (H.KEYI),A      ; set new hook op-code
+	LD      (H.NEWS),A
+	LD      HL,INTENT       ; get our interrupt entry point
+	LD      (H.KEYI+2),HL   ; set new interrupt entry point
+	LD      HL,NEWENT       ; get our NEWSTT entry point
+	LD      (H.NEWS+2),HL   ; set new NEWSTT entry point
+	LD      A,0C9H          ; `RET' operation code
+	LD      (H.KEYI+4),A    ; set operation code of `RET'
+	LD      (H.NEWS+4),A
+
+	EI                      ; end of critical region
+
+; Set BASIC's device No.   ( COM?: )
+
+	LD      HL,HOKVLD       ; now Extended BIOS Call hook is valid ?
+	BIT     0,(HL)
+	JR      NZ,CALEXB       ; yes, go to call extend BIOS
+	SET     0,(HL)          ; say hook is valid
+	LD      HL,FCALL
+	LD      B,5             ; set length of hook
+SET0C9:
+	LD      (HL),0C9H       ; set RET code all
+	INC     HL
+	DJNZ    SET0C9
+CALEXB:
+	XOR     A
+	LD      DE,PHYDVN*256+HMCCMD    ; how many RS232C channels
+	CALL    FCALL                   ; do you have ?
+
+	LD      HL,DEVNUM       ; set address of device No.
+	LD      (HL),A          ; set channel No.
+
+	XOR     A
+	LD      DE,TRPCMD       ; how many trap entries are you using ?
+	CALL    FCALL
+	ADD     A,A             ; set high nibble
+	ADD     A,A
+	ADD     A,A
+	ADD     A,A
+	OR      (HL)
+	LD      (HL),A          ; set to DEVNUM
+
+
+; This section make Extended BIOS Call hook
+
+;  HOKVLD (LSB):Flag of Extended BIOS Call hook was set or not
+;  FCALL:Extended BIOS Call entry address
+;  MEXBIH:Old Extended BIOS Call hook saved area
+
+
+	LD      DE,MEXBIH       ; set address of my hook saved area
+	DI                      ; start of critical section
+	LD      HL,FCALL        ; get entry address
+	LD      BC,5            ; length of hook is 5 bytes
+	LDIR                    ; transfer
+
+; Set new inter-slot call
+
+	CALL    GTMSLT          ; get my slot address
+	LD      (FCALL+1),A     ; set slot address
+	LD      A,0F7H          ; `RST 30H' inter-slot call operation code
+	LD      (FCALL),A       ; set new hook op-code
+	LD      HL,EXBENT       ; get my Extended BIOS Call entry point
+	LD      (FCALL+2),HL    ; set it
+	LD      A,0C9H          ; `RET' operation code
+	LD      (FCALL+4),A     ; set operation code of `RET'
+
+; Set DISINT, ENAINT hook
+; This routine should be executed by all cartridges
+
+	LD      BC,LOINTP       ; set length
+	LD      HL,DINTPR       ; set source address
+	LD      DE,DISINT       ; set destination address
+	LDIR                    ; transfer
+
+	EI                      ; end of critical routine
+
+	RET                     ; return to BASIC
+
+;------------
+; Stored program to DISINT, ENAINT hook
+;  This program should be stored in DISINT, ENAINT hook area (0FFCFH~0FFE6H)
+;
+
+DINTPR:
+	PUSH    DE              ; save environment
+	LD      E,DICMD         ; set disable interrupt command
+	JR      INTPRG
+EINTPR:
+	PUSH    DE
+	LD      E,EICMD         ; set enable interrupt command
+INTPRG:
+	LD      D,0             ; set Broad cast mode
+	PUSH    IX              ; save environment
+	PUSH    IY
+	CALL    FCALL           ; Extended BIOS Call
+	EI                      ; make a chance for get data from UART
+	POP     IY              ; restore environment
+	POP     IX
+	POP     DE
+	RET                     ; return to OS
+
+LOINTP  EQU     $-DINTPR        ; length of this routine
+
+
+;=======================
+; Clear pointers and flag
+;  Entry:No
+;  Return:No
+;  Modify: AF
+;   CLPTRF does flash buffer and clear flags
+;   CLPTR does flash buffer
+;
+CLPTRF:
+	XOR     A
+	LD      (FLAGS),A       ; clear flags
+CLPTR:
+	PUSH    HL              ; save
+	LD      HL,DATCNT       ; get address of data counter
+	XOR     A               ; clear data
+	LD      (HL),A          ; clear counter
+	INC     HL
+	LD      (HL),A          ; clear get pointer
+	INC     HL
+	LD      (HL),A          ; clear put pointer
+	INC     HL
+	LD      (HL),A          ; clear error status
+	POP     HL              ; restore
+	RET
+
+;
+; Default establishment table
+;
+
+DEFTBL:
+
+	DEFB    '8N1XHNNN'      ; 8 bits, non parity, 1 stop bit, XON/XOFF,
+				; RTS-CTS hand-shake, no auto LF, no SI/SO
+	DEFW    300             ; receiver baud rate     (1200 baud)
+	DEFW    300             ; transmitter baud rate  (1200 baud)
+	DEFB    0               ; time out count         (forever)
+
+LOESTB  EQU     $-DEFTBL        ; length of establishment table
+
+
+	SUBTTL  Expanded statement dispatcher
+
+;-----------------------
+; Expanded statement entry
+;    BASIC interpreter calls this procedure when he met 'CALL' statement
+;
+STTMNT:
+	EI                      ; enable interrupt,   because  inter-slot  call
+				; routine disables interrupt
+	PUSH    HL              ; set text  pointer  to  IX  for later use
+	POP     IX              ;  when met unknown device number
+	LD      DE,EXPSTT       ; set address of expanded statement name table
+	CALL    CHKSNM          ; is statement inside the cartridge ?
+	RET     C               ; no, return with carry flag set
+
+; Now DE has an entry address of each statement handler
+
+	PUSH    DE              ; set entry address
+	RET                     ; go each routine
+
+
+;-----------------------
+; Check if specified statement name exists inside the cartridge
+;
+;  Entry:IY = address of name table
+;  Action: Check its name (in the system area) is inside the cartridge
+;  Return: DE = jump address
+;          Carry flag = If carry  is  set  when  statement  is  not inside the
+;                       cartridge otherwise carry is reset
+;  Modify: AF, DE
+;
+
+CHKSNM:
+	PUSH    BC              ; save environment
+	PUSH    HL
+CHKNXT:
+	LD      HL,PROCNM       ; get address of statement name is stored
+	LD      A,(DE)          ; get begin  character  of  expanded  statement
+				; table
+	INC     A               ; end of statement table ( A = 0FFH ) ?
+	JR      Z,NOTFND        ; yes, its  statement  is  not  found  in  this
+				; cartridge
+	CALL    STRCMP          ; string compare terminated by 0
+
+; Now DE, HL indicates an address to terminator ( =0 ) of each statement
+
+	JR      Z,STTFND        ; if found, go to get jump address
+	INC     DE              ; advance address to next statement
+	INC     DE
+	INC     DE
+	JR      CHKNXT          ; check next statement
+
+STTFND:
+	EX      DE,HL           ; get address to useful register
+	INC     HL              ; advance address to statement entry point
+	LD      E,(HL)          ; get entry point (low byte)
+	INC     HL
+	LD      D,(HL)          ; get entry point (high byte)
+	AND     A               ; reset carry flag
+	JR      ENDCST          ; go to return
+
+NOTFND:
+	SCF                     ; set Carry flag
+ENDCST:
+	POP     HL
+	POP     BC
+
+	RET
+
+
+;-----------------------
+; String compare, This routine thinks lower case alphabet as same as upper
+;  Entry: HL = pointer to source string
+;         DE = pointer to destination string
+;
+;  Action: compare string and advance pointers to end of string
+;  Return: DE = points end of destination string
+;          HL = points end of source string
+;          Flag = Zero flag set, if same string. otherwise reset
+;  Modify: AF
+;
+
+STRCMP:
+	LD      A,(DE)          ; get destination character
+	CALL    TOUPPR          ; change to upper case
+	LD      C,A             ; save character
+	LD      A,(HL)          ; get source character
+	CALL    TOUPPR          ; change to upper case
+	CP      C               ; compare character
+	JR      NZ,DIFSTR       ; if different character, then return with
+				; zero flag clear
+	AND     A               ; end of string ?
+	RET     Z               ; yes, both strings are same. return with zero
+				; flag sets
+	INC     DE              ; advance destination pointer
+	INC     HL              ; advance source pointer
+	JR      STRCMP          ; return to main when specified length was done
+DIFSTR:
+
+; Retrieve destination pointer to end of string
+
+	LD      A,(DE)          ; get character
+	AND     A               ; end of string ?
+	JR      Z,RETSRC        ; yes, go next
+	INC     DE              ; no, advance pointer
+	JR      DIFSTR          ; check character
+
+; Retrieve source pointer to end of string
+
+RETSRC:
+	LD      A,(HL)          ; get character
+	AND     A               ; end of string ?
+	JR      Z,DIFST2        ; yes, go next
+	INC     HL              ; advance pointer
+	JR      RETSRC          ; check next character
+DIFST2:
+	LD      A,L             ; reset zero flag
+	OR      H
+	RET                     ; return with zero flag reset
+
+
+;-----------------------
+; Expanded statement name table
+;
+
+EXPSTT:
+	DEFB    'COMINI',0
+	DEFW    COMINI          ; communication port initialize routine
+
+	DEFB    'COMDTR',0
+	DEFW    COMDTR          ; control DTR line
+
+	DEFB    'COMSTAT',0
+	DEFW    COMSTT          ; read modem status routine
+
+	DEFB    'COMBREAK',0
+	DEFW    COMBRK          ; send break character
+
+	DEFB    'COMTERM',0
+	DEFW    COMTRM          ; go to terminal mode
+
+	DEFB    'COM',0         ; sets trap line number
+	DEFW    ON_COM
+
+	DEFB    'COMON',0       ; enables trap
+	DEFW    COM_ON
+
+	DEFB    'COMOFF',0      ; disables trap, flashes buffer
+	DEFW    COM_OFF
+
+	DEFB    'COMSTOP',0     ; suspends trap
+	DEFW    COM_STOP
+
+	DEFB    'COMHELP',0
+	DEFW    COMHLP          ; print help message routine
+
+	DEFB    0FFH            ; terminator of expanded statement name table
+
+
+	SUBTTL  Expanded device handlers
+
+;-----------------------
+; Expanded device entry
+;
+
+RS2DVE:
+	EI                      ; make a chance for get data from UART
+	CP      0FFH            ; check device name ?
+	JP      NZ,RS2DSP       ; no, go DISPATCHER
+	LD      HL,PROCNM       ; set address of BASIC text's device name
+	LD      A,(HL)          ; get a character
+	CP      'C'             ; 'C' of 'COM?:' ?
+	JR      NZ,NODVCE       ; no
+	INC     HL              ; advance pointer
+	LD      A,(HL)          ; get a character
+	CP      'O'             ; 'O' of 'COM?:' ?
+	JR      NZ,NODVCE       ; no
+	INC     HL              ; advance pointer
+	LD      A,(HL)          ; get a character
+	CP      'M'             ; 'M' of 'COM?:' ?
+	JR      NZ,NODVCE       ; no
+	INC     HL              ; advance pointer
+	LD      A,(HL)          ; get next character
+	AND     A               ; end of string ?
+	JR      NZ,DEVN0X       ; no
+	DEC     HL              ; yes, backward pointer
+	LD      A,'0'           ; set device  No.  because  'COM:'  as  same as
+				; 'COM0:'
+DEVN0X:
+	SUB     '0'             ; convert ASCII digit to binary
+	JR      C,NODVCE        ; I don't  know  such device name, if not digit
+	CP      10              ; digit ?
+	JR      NC,NODVCE       ; I don't  know  such device name, if not digit
+	PUSH    BC              ; save environment
+	PUSH    AF              ; save channel No.
+	LD      A,(DEVNUM)      ; get my channel No.
+	AND     0FH             ; get low digit
+	LD      B,A
+	POP     AF              ; restore channel No.
+	CP      B               ; compare with my channel No.
+	POP     BC              ; restore environment
+	JR      NZ,NODVCE       ; ok ? if not, I'm not such device No.
+	INC     HL              ; set pointer to last character
+	LD      A,(HL)          ; get last character
+	AND     A               ; end of string ?
+	RET     Z               ; yes, I know  such  device  name.   return  ID
+				; No. (0) with carry flag is reset
+NODVCE:
+	SCF                     ; set carry flag
+	RET                     ; return to BASIC
+
+
+
+;-----------------------
+; RS232C device driver DISPATCHER
+;
+
+RS2DSP:
+
+	PUSH    HL              ; save environment
+	PUSH    AF              ; save command
+	LD      HL,RS2DTB       ; set top address of dispatch table
+	ADD     A,L             ; compute pointer to jump address
+	LD      L,A
+	JR      NC,RS2DS1
+	INC     H
+RS2DS1:
+	LD      A,(HL)          ; get jump address (low byte)
+	INC     HL
+	LD      H,(HL)          ; set jump address (high byte)
+	LD      L,A
+	POP     AF              ; restore command
+	EX      (SP),HL         ; restore environment and set jump address
+				; to stack
+	RET                     ; jump each handler
+
+;-----------------------
+; Device handler jump table
+;
+
+RS2DTB:
+	DEFW    RS2OPN          ; open
+	DEFW    RS2CLS          ; close
+	DEFW    JDERSO          ; random I/O (not supported)
+	DEFW    RS2SQO          ; sequential output
+	DEFW    RS2SQI          ; sequential input
+	DEFW    RS2LOC          ; LOC function (# of data in buffer)
+	DEFW    RS2LOF          ; LOF function (# of available space)
+	DEFW    RS2EOF          ; EOF function
+	DEFW    JFCERR          ; FPOS function (not supported)
+	DEFW    RS2BCK          ; back up a character
+
+
+
+;-----------------------
+; Open RS232C communication port
+;    This routine must be called by BASIC interpreter only.
+;
+
+RS2OPN:
+	LD      C,127           ; set buffer length
+	CALL    OPEN            ; open RS232C port
+	JR      C,RS2OPE        ; go, error handling routine if error occurred
+	LD      (PTRFIL),HL     ; set FCB address
+	RET                     ; return to BASIC
+
+RS2OPE:
+	DEC     A               ;is the error code 1 ?
+	JP      Z,JDERBN        ;yes.. bad file name
+	JP      JDERFO          ;no.. file already open
+
+;
+;   Open a receiver buffer and set-up environment
+;     This routine will be called by Extended BIOS Call
+;     and BASIC interface routine. I do following action.
+;
+;       a). Set FCB address
+;       b). Set receive buffer length
+;       c). Clear pointers and flags
+;       d). Turn on interrupt
+;       e). Turn on RTS modem line
+;
+
+OPEN:
+
+; check the file is opened or not
+
+	OR      A               ; clear carry (assume no error)
+	LD      A,(FLAGS)       ; get flags
+	BIT     FAONBT,A        ; file already opened ?
+	LD      A,2             ; assume error (set error code)
+	SCF
+	RET     NZ              ; return if already opened
+
+; check open mode
+
+	LD      A,E             ; check open mode
+	CP      MD.APP          ; if opened for append mode
+	LD      A,1             ; assume error (set error code)
+	SCF
+	RET     Z               ; return if append mode
+
+	PUSH    BC              ; save environment
+	PUSH    DE
+	PUSH    HL
+
+; store FCB address
+
+	LD      (RSFCB),HL      ; set FCB address
+
+; store buffer length
+
+	LD      A,C             ; get buffer length
+	LD      (RSIQLN),A      ; set it
+
+; initialize FCB variable
+
+	LD      (HL),E          ; set open mode
+	XOR     A               ; set clear value
+	INC     HL              ; points to error status of back up character
+	INC     HL
+	LD      (HL),A          ; clear error status of back up character
+	INC     HL              ; points to back up character
+	LD      (HL),A          ; clear back up character
+	INC     HL              ; points to buffer position
+	INC     HL
+	INC     HL
+	LD      (HL),A          ; clear buffer position
+
+; clear receiver queue pointers and flags
+
+	CALL    CLPTRF          ; clear pointers and flag
+
+; set flags
+
+	LD      HL,FLAGS        ; set address of flags
+	SET     FAONBT,(HL)     ; set file is opened now
+
+; turn on interrupt
+
+	DI                      ; beginning of critical region
+	CALL    INTON           ; set interrupt enable
+
+; turn on RTS modem line
+
+	CALL    RTSON           ; turn on RTS line
+	EI                      ; end of critical section
+	OR      A               ; to reset error flag
+	POP     HL              ; restore environment
+	POP     DE
+	POP     BC
+	RET
+
+
+;-----------------------
+; Close RS232C communication port
+;  This routine will be called both BASIC interpreter and Extended BIOS Call.
+;   I do following action.
+;       a). Send EOF code if port was opened <FOR OUTPUT> mode.
+;       b). Turn off RTS modem line.
+;       c). Turn off interrupt
+;
+
+RS2CLS:
+	PUSH    HL              ; save environment
+	LD      HL,(RSFCB)      ; get FCB address
+	LD      A,(HL)          ; get what mode opened
+	CP      MD.SQO          ; opened for OUTPUT mode ?
+	SCF                     ; clear carry flag without effecting ZERO flag
+	CCF
+	JR      NZ,CLOSE1       ; no, never send EOF code
+	LD      A,EOF           ; set EOF code
+	CALL    SD232C          ; send EOF code
+CLOSE1:
+	DI                      ; beginning of critical routine
+	CALL    WTTXEM          ; wait for the end of sending EOF
+	CALL    RTSOFF          ; off RTS line
+	CALL    INTOFF          ; disable interrupt
+	EI                      ; end of critical routine
+	LD      HL,FLAGS        ; clear flag of `File already open'
+	RES     FAONBT,(HL)
+	POP     HL              ; restore environment
+	RET
+
+
+;-----------------------
+; Sequential output
+;   This routine must be called by BASIC interpreter only.
+;
+
+RS2SQO:
+	LD      A,C             ; set a character to send
+	CALL    SD232C          ; send a character
+	EI                      ; make a chance for get data from UART
+	JP      C,JDIERR        ; if control break key was pressed
+	JP      Z,JDIERR        ; if time out error occurred
+	RET
+
+;-----------------------
+; Sequential input
+;   This routine must be called by BASIC interpreter only.
+;   If port was opened for without raw mode, then carry flag will
+;   be set when EOF code was coming.
+;
+
+RS2SQI:
+	CALL    RSSQI           ; get a character
+	JP      M,JDIERR        ; go `Device I/O error' if any error occurred
+	RET
+
+; This section will be called both BASIC interpreter and Extended BIOS Call.
+;   Return:A=character
+;          Flags, Sign flag is set if any error occurred
+;                 Carry flag is set if EOF coming at <FOR INPUT> mode
+
+RSSQI:
+	PUSH    HL              ; save environment
+	PUSH    BC
+	CALL    GETBUA          ; get address of back up character
+	LD      C,(HL)          ; get backed-up character
+	LD      (HL),0          ; clear previous character
+	DEC     HL              ; set pointer to indicate error status
+	LD      A,(HL)          ; get error status
+	LD      (ERRORS),A      ; set error status for RDSTAT
+	LD      (HL),0          ; clear previous error status
+	INC     HL              ; backward pointer to indicate back up character
+	AND     A               ; any error occurred ?
+	JR      NZ,RSQIER       ; yes, go to set error flag
+	LD      A,C             ; get backed up character
+	AND     A               ; any character backed up ?
+	JR      NZ,RSSQI1       ; yes, go to with the character
+	CALL    RV232C          ; no, go to get data from receive queue
+	EI                      ; make a chance for get data from UART
+	LD      C,A             ; set character to [C]
+	JP      M,RSQIER        ; go to set error flag if communication error
+	CALL    SNDERR          ; set ERRORS if following error occurred
+	JR      C,RSQIER        ; go to set error flag if CTRL-BREAK
+	JR      Z,RSQIER        ; go to set error flag if time out error
+RSSQI1:
+
+; Now [C] has the character, (ERRORS) has error status
+
+	PUSH    HL              ; save pointer
+	LD      HL,(RSFCB)      ; get FCB address
+	LD      A,(HL)          ; get what mode opened for
+	POP     HL              ; restore pointer
+	CP      MD.RIO          ; opened for raw mode ?
+	JR      Z,RSSQI2        ; yes, do not EOF logic
+	LD      A,C             ; re-get character
+	CP      EOF             ; is the character EOF ?
+	JR      NZ,RSSQI2       ; no, return with the character
+	LD      (HL),A          ; write EOF again
+	AND     A               ; reset sign flag
+	SCF                     ; indicates EOF encountered
+	JR      PBHRET          ; go to return
+
+RSQIER:
+	OR      80H             ; set sign flag for return with error
+	JR      CPBHRT          ; go to return
+
+RSSQI2:
+	XOR     A               ; clear error flags
+	INC     A
+CPBHRT:
+	LD      A,C             ; re-get character saved in [C]
+PBHRET:
+	POP     BC              ; restore environment
+	POP     HL
+	RET
+
+;-----------------------
+; LOC function
+;  This routine must be called by BASIC interpreter only.
+;  Return the number of character into receive queue
+;
+
+RS2LOC:
+	PUSH    HL              ; save environment
+	CALL    LOCX            ; get number of character into receive  queue
+INTFNC:
+	LD      (DAC+2),HL
+	LD      HL,VALTYP       ; value  type  is  INTEGER
+	LD      (HL),2
+	POP     HL              ; restore environment
+	RET
+
+;  This section will be called both BASIC interpreter and Extended BIOS Call.
+;  Value of result is returned into [HL]
+
+LOCX:
+	PUSH    AF              ; save environment
+	EI                      ; make a chance for get data from UART
+	LD      HL,(RSFCB)      ; set FCB address
+	LD      A,(HL)          ; get what mode opened for
+	CP      MD.SQI          ; input mode ?
+	JR      NZ,LOCSOR       ; no
+	CALL    GETBUC          ; get backed up character
+	JR      Z,LOCNOADD      ; if no backed up character
+	SUB     EOF             ; EOF ?
+	JR      Z,SETAHL        ; yes, go to return with 0
+	LD      A,1             ; no, set number of backed up character
+LOCNOADD:
+	PUSH    BC              ; save environment
+	CALL    ISEOFIN         ; get number of character before EOF
+	ADD     A,B             ; add it
+	POP     BC              ; restore environment
+	JR      SETAHL          ; go to return
+
+LOCSOR:
+	CALL    RCVY            ; get number of character into buffer and
+				; back up character
+SETAHL:
+	LD      L,A             ; set BYTE value
+	LD      H,0
+	POP     AF              ; restore environment
+	RET
+
+;-----------------------
+; LOF function
+;  This routine must be called by BASIC interpreter only.
+;  Return the number of free byte of receive queue
+;
+
+RS2LOF:
+	PUSH    HL              ; save environment
+	CALL    LOFX            ; get number  of  free  byte  of  receive queue
+INTFN2:                         ; by WORD
+	JR      INTFNC          ; go to set value to DAC
+
+;  This section will be called both BASIC interpreter and Extended BIOS Call.
+;  Value of result is returned into [HL]
+
+LOFX:
+	PUSH    AF              ; save environment
+	EI                      ; make a chance for get data from UART
+	CALL    LOCX            ; get number of character
+	PUSH    DE              ; save environment
+	EX      DE,HL           ; set number of character to [DE]
+	LD      A,(RSIQLN)      ; get length of buffer
+	LD      L,A             ; set to [HL]
+	LD      H,0
+	AND     A               ; clear carry
+	SBC     HL,DE           ; get free byte
+	INC     HL              ; add number of back up character
+	POP     DE              ; restore environment
+	POP     AF
+	RET
+
+;-----------------------
+; EOF function
+;  This routine must be called by BASIC interpreter only.
+;  Returns -1 if the end of file is encountered, 0 if not.
+
+RS2EOF:
+	PUSH    HL              ; save environment
+	CALL    EOFX            ; get value of EOF flag
+	JP      M,JDIERR        ; go `Device I/O error' if any error occurred
+	JR      INTFN2          ; go to set value
+
+;  This section is called BASIC interpreter interface routine
+;  Return SIGN flag is set if any error occurred
+;  Value of result is returned into [HL]
+
+EOFX:
+	PUSH    BC              ; save environment
+	LD      B,A             ; save [A]
+	EI                      ; make a chance for get data from UART
+	CALL    RSSQI           ; get a character
+	JP      M,RABRET        ; return with error flag set if any error occurred
+	PUSH    BC              ; save environment
+	LD      C,A             ; set a character for back up
+	CALL    RS2BCK          ; back up a character
+	POP     BC              ; restore environment
+	CP      EOF             ; EOF ?
+	JR      Z,EOFCOM        ; yes
+	XOR     A               ; no, clear flags
+	LD      L,A             ; set result
+	LD      H,A
+	INC     A               ; clear flags
+	JR      RABRET          ; go to restore A,BC then return
+
+EOFCOM:
+	LD      HL,0FFFFH       ; say EOF coming
+	SCF
+RABRET:
+	LD      A,B             ; restore [A]
+	POP     BC
+	RET
+
+
+;-----------------------
+; Back up a character
+;
+
+RS2BCK:
+	PUSH    HL              ; save environment
+	CALL    GETBUA          ; get address of back up character
+	LD      (HL),C          ; store a character
+	PUSH    AF              ; save environment
+	DEC     HL              ; set pointer to indicate error status
+	LD      A,(ERRORS)      ; get error status
+	AND     ERRBIT          ; clear without character error
+	LD      (HL),A          ; store error status for RDSTAT
+	POP     AF              ; restore environment
+	POP     HL
+	RET
+
+;---------------                                              

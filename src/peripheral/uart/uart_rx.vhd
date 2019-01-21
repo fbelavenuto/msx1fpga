@@ -56,14 +56,15 @@ entity uart_rx is
 		data_o		: out std_logic_vector( 7 downto 0);
 		rx_full_i	: in  std_logic;
 		fifo_wr_o	: out std_logic;
-		errors_o		: out std_logic_vector( 2 downto 0);
+		errors_o		: out std_logic_vector( 2 downto 0);	-- Overrun, Frame, Parity
+		break_o		: out std_logic;
 		rx_i			: in  std_logic
 	);
 end entity;
 
 architecture rcvr of uart_rx is
 
-	type state_t is (stIdle, stStart, stData, stParity, stStop2, stStop1);
+	type state_t is (stIdle, stStart, stData, stParity, stStop2, stStop1, stBreak);
 	signal state_s			: state_t;
 	signal rx_filter_q	: integer range 0 to 10; 
 	signal rx_filtered_s	: std_logic								:= '1';
@@ -109,6 +110,10 @@ begin
 
 	-- Main process
 	process(clock_i)
+		variable is_parity_v	: unsigned(0 downto 0);
+		variable stopbits_v	: unsigned(0 downto 0);
+		variable break_det_v	: integer range 0 to 7;
+		variable break_max_v	: integer range 0 to 7;
 	begin
 		if rising_edge(clock_i) then
 
@@ -121,10 +126,12 @@ begin
 				state_s			<= stIdle;
 				fifo_wr_o		<= '0';
 				errors_o			<= (others => '0');
+				break_o			<= '0';
 			else
 
 				fifo_wr_o	<= '0';
 				errors_o		<= (others => '0');
+				break_o		<= '0';
 
 				case state_s is
 
@@ -138,6 +145,10 @@ begin
 							parity_cfg_s	<= parity_i;
 							stop_bits_s		<= stop_bits_i;
 							shift_q			<= (others => '0');
+							is_parity_v(0)	:= parity_i(0) or parity_i(1);
+							stopbits_v(0)	:= stop_bits_i;
+							break_det_v		:= 0;
+							break_max_v		:= to_integer(is_parity_v + stopbits_v + 2);
 							state_s			<= stStart;
 						end if;
 
@@ -154,6 +165,9 @@ begin
 							baudr_cnt_q <= 0;
 							shift_q(bit_cnt_q)	<= rx_filtered_s;
 							if bit_cnt_q >= bitmax_s then
+								if shift_q = 0 then
+									break_det_v := break_det_v + 1;
+								end if;
 								if parity_cfg_s /= "00" then
 									state_s		<= stParity;
 								else
@@ -175,8 +189,11 @@ begin
 							baudr_cnt_q <= 0;
 							if parity_s /= rx_filtered_s then
 								errors_o(0)	<= '1';							-- Parity Error
-								state_s		<= stIdle;
-							elsif stop_bits_s = '0' then
+							end if;
+							if rx_filtered_s = '0' then
+								break_det_v := break_det_v + 1;
+							end if;
+							if stop_bits_s = '0' then
 								state_s		<= stStop1;
 							else
 								state_s		<= stStop2;
@@ -190,10 +207,9 @@ begin
 							baudr_cnt_q <= 0;
 							if rx_filtered_s = '0' then
 								errors_o(1)	<= '1';							-- Frame error
-								state_s		<= stIdle;
-							else
-								state_s		<= stStop1;
+								break_det_v := break_det_v + 1;
 							end if;
+							state_s		<= stStop1;
 						else
 							baudr_cnt_q <= baudr_cnt_q + 1;
 						end if;
@@ -203,15 +219,25 @@ begin
 							baudr_cnt_q <= 0;
 							if rx_filtered_s = '0' then
 								errors_o(1)	<= '1';							-- Frame error
-								state_s		<= stIdle;
+								break_det_v := break_det_v + 1;
+								state_s		<= stBreak;
 							elsif rx_full_i = '1' then
 								errors_o(2)	<= '1';							-- Overrun error
+								state_s		<= stIdle;
 							else
 								fifo_wr_o	<= '1';							-- No errors, write data
+								state_s		<= stIdle;
 							end if;
-							state_s		<= stIdle;
 						else
 							baudr_cnt_q <= baudr_cnt_q + 1;
+						end if;
+
+					when stBreak =>
+						if break_det_v > break_max_v then
+							break_o	<= '1';									-- Inform Break char detected
+						end if;
+						if rx_filtered_s = '1' then
+							state_s		<= stIdle;
 						end if;
 
 				end case;
