@@ -51,7 +51,6 @@ entity uart_rx is
 		reset_i		: in  std_logic;
 		baud_i		: in  std_logic_vector(15 downto 0);
 		char_len_i	: in  std_logic_vector( 1 downto 0);
-		stop_bits_i	: in  std_logic;
 		parity_i		: in  std_logic_vector( 1 downto 0);
 		data_o		: out std_logic_vector( 7 downto 0);
 		rx_full_i	: in  std_logic;
@@ -64,12 +63,11 @@ end entity;
 
 architecture rcvr of uart_rx is
 
-	type state_t is (stIdle, stStart, stData, stParity, stStop2, stStop1, stBreak);
+	type state_t is (stIdle, stStart, stData, stParity, stStop, stBreak);
 	signal state_s			: state_t;
 	signal rx_filter_q	: integer range 0 to 10; 
 	signal rx_filtered_s	: std_logic								:= '1';
 	signal parity_cfg_s	: std_logic_vector(1 downto 0)	:= (others => '0');
-	signal stop_bits_s	: std_logic								:= '0';
 	signal baudr_cnt_q	: integer range 0 to 65536			:= 0;
 	signal max_cnt_s		: integer range 0 to 65536			:= 0;
 	signal mid_cnt_s		: integer range 0 to 32768			:= 0;
@@ -111,7 +109,6 @@ begin
 	-- Main process
 	process(clock_i)
 		variable is_parity_v	: unsigned(0 downto 0);
-		variable stopbits_v	: unsigned(0 downto 0);
 		variable break_det_v	: integer range 0 to 7;
 		variable break_max_v	: integer range 0 to 7;
 	begin
@@ -119,7 +116,6 @@ begin
 
 			if reset_i = '1' then
 				parity_cfg_s	<= (others => '0');
-				stop_bits_s		<= '0';
 				baudr_cnt_q		<= 0;
 				shift_q			<= (others => '0');
 				bit_cnt_q		<= 0;
@@ -143,12 +139,10 @@ begin
 							max_cnt_s		<= to_integer(unsigned(baud_i));
 							mid_cnt_s		<= to_integer(unsigned(baud_i)) / 2;
 							parity_cfg_s	<= parity_i;
-							stop_bits_s		<= stop_bits_i;
 							shift_q			<= (others => '0');
 							is_parity_v(0)	:= parity_i(0) or parity_i(1);
-							stopbits_v(0)	:= stop_bits_i;
 							break_det_v		:= 0;
-							break_max_v		:= to_integer(is_parity_v + stopbits_v + 2);
+							break_max_v		:= to_integer(is_parity_v + 2);
 							state_s			<= stStart;
 						end if;
 
@@ -171,11 +165,7 @@ begin
 								if parity_cfg_s /= "00" then
 									state_s		<= stParity;
 								else
-									if stop_bits_s = '0' then
-										state_s		<= stStop1;
-									else
-										state_s		<= stStop2;
-									end if;
+									state_s		<= stStop;
 								end if;
 							else
 								bit_cnt_q <= bit_cnt_q + 1;
@@ -193,28 +183,12 @@ begin
 							if rx_filtered_s = '0' then
 								break_det_v := break_det_v + 1;
 							end if;
-							if stop_bits_s = '0' then
-								state_s		<= stStop1;
-							else
-								state_s		<= stStop2;
-							end if;
+							state_s		<= stStop;
 						else
 							baudr_cnt_q <= baudr_cnt_q + 1;
 						end if;
 
-					when stStop2 =>
-						if baudr_cnt_q >= max_cnt_s then
-							baudr_cnt_q <= 0;
-							if rx_filtered_s = '0' then
-								errors_o(1)	<= '1';							-- Frame error
-								break_det_v := break_det_v + 1;
-							end if;
-							state_s		<= stStop1;
-						else
-							baudr_cnt_q <= baudr_cnt_q + 1;
-						end if;
-
-					when stStop1 =>
+					when stStop =>
 						if baudr_cnt_q >= max_cnt_s then
 							baudr_cnt_q <= 0;
 							if rx_filtered_s = '0' then
@@ -233,7 +207,7 @@ begin
 						end if;
 
 					when stBreak =>
-						if break_det_v > break_max_v then
+						if break_det_v >= break_max_v then
 							break_o	<= '1';									-- Inform Break char detected
 						end if;
 						if rx_filtered_s = '1' then
