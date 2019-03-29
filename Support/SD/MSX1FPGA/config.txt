@@ -3,6 +3,6 @@
 |||||+-Scanlines: 1=Enabled, 0=Disabled
 ||||+--Turbo: 1=Initialize with turbo enabled
 |||+---Color System: N=NTSC, P=PAL
-||+----Keymap: E=English, B=Brazilian, F=Francese, S=Spanish
+||+----Keymap: E=English, B=Brazilian, F=Francese, S=Spanish, J=Japanese
 |+-----Scandoubler(VGA): 1=Enabled, 0=Disabled
 +------Nextor: 1=Enabled, 0=Disabled

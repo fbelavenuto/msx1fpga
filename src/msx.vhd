@@ -165,8 +165,8 @@ entity msx is
 		vga_on_k_i		: in  std_logic;
 		vga_en_o			: out std_logic;
 		scanline_on_k_i: in  std_logic;
-		vertfreq_on_k_i: in  std_logic								:= '0';
 		scanline_en_o	: out std_logic;
+		vertfreq_on_k_i: in  std_logic								:= '0';
 		-- SPI/SD
 		flspi_cs_n_o	: out std_logic;
 		spi2_cs_n_o		: out std_logic;
