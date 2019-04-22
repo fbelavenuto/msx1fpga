@@ -1,0 +1,199 @@
+***************************************
+ AKID quick menus and shortcuts guide
+  Original text by Javier Lavandeira
+          www.lavandeira.net
+***************************************
+
+
+***************************************
+[F1]: Commands to leave the editor and
+            open a new file
+***************************************
+
+[E]: Save the file currently open in
+the editor and quit to MSX-DOS2.
+
+[Q]: Quit to MSX-DOS2 without saving.
+
+[S]: Save the file and continue
+editing.
+
+[N]: Save the file and edit a different
+one. AKID will ask for a new file name.
+
+[A]: Discard the current file and open
+a different one. Again, AKID will ask
+for a new file name.
+
+[O]: Discard all changes to the current
+file and revert to the last version
+saved.
+
+
+***************************************
+ [F2]: Commands to split the file and
+            include others
+***************************************
+
+[I]: Read a file from the disk and
+insert it in the current file at the
+cursor position.
+
+[W]: Write the current file to disk
+with a different file name.
+
+[Y]: Write the contents of the
+clipboard to a file.
+
+[D]: Shows a directory of the files at
+a given path.
+
+
+***************************************
+ [F3]: Commands related to moving the
+                cursor
+***************************************
+
+[G]: Go to an especific line in the
+file. AKID will ask for a line number.
+
+[T]: Move the cursor to the first line
+of the file.
+
+[B]: Move the cursor to the last line
+of the file.
+
+
+***************************************
+ [F4]: Search and replacement commands
+***************************************
+
+[F]: Search forward for a text string
+and place the cursor over the first
+match.
+
+[B]: Search backwards for a text string
+and place the cursor over the first
+match.
+
+[A]: Search forward from the current
+cursor location and automatically
+replace all matches with a new string.
+
+[R]: Same as A, but allows you to
+confirm each match and decide whether
+to apply the replacement or skip to the
+next match.
+
+[S]: Enables/disables case sensitivity
+for searches.
+
+
+***************************************
+[F5]: Copying, duplicating and deleting
+            blocks of text
+***************************************
+
+[C]: Copy a block of text to the
+clipboard (discards the previous
+clipboard contents)
+
+[A]: Adds a block of text to whatever
+is in the clipboard
+
+[X]: Deletes a block of text from the
+screen and copies it to the clipboard
+
+
+***************************************
+             Key shortcuts
+***************************************
+
+[CTRL]+[E]: Move the cursor one line
+up.
+
+[CTRL]+[X]: Move the cursor one line
+down.
+
+[CTRL]+[D]: Move the cursor one
+character to the right.
+
+[CTRL]+[S]: Move the cursor one
+character to the left.
+
+[CTRL]+[F]: Move the cursor to the
+previous word.
+
+[CTRL]+[A]: Move the cursor to the next
+word.
+
+[CTRL]+[B]: Move the cursor to the
+beginning of the line.
+
+[CTRL]+[O]: Move the cursor to the end
+of the file.
+
+[CTRL]+[P]: Move the cursor to the end
+of the file.
+
+[CTRL]+[Z]: Scroll down one line.
+
+[CTRL]+[W]: Scroll up one line.
+
+[CTRL]+[C]: Scroll down one screen.
+
+[CTRL]+[R]: Scroll down one screen.
+
+[CTRL]+[^]: Search for a string
+(forward).
+
+[CTRL]+[\]: Search for a string
+(backwards).
+
+[CTRL]+[]]: Continue searching for more
+matches (forward).
+
+[CTRL]+[[]: Continue searching for more
+matches (backwards).
+
+[CTRL]+[G]: Delete the character under
+the cursor (DEL).
+
+[CTRL]+[H]: Delete the character before
+the cursor (BS).
+
+[CTRL]+[Y]: Cut the line were the
+cursor is and store it in the line
+buffer.
+
+[CTRL]+[U]: Cut the current line up to
+the position of the cursor and store it
+in the line buffer.
+
+[CTRL]+[K]: Cut from the cursor to the
+end of the current line and store it in
+the line buffer.
+
+[CTRL]+[T]: Delete one word.
+
+[CTRL]+[M]: Carriage return (enter a
+new line).
+
+[CTRL]+[N]: Insert a new line above the
+cursor.
+
+[CTRL]+[I]: Tab.
+
+[CTRL]+[Q]: Display the current file
+name, column and row numbers.
+
+[CTRL]+[J]: Toggle insert / overwrite
+modes.
+
+[CTRL]+[@]: Enter a control character.
+
+[CTRL]+[L]: Paste the contents of the
+line buffer.
+
+[CTRL]+[V]: Paste the contents of the
+clipboard.

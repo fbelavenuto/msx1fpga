@@ -1,0 +1,49 @@
+              **************************************
+              *            SofaSet v1.4            *
+              *   coded by Louthrax in March 2017  *
+              **************************************
+
+
+
+===================================================================
+                           Introduction
+===================================================================
+
+SofaRun  is  an  MSX  tool  allowing  you  to  control  and preview
+everything in your MSX ClockChip through a simple user-interface.
+
+
+===================================================================
+                              License
+===================================================================
+
+You are allowed to freely  use and distribute SofaRun for  any non-
+commercial usage.
+
+This software is provided  'as-is', without any express  or implied
+warranty.  In no  event will  the author  be held  liable for  any
+damages arising from the use of this software.
+
+
+===================================================================
+                           Requirements
+===================================================================
+
+Any MSX2 computer  with MSX-DOS 2
+
+
+===================================================================
+                             Usage
+===================================================================
+
+Usage: SS [options] [settings_file]
+
+[options] can be one or more of:
+  /Q: Do not display user interface
+  /H: Display this help
+
+If [settings_file] is specified,  settings are read and  written to
+that file.
+
+"SS.COM /Q" can be used  to reset screen settings according  to the
+MSX ClockChip values.

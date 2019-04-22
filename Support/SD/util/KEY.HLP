@@ -1,0 +1,39 @@
+KEY
+---
+
+Format :     KEY[/h] [/b]  [on!off]
+                      
+             KEY [<num‚ro de touche>,<chaŒne de caractŠres>]
+                                          
+
+Fonction:    Attribue une < chaŒne  de  caractŠres > … une touche de
+        fonction, affiche ou ‚teind les touches de fonction .
+
+Usage:       KEY/h ==> affiche un message d'aide ( en Anglais ) .
+
+             KEY/b ==> r‚initialise les touches de fonction .
+
+             Si on veut ins‚rer un espace  ou un slashe "/" dans une
+        <chaine de caractŠres> , celle-ci doit Štre d‚limit‚e par un 
+        double guillemets  ("  ") .
+
+             Un caractŠre de contr“le  peut ˆtre repr‚sent‚  par ses
+        deux caractŠres hexad‚cimaux pr‚c‚d‚ par un antislashe "\" .
+        Par exemple , "\0D" est le code de retour chariot  [RETURN].
+
+             Pour r‚initialiser les touches de fonction sous BASIC ;
+        taper : DEFUSR0=&h3E:A=USR(0):cls
+
+             Certains programmes r‚initialisent  et/ou  effacent les
+        touches de fonction (MED) . Pour les retrouver  il suffit de
+        taper : SETKEY 
+
+
+Exemple:     KEY on             ==>          affiche  les  fonctions
+             KEY 1,basic\0D     ==>          [F1] = basic + [RETURN]
+             KEY 2,"dir A:\0D"  ==>          [F2] = dir B:+ [RETURN]
+              .
+              .
+              .
+
+             etc ...       ( voir le fichier SETKEY.BAT )

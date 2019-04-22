@@ -1,0 +1,197 @@
+ROMLOAD version 1.99w
+
+This program was inspired by SCROM by Sean Young. ROMLOAD can load and
+execute a ROM in a Konami Sound Cartridge like Snatcher or SD-Snatcher, or in
+an ESE-SCC cartridge. ESE-SCC is a Sound Cartridge style device which has up
+to 512 kB of SRAM mapped by a normal SCC. Additional hardware enables write
+access to the SRAM like the Konami Sound Cartridge. When a Sound Cartridge is
+expanded to 128 kB RAM a 1MegaROM can be loaded. ROMLOAD has the following
+usage:
+
+
+Usage: ROMLOAD <pathspec> [/S] [/R] [/I:P-S] [/F] [/{J|E}] [/V:N] [/{A|1|L|O|2|0
+|B}] [/7xx] [/5] [/D:<type>] [/T:<mode>] [/H] [/P:<data>]
+
+<pathspec> = Full path & filename of ROM image (default extension: ROM)
+        /S = Start ROM when loaded
+        /R = Reset system after loading ROM image
+        /I = Ignore detection in slot P-S
+        /F = Force ROM image load
+        /J = Force Japanese language
+        /E = Force non-Japanese language
+        /V = Force different MSX version
+        /A = Convert from ASCII8
+        /1 = Convert from ASCII16
+        /L = Super Lode Runner (16 kB)
+        /O = Cross Blaim (16 kB)
+        /2 = MSX-DOS 2 Kernel (16 kB)
+        /0 = ROM image in Page 0
+        /B = BASIC in ROM
+        /7 = Double cartridge
+        /5 = SCC-I mode
+        /D = DAC mode
+        /T = Select CPU mode
+        /H = Add hot-key to disable the ROM image
+        /P = Patch blocks (x,yyyy,zz:x,yyyy,zz:...)
+
+
+The /S option will start the ROM image after it was loaded into the Sound
+Cartridge. Games using disk should be able to start with this option as well
+now. Optionally it's possible to start with 50Hz or 60Hz when expanding /S
+with :5 or :6.
+
+The /R option will reset the computer after loading the ROM image into the
+Sound Cartridge. This option overrules the /S option. It's generally used to
+start games that will not start with /S for some reason.
+
+The /I option enables multiple Sound Cartridge support. The slot given (in
+P-S format) will be skipped during the search for a Sound Cartridge. A
+different ROM image can be loaded into it to make combinations. In most cases
+this will require 2 Sound Cartridges with 128 kB RAM, but some combinations
+with smaller games will work as well.
+
+The /F option forces the specified ROM image to be loaded even if it wouldn't
+fit in memory. It is unlikely the program in the ROM image would run then,
+but with it combinations using MegaROM type cartridges should work.
+
+With the /J and /E options the first option found will be valid and will force
+the ROM-image to play in either Japanese or non-Japanese mode. In most cases
+this will only work with Konami titles.
+
+The /V option forces the game to run on a different MSX version. It can be
+useful when you want to play an MSX1 game that has extra features on MSX2
+(such as palette changing) as it was played on MSX1. The version N is
+formatted as follows: 0 for MSX1, 1 for MSX2, 2 for MSX2+ and 3 for
+MSXturboR.
+
+The /7 option requires two more numbers to form a Konami RC-code. This will
+be the second cartridge for another cartridge to find. This option will not
+load the ROM image, but ROMLOAD emulates it by writing data to the addresses
+for the game to detect it as being there. The Game Master 2 will be detected
+for any secrets to find, but the SRAMdisk will always fail.
+
+The /5 option will put the SCC in SCC-I mode before booting. A hardware reset
+will reset this to the default SCC mode again.
+
+The /D option will convert Konami's Synthesizer and Hai No Majutsushi to use
+a different DAC to play the samples. 0 will use Covox or SIMPL, 1 will use the
+Philips Music Module DAC, 2 will use the MSXturboR PCM and 3 will use the
+PlaySoniq DAC.
+
+The /T option will change the CPU mode on MSXturboR to the desired mode
+before starting the ROM image, where 0 is Z80, 1 is R800 and 2 is R800 DRAM
+mode. On the Panasonic FS-A1WX, Panasonic FS-A1FX or Panasonic FS-A1WSX it'll
+set the desired CPU speed mode, where 0 is 3.58 MHz and 1 or 2 is 5.38 MHz.
+On the Ciel Expert 3 it'll set the desired CPU speed mode, also where 0 is
+3.58 MHz and 1 or 2 is 5.38 MHz. Without the /T option ROMLOAD will always
+switch to compatibility mode. This option only works together with /S.
+
+The /H option enables the possibility to disable the ROM image loaded in the
+Sound Cartridge when pressing the hotkey while booting the MSX. The current
+key can be viewed and reconfigured with the HOTKEY.COM utility. It will
+configure the ROMLOAD.COM in the current directory. Optionally it's possible
+to provide a temporary hotkey by expanding /H with :<row><bit>. For example
+when a key isn't available on the machine ROMLOAD is started and a hotkey is
+wanted. The <row> is a hexadecimal value in the range of 0-F and <bit> is a
+value from 0-7. With HOTKEY /M the keyboard matrix of the current machine can
+be viewed in order to find the required row and bit for the key to use as
+temporary hotkey. For the initially defaulted [GRAPH]-key use /H:62.
+
+The /P option is a very special feature. It enables changing data in a
+ROM image while loading. It does require knowledge to prevent a ROM image to
+crash in stead of starting. The format for the patching list is
+<block>,<address>,<data>:<block>,<address>,<data>:... and is limited to the
+length of the command line. Blocks are always seen in 8 kB blocks, even if
+the actual ROM image has 16 kB mapping and due to the maximum size of a
+ROM image the last block can't exceed the number of blocks of the ROM image.
+All patch data is written in hexadecimal notation. It's required to stick to
+their length, <block> can be either 1 or 2 hexadecimal characters (0-3F),
+<address> is always 4 hexadecimal characters (0000-1FFF) and is an offset to
+the actual address, <data> is always 2 hexadecimal characters (00-FF). Patch
+offset <address> in 8 kB block <block> with value <data>. Two simple examples:
+
+/P:0,123A,5A
+        will write 5A to address offset 123A in block 0.
+/P:4,03D4,12:1F,0000,76
+        will write 12 to address offset 03D4 in block 4 and 76 to address
+        offset 0000 in block 1F (this requires at least 256 kB).
+
+All-combination patches:
+
+Yie Ar Kung-Fu 2: /P:0,1F6C,18:0,1F9D,59
+Nemesis:          /P:0,105A,18:0,1F5B,4B
+Vampire Killer:   /P:0,1C95,18:0,1C96,19
+   version [a1]   /P:0,1C8A,18:0,1C8B,19
+   version [a2]   /P:0,1C99,18:0,1C9A,19
+   version [a3]   /P:0,1CAD,18:0,1CAE,19
+Hinotori:         /P:0,1DFF,18:0,1DFF,15:0,1E16,3E:0,1E17,01
+Ganbare Goemon:   /P:1,1EAB,18:1,1EAC,19
+Maze of Galious:  /P:0,1ED0,3E:0,1ED1,03:0,1ED2,32:0,1ED3,F8:0,1ED4,F0:
+                     0,1ED6,C9
+Nemesis 2:        /P:3,1CB1,3E:3,1CB2,0D:3,1CB3,32:3,1CB4,F5:3,1CB5,F0:
+                     3,1CB6,C9
+   version [a1]   /P:3,1CB7,3E:3,1CB8,0D:3,1CB9,32:3,1CBA,F5:3,1CBB,F0:
+                     3,1CBC,C9
+F1-Spirit:        /P:F,1F50,18:F,1F51,15:F,1F67,3E:F,1F52,02
+Treasure of Usas: /P:5,1751,3E:5,1752,0F:5,1753,32:5,1754,05:5,1755,C2:
+                     5,1756,C9
+Salamander:       /P:3,1599,3E:3,159A,01:3,159B,32:3,159C,F5:3,159D,F0:
+                     3,159E,C9
+
+
+With the following options, the first option found will be valid:
+
+The /C option is removed. If the Konami without SCC mapper is detected in the
+first block, it will convert to Konami with SCC mapper automatically to be
+played in a Sound Cartridge as the Sound Cartridge only supports Konami games
+with SCC. This way almost all Konami titles will work by default.
+
+At the moment ROMLOAD coding was started SCROM didn't have ASCII 8 kB type
+support yet, so the /A option was added. The conversion in ROMLOAD is more
+advanced than the ASCII 8 kB type conversion found in SCROM. It also converts
+Bubble Bobble correctly. There was one minor problem when converting Family
+Billiards, as a color got corrupted. The ASCII 8 kB type was extended so
+these kind of errors will not happen anymore. So if SCROM can run it
+perfectly, so will ROMLOAD now.
+
+The /1 option will do an ASCII 16 kB conversion. It also will copy a little
+piece of code into RAM, which might cause the computer to hang, so it is
+recommended to either reset or start the ROM after it was loaded into the
+Sound Cartridge.
+
+The /L option enables Super Lode Runner to run in the Sound Cartridge.
+
+The /O option enables Cross Blaim to run in the Sound Cartridge.
+
+The /2 option enables an MSX-DOS 2 kernel to run in the Sound Cartridge.
+
+The /0 option enables ROM images for Page 0 to be run from the Sound
+Cartridge.
+
+The /B option enables ROM image containing MSX-BASIC tokenized text to be
+executed from the Sound Cartridge.
+
+
+ROMLOAD will first try to detect a Sound Cartridge or ESE-SCC. This way it
+can be used to detect the memory size without loading a ROM image. This is an
+option which I added to the first version of SCROM and that version was never
+released. When ROMLOAD has no parameters, the usage will be displayed after a
+successful detection. Depending on the screen width the usage is displayed
+in a reformatted wide style to make it completely fit the screen.
+
+ROMLOAD will check whether the ROM image will fit into the memory size
+detected and loads it if it fits. This can be overriden with the /F flag. The
+ROM image will be converted and executed according to the options set.
+
+The correct positioning of a 8 kB or 16 kB ROM image is detected. Also, a
+small bug is fixed in the previous version which couldn't run 16 kB and
+32 kB ROM images in the SD-Snatcher Sound Cartridge.
+
+ROMLOAD.LST is a text file which contains a list of games with the options
+necessary to start the game correctly.
+
+If you have suggestions to implement in future releases, please contact me.
+
+
+bifi@msxnet.org
+IRC: #msxdev @ Rizon

@@ -1,0 +1,920 @@
+              *************************************
+              *          SofaRun v4.1             *
+              *  coded by Louthrax in March 2019  *
+              *************************************
+
+
+===================================================================
+                           Introduction
+===================================================================
+
+SofaRun is an MSX-DOS 2 tool  that allows you  to run disk  (.DSK),
+cassette (.CAS)  and cartridge  (.ROM)   images.  Various  settings
+can  be set    and stored for  each game. It  can also  be  used to
+launch normal MSX-DOS 2 and BASIC programs.
+
+It features a joystick controlled file browser, ZIP files  support,
+options  to  map  JoyMega buttons  to  keyboard  and "soft  reset",
+allowing you to play lying on your sofa just like a lazy penguin!
+
+
+
+===================================================================
+                              License
+===================================================================
+
+You are allowed to freely  use and distribute SofaRun for  any non-
+commercial usage.
+
+This software is provided  'as-is', without any express  or implied
+warranty.  In no  event will  the author  be held  liable for  any
+damages arising from the use of this software.
+
+
+
+===================================================================
+                           Requirements
+===================================================================
+
+SofaRun works on  any MSX computer with MSX-DOS 2 and 32KB free
+mapped memory.
+
+MSX machines  with a  total of  128KB mapped  memory are supported,
+assuming   that   you  use   COMMAND.COM   version   2.31  or lower
+(versions   above  2.31    are allocating   an  extra   16KB memory
+segment).
+
+That beeing said, if you want to  launch a disk image  containing a
+program using  mapped memory  (like Project  Melancholia or cracked
+games from the 80's), you'll need more memory.
+
+Also, launching  a  ROM  image may require more memory (when  using
+the "Memory mapper" device)   or a  specific device.  Supported ROM
+devices in SofaRun v4.0 are:
+
+ * Memory mapper
+ * turboR mapper
+ * SD Snatcher
+ * Snatcher
+ * MegaRAM
+ * ESE SCC
+ * ESE RAM
+ * MegaFlashROM SCC
+ * GR8NET
+ * MegaFlashROM SCC+ SD
+ * Multi-MSXRAM
+ * MegaFlashROM SCC+
+ * Carnivore 2 - Flash
+ * Carnivore 2 - RAM
+
+The SRAM auto-save feature requires a Panasonic PAC or FM-PAC.
+
+
+===================================================================
+                             Features
+===================================================================
+
+ * ZIP files  support (see  the "ZIP  files support"  section   for
+   details).
+
+ * Disk   access when   running  ROMs.  You  can   save and   load,
+   for example, your  King's  Valley stages  or  Game Masters  game
+   states.
+ 
+ * Option  to edit  text files  on any  MSX machine  (even MSX  1),
+   using the great & free VEDIT.COM tool.
+ 
+ * Basic  Copy,   Paste  and  Delete   operations  on  files    and
+   directories.
+
+ * SofaSet tool to control all MSX2 RCT settings.
+   
+ * Writing back tape images (.CAS) to real tape, thanks to  Martos'
+   CAS2TAPE.COM tool.
+
+ * SRAM auto-backup.
+
+ * Game Master 1  and Game Master 2  support. Game Master 2  can be
+   used only  with a  supported  flash  device, but  Game Master  1
+   works without for small ROMs.
+
+ * Soft reset: if you have selected JoyMega support, you can  reset
+   the game by pressing the [A] and [Start] button simultaneously.
+
+ * Editable   SR.INI file.   You  can  specify  your   "saves"  and
+   "temporary" locations here,   define your  custom palettes,  and
+   even your own file-type associations.
+
+ * Save of all  settings for each game,  so that you don't  have to
+   set them every time.
+
+ * Support of external SCC  or SCC+ sound cartridge,if you  want to
+   hear the "real thing".
+
+ * PSC to SCC: you can redirect PSG sounds to an SCC cartridge, and
+   define SCC waveform for each PSG channel.
+
+ * Various settings, like other game loaders (video mode, language,
+   CPU mode, MSX version).
+
+
+
+===================================================================
+                        Installing SofaRun
+===================================================================
+
+From your desktop computer, extract "sofarun.zip" somewhere to your
+MSX-DOS2 mass storage device (SD card or hard drive).
+
+Plug your mass storage device on you MSX, boot to MSX-DOS 2, go  to
+the  directory where  you extracted  "sofarun.zip" using  the  "cd"
+command, and  type "SR"  from  the  command line.  You should   see
+the SofaRun  title  screen.   SofaRun   takes  no  file  arguments,
+only these two options can be specified:
+
+ /S: Skip the display of the title screen.
+
+ /I: Ignore last  launched game,  and start  SofaRun from  current
+     directory.
+
+
+
+===================================================================
+                       Supported file types
+===================================================================
+
+All file types associations here can be changed in the SR.INI  file
+(see "The SR.INI file" section below).
+
+ * .ROM
+Cartridge images. Can be ROMs or MegaROMs.
+
+
+ * .DSK
+Disk image files, as used by MSX emulators. Several disk images can
+be concatenated  into a  single .DSK  file. You'll  be able to swap
+disks during game (see section "Swapping disks").
+
+
+ * .CAS
+Cassette images, as used by  MSX emulators. Those files are  loaded
+using the "LOADCAS" tool from Martos.
+
+
+ * .COM
+MSX-DOS executables.
+
+
+ * .BAT
+MSX-DOS batch files.  Those files can  be launched but  also edited
+(like described below for .INI and .TXT files).
+
+
+ * .LDR
+BASIC files.  ".BAS" files  are not  displayed to  distinguish them
+from "loader" specific BASIC files.
+
+
+ * .ZIP
+PKZIP compressed files.  Contents of these  files can be  extracted
+and played with a single click. See the "ZIP files support" section
+for details.
+
+
+ * .MIG
+MSX compressed images. Those are displayed using MIGVIEW.COM.
+
+
+ * .VGM
+Video Game Music files. Those are played using Grauw's  VGMPLAY.COM
+player.
+ 
+
+ * .INI and .TXT
+Those are considered as text files. SofaRun allows you to edit them
+using  an  MSX  patched  version  of  the  excellent  VEDIT   tool.
+Instructions for using VEDIT are displayed before launch.
+
+
+
+===================================================================
+                              Controls
+===================================================================
+
+Everything in SofaRun can be controlled with either the keyboard or
+the joystick in port 1.
+
+To  validate  something,   press   [Space]  key,  [Enter]   key  or
+joystick [Button  A]. This  is referred  later in  this document as
+[Validate].
+
+To cancel  something,  press   [ESC] key  or  joystick  [Button B].
+This is referred later in this document as [Cancel].
+
+
+
+===================================================================
+                          The game browser
+===================================================================
+
+This  is  what you  get  when you  launch  SofaRun: a  list  of all
+supported files, and directories.
+
+You can move in the entries  here using the keyboard arrows or  the
+joystick.
+
+To open the "Game" menu in order to launch you game, or change  to
+another directory, just [Validate].
+
+[Cancel] to enter the "Quit" menu.
+
+
+
+===================================================================
+                         The "Game" menu
+===================================================================
+
+This menu is  invoked by [Validating]  a game in  the game browser.
+Following is a description of each menu entry.
+
+                            ** Start **
+
+Start the game!
+
+
+                          ** Settings **
+
+Edit settings for the game (see "Settings" menu below).
+
+
+                         ** Erase SRAM **
+
+Erases the  SRAM for  the current  game if  "PAC-SRAM auto-save" is
+enabled in its settings.
+
+
+                        ** Write to tape **
+
+Write the current cassette image to tape (.CAS files only).
+
+
+                        ** Write to disk **
+
+Write the current  disk image to  floppy (.DSK files  only). Select
+the target drive and [Validate] to start writing.
+
+
+                            ** Back **
+
+Go back to the game browser.
+
+
+
+===================================================================
+                        The "Settings" menu
+===================================================================
+
+This menu is invoked by selecting "Settings" in the "Game" menu. It
+displays available settings for the game.
+
+You can change a setting with the [Left] and [Right] cursor keys or
+with the joystick in port 1.
+
+At first, all settings are set to the default values. If you change
+a setting, it will be  displayed with a star ("*").  This indicates
+that this setting is  set and will be  used instead of the  default
+value.
+
+You   can  toggle   a  setting   between the   "set"  and "default"
+states by [Validating].
+
+Following is a description of each menu entry.
+
+
+----------------------------- Actions -----------------------------
+
+                           ** Apply **
+
+Apply your settings choices and go back to the "Game" menu.
+
+
+                           ** Cancel **
+
+Cancel the changes made in the settings and return to the "Game" menu.
+
+
+                      ** Reset to defaults **
+
+Reset all settings to the default ones.
+
+
+
+------------------------ Generic settings -------------------------
+
+                         ** Video mode: **
+                           (MSX 2 only)
+
+Choose between 50Hz or 60Hz video modes here. Most of the games are
+looking better in 60Hz mode.
+
+
+                        ** Erase VRAM: **
+
+Erase the VRAM first 16KBs to  0 before launching the game. Can  be
+useful for flawed games that  expect the VRAM to be  completely set
+to 0.
+
+
+                          ** Palette: **
+                           (MSX 2 only)
+
+Choose between different color palettes for  the game. Palettes can
+be defined in  the SOFARUN.INI file.  You can  for  example use the
+MSX1 palette to have  the original look and  feel  of a game  on an
+MSX2. The "CoolColors" palette by FRS also looks  very well on lots
+of ROMs! See the "SOFARUN.INI" section below for  more details.
+
+
+                     ** PAC-SRAM auto-save: **
+
+If you have a PAC-SRAM  cartridge, its content will be  saved after
+each game's run, and saved when you go back to SofaRun. This allows
+to play  several games  using PAC  with no  danger of loosing saved
+data. The generated SRAM backup file has the same base name as  the
+game file, with extension replaced by ".USR".
+
+
+                     ** Find Music-Module: **
+
+Allow some games (mainly Compile  ones) to find and use  the Music-
+Module sound cartridge.
+
+
+-------------------------- Disk settings --------------------------
+
+                         ** Start disk: **
+
+SofaRun handles .DSK files  with concatenated disk images.  You can
+select which disk image to boot to here.
+
+
+                     ** Write enable disk: **
+
+By default,  the .DSK  file you  have selected  is write-protected.
+Enable this to allow writing. Note  that each time a .DSK image  is
+launched, a "virtual" user disk  is added in last position.  It has
+the same  base name  as the  .DSK file  with extension  replaced by
+".USR". This virtual disk is only created if accessed.
+
+
+                         ** Disk delay: **
+
+Some games do not like the fact that disk accesses are quite faster
+on an  SD card  or hard  disk compared  to original  floppies. This
+leads to  graphical glitches  or even  crashes. Increase  the value
+here until the problem is solved.
+
+
+                  ** Simulate [CTRL] pressed: **
+
+Free up some memory by allowing only one drive instead of two, just
+like when you press the [CTRL] key at boot time.
+
+
+                      ** No memory mapper **
+                  
+Simplifies memory handling by assuming  that the game is not  using
+memory-mapped memory. Increases speed  but might cause crashes  for
+games that do use the memory-mapped memory.
+
+
+
+------------------------- turboR settings -------------------------
+
+                          ** CPU mode: **
+
+If you're the  happy owner of  a turboR, you  can define which  CPU
+mode to use here.
+
+
+                       ** Disable FM-PAC: **
+
+Prevent  games from   using the  integrated  FM-PAC on  turboR,  so
+you'll get standard PSG sounds. This allows to run  games in   R800
+mode without FM-PAC sound glitches.
+
+
+-------------------------- ROM settings ---------------------------
+
+                        ** Pref. device **
+
+Selects the prefered ROM device used to launch a .ROM file. If that
+device does not exist or does not fit the requirements to launch  a
+ROM, another device will be selected instead if possible.
+
+
+                        ** Flash speed: **
+       (MegaFlashROM SCC+ (SD) and Carnivore 2 devices only)
+
+Sets flashing speed for the flash memory devices. Default speed for
+MegaFlashROM SCC+ is 1x, default speed for MegaFlashROM SCC+ SD and
+Carnivore 2 is 4x. MegaFlashROM SCC only supports 1x.
+
+
+                          ** ROM type **
+
+By default, SofaRun tries to guess  the type of the ROM  file  when
+flashing it.   If this  does  not  work, you   can specify  a  type
+here.
+
+
+                        ** No subslots: **
+
+Disables  subslots  for the ROM device when launching ROM.
+
+
+                    ** Disable disk driver: **
+
+Disable the  disk driver  when launching  ROM. Required  for Iligks
+Episode IV.
+
+
+                     ** Interruption mode: **
+
+Change this to improve game speed or fix freezings and crashes.
+
+
+                         ** A.I. level: **
+
+Increase value to fix glitches or crashes.
+
+
+                  ** Page switch optimization: **
+                 ("Memory mapper" ROM device only)
+
+Increase  value  to  reduce  disk  accesses.  Warning:  might cause
+crashes if too high.
+
+
+                        ** Game Master: **
+
+You can select  to launch a  game with Konami's  Game Masters here.
+"Memory mapper" ROM  device only supports  Game Master 1  for small
+ROMs.
+
+
+                        ** MSX version: **
+
+You can lie about the version of your MSX here. This allows to play
+Gradius 3 in MSX1 mode  for example. Well, there's little  interest
+in that, but if you are playing  a game with the Game Master 2  and
+want to use a custom palette, this might be useful: the Game Master
+2 in MSX2 mode sets its own palette, and erases the custom  palette
+before launching  the ROM.  This won't  happen if  you set  the MSX
+version to MSX1!
+
+
+                          ** Language: **
+
+Set this to  "International" to play  the ROM in  English instead of
+Japanese.
+
+
+                          ** JoyMega: **
+
+If  you have  a JoyMega  adapter and  a Megadrive  joypad, you  can
+choose  between  different  configurations  here.  Some   "generic"
+configurations are  provided in  the default  SOFARUN.INI file, but
+you can add as  many configurations as you  want in this file.  See
+the "SR.INI" section below for more details.
+
+The 3 buttons configurations will be a bit faster compared to the 6
+buttons one, but only [A] and [Start] buttons are available.
+
+
+                      ** Disable keyboard: **
+
+If you enable this, the keyboard will not be read and be  inactive.
+As  reading the  JoyMega and  converting buttons  to keys  takes  a
+while,  this  might  speeds  things  up  a  bit.  Use  this  if you
+experience slowdowns when JoyMega is enabled.
+
+
+
+
+
+----------------------- ROM sound settings ------------------------
+
+                      ** Use external SCC: **
+
+Flash devices usually emulate SCC  and SCC+ very well,  but  if you
+are a "vintage fanatic", set this  to "Yes" to use  a real  SCC  or
+SCC+  cartridge instead. You have to set which SCC slot to use with
+the "SCC slot" setting below.
+
+
+                          ** PSG port: **
+
+You can redirect the default PSG port to another one here. Use "MFR
+SCC+" to use  the MegaFlashROM SCC+  ports. Use "Disabled"  to mute
+the PSG.
+
+
+                       ** PSG channel #x: **
+
+You can filter the 3 PSG  ports here. "Noise only" will only  allow
+noise on the x channel. "Music only" will only allow music on the x
+channel. "On" allows everything and "Off" disable everything.
+
+
+                         ** PSG to SCC: **
+
+Set this to "Yes" to also play PSG sounds on an SCC cartridge.  You
+can select  which SCC  waveform is  associated to  each PSG channel
+with the next settings. You have to set which SCC slot to use  with
+the "SCC slot" setting below.
+
+
+                       ** SCC Waveform x: **
+
+Select which SCC   waveform is associated   to PSG  channel  x when
+the  "PSG  to  SCC"  setting  is  enabled.  You  can  add and  edit
+SCC waveforms in the SROM.INI file.
+
+
+                          ** SCC slot: **
+
+Select which SCC  slot to use  when "Use external  SCC" or "PSG  to
+SCC"  settings  are  enabled  (there's  not  auto-detection  of SCC
+cartridges yet in SofaRun).
+
+Note that you might receive "SCC slot conflict" errors or  warnings
+when launching ROM depending  of your slot layout.  Basically,  the
+SCC slot specified here   can't be in the  same "main slot" as  the
+RAM or flash device slot used for the game.
+
+
+
+===================================================================
+                        The "Write to tape" menu
+===================================================================
+
+This menu is invoked by  selecting [Write to tape] from  the "Game"
+menu.
+
+
+                     ** Write game to tape: **
+
+Select  the  desired  baud  rate (1200,  1800,  2400  or  3600) and
+[Validate] to start writing the game to tape.
+
+
+                       ** Write silence: **
+
+Select the silence duration  and validate to start  writing silence
+to tape.
+
+
+                            ** Back **
+
+Go back to the "Game" menu.
+
+
+
+===================================================================
+                          The "Quit" menu
+===================================================================
+
+This menu is invoked by [Canceling] in the game browser.  Following
+is a description of each menu entry.
+
+
+                       ** Parent directory **
+
+Change current directory to the parent one. If browsing a ZIP file,
+exit to the containing directory.
+
+
+                        ** Quick launch: **
+
+Allows to quickly  launch any application  without browsing to  it.
+These applications can be added in the SR.INI file (see "The SR.INI
+file" section below).
+
+Default Quick launch applications are:
+
+ * SofaSet
+Launches SOFASET.COM which  allows  you to  customize all  MSX2 RTC
+chip settings.
+
+ * JoyTest
+Launches  FRS  JOYTEST.COM tool  to  test your  joystick,  joymega,
+paddle, mouse or lightgun.
+
+ * BLOAD"CAS:",r
+Goes to BASIC then load and run a binary file from tape.
+
+ * CLOAD
+Goes to BASIC then load and run a BASIC file from tape.
+
+ * RUN"CAS:"
+Goes to BASIC then load and run ASCII BASIC file from tape.
+
+
+                        ** Quit SofaRun **
+
+Returns to MSX-DOS 2.
+
+
+                         ** ZIP filter **
+                         
+You  can specifiy  here a  filter used  when displaying  ZIP  files
+content. That can be specially useful if your ROMs are named  based
+on  the TOSEC  naming convention. Keyboard input is allowed.
+
+The filter  is using  a  classic wildcard system with "*" and "?":
+
+  * "?" matches any single character.
+
+  * "*" matches any sequence of characters.
+
+Here are some examples:
+
+ * "Z*" display all files starting with letter Z.
+
+ * "*.ROM" display all ROM files.
+
+ * "*(KONAMI)*" display all files released by Konami.
+
+ * "*(199?)*" display all files released in the nineties.
+
+
+                      ** SofaRun settings **
+
+This will  invoke another  menu allowing  you to  edit the  default
+settings inherited by all games. There are also some extra "UI
+settings" in this menu (see section below).
+
+
+
+                     ** Clean temporary files **
+
+This  deletes all  temporary  files  generated by  SofaRun  from in
+the "TMPPATH" directory, including *.UNZ directories.  Use this  if
+you  run out  of disk  space or to solve corrupted files issues.
+
+ * .UNZ files are individual files extracted from ZIP files.
+ * .UNZ directories  are generated  when using  the [Extract  all]
+   command on ZIP files.
+
+
+                   ** Forget last flashed ROM **
+
+Tells  SofaROM to  forget about  ROMs flashed  on non-volatile  ROM
+devices. This forces a reflash on next game launch.
+
+
+                  ** Copy <file_or_directory> **
+
+Copy the current file or directory for later pasting.
+
+
+                  ** Paste <file_or_directory> **
+
+Paste the previously copied file or directory in current directory.
+Directories are copied recursively.
+
+
+                 ** Delete <file_or_directory> **
+
+Delete the  current file  or directory.  Directories are completely
+and recursively deleted.
+
+
+                            ** Back **
+
+Returns to the game or ZIP browser.
+
+
+
+===================================================================
+                             UI settings
+===================================================================
+
+Those  settings  are only  available  in the  "Quit"  menu "SofaRun
+settings".
+
+                       ** Show all files: **
+
+Toggles display of  all files or  only supported ones.  You can use
+this to check your hard disk  or SDCard for other files. Note  that
+nothing happens  if you  select a  non-supported file  in the  game
+browser.
+
+
+                     ** Show command line: **
+                     
+Display the command line created when SofaRun launches an  external
+application.
+
+
+                        ** Quiet launch: **
+                     
+Do  not  display  any  text or  ask  for  launch  confirmation when
+launching a .DSK or .ROM image.
+
+
+                        ** UI video mode: **
+                           (MSX 2 only)
+
+Choose between 50Hz or 60Hz video modes for SofaRun's UI display.
+                     
+
+                        ** UI text color: **
+
+Choose the text color SofaRun's UI display.
+
+
+                        ** UI background color: **
+
+Choose the background color SofaRun's UI display.
+
+
+                        ** UI force 40 columns: **
+                           (MSX 2 only)
+
+Force  UI  display  in 40  columns  mode  instead of  80  on  MSX 2
+machines.
+
+
+===================================================================
+                          The SR.INI file
+===================================================================
+
+You  can  setup different  things  in this  file.  Each section  is
+documented, just have a look at the file. You can edit it  directly
+from SofaRun.
+
+Below is the default SR.INI file bundled with SofaRun:
+
+####################################################################
+[SYSTEM]
+####################################################################
+
+# Path where your save files (PAC-SRAM (.SRM), ROM or Game Master
+# files, user disks (.USR)) will be placed (current directory if
+# not defined).
+SAVEPATH=A:\SAVES
+
+# Path where ZIP-extracted files (.UNZ) and patched ROMs (.PRM) will
+# be placed (current directory if not defined).
+TMPPATH=A:\TMP
+
+# Path where game (.GST) and SofaRun (SR.SST) settings files will be
+# placed (current directory if not defined).
+SETTINGSPATH=A:\SETTINGS
+
+####################################################################
+[QUICKLAUNCH]
+####################################################################
+
+# %s: SofaRun directory path (e.g. A:\SOFARUN\)
+# %c: COMMAND2.COM path (e.g. A:\COMMAND2.COM) 
+
+SofaSet=%sSS.COM
+JoyTest=%sJOYTEST.COM
+BLOAD"CAS:",r=%c BASIC %sCASBLOAD.LDR
+CLOAD=%c BASIC %sCASCLOAD.LDR
+RUN"CAS:"=%c BASIC %sCASRUN.LDR
+
+####################################################################
+[EXTS]
+####################################################################
+
+# *1: internal ROM (ROM image) handling
+# *2: internal CAS (tape image) handling
+# *3: internal DSK (disk image) handling
+# *4: internal COM (MSX-DOS executable) handling
+# *5: internal COM (MSX-DOS batch file) handling
+# *6: internal BAS (MSX-BASIC file) handling
+# *7: internal ZIP (zipped file) handling
+
+# %s: SofaRun directory path (e.g. A:\SOFARUN\)
+# %f: Selected file path (e.g. MYGAME.ROM)
+# %c: COMMAND2.COM path (e.g. A:\COMMAND2.COM) 
+
+ROM=*1
+DSK=*3
+CAS=*2
+COM=*4
+BAT=*5
+BAS=*6
+LDR=*6
+ZIP=*7
+
+MIG=%sMIGVIEW.COM %f
+VGM=%sVGMPLAY.COM %f
+TXT=%sAKID.COM %f
+INI=%sAKID.COM %f
+
+#MID=A:\BIN\SZMMP.COM /U1 %f
+#MID=A:\BIN\MIDIPAC\MIDIPLAY.COM %f
+
+####################################################################
+[PALETTES]
+####################################################################
+
+# Palette configurations
+#
+# Format is <name>=<color_code>*16
+#
+# <name> is the name displayed in SofaRun.
+#
+# <color_code>  is composed  of 3  digits between  0 and  7, in  RGB
+# order. For example 700 is red, 070 is green, 007 is blue, and  777
+# is white.
+
+CoolColors=  000 000 253 364 125 236 521 357 632 742 762 774 142 524 555 777
+MSX1=        000 000 051 263 237 347 632 167 732 743 552 663 041 635 666 777
+Gray scales= 000 000 444 555 222 333 222 555 333 444 555 666 333 444 666 777
+Green scales=000 000 040 050 020 030 020 050 030 040 050 060 030 040 060 070
+C64=         000 000 444 474 214 336 220 355 411 421 533 563 252 414 555 777
+NES=         000 000 262 575 007 437 501 077 710 732 750 775 050 606 555 777
+APPLE2=      000 000 160 160 147 147 730 727 730 730 777 777 160 727 777 777
+SPECTRUM=    000 000 070 077 005 007 500 055 700 707 550 770 050 505 555 777
+CGAMONO=     000 000 060 060 040 040 040 060 040 070 070 070 060 040 070 070
+FM-X-RGB=    000 000 070 070 007 007 700 077 700 700 770 770 070 707 777 777
+PCJR=        000 000 272 277 005 227 500 055 722 727 520 772 050 505 555 777
+
+
+
+===================================================================
+                         ZIP files support
+===================================================================
+
+Selecting a ZIP file from the game browser displays its contents in
+a way quite  similar to the  game browser. "Game"  and "Quit" menus
+are available and work the same way.
+
+When a game  file is selected,  it is extracted  to a "cache"  file
+with  extenstion replaced  with ".UNZ".  Those .UNZ  files are  not
+displayed by default  by  SofaRun.  You   can  delete  them   using
+"Clean temporary files" from the "Quit" menu.
+
+The [Extract all]  command allows to  extract the whole  content of
+the  ZIP  file  (including sub-directories)  to  a  directory. This
+directory is  made of  the ZIP  file base  name (file  name without
+extension), and  placed in  the "TMPPATH"  (that you  can define in
+SR.INI).
+
+
+
+===================================================================
+                             Error messages
+===================================================================
+
+* "Bad signature in <ZIPfile>"
+<ZIPfile> seems corrupted. 
+
+* "Unable to open <file>"
+<file> does not exist or can't be opened for some reasons.
+
+* "Unable to create <file_or_directory>"
+<file_or_directory> can't be created for  some reasons.
+
+* "Out of TPA memory"
+The current directory  or ZIP file  is too big.  Try to split  your
+games in several smaller directories or ZIP files.
+
+* "Out of segments"
+You  need more available segmented memory.  See the  "Requirements"
+section for details.
+
+* MSX-DOS 2 errors
+When   an   MSX-DOS   2  error   happens   (disk   write  protected
+for example), you'll   get  a  menu  in  which you    can choose to
+Retry, Ignore or Abort the current operation.
+
+
+
+===================================================================
+                              Thanks
+===================================================================
+
+Thanks are flying to (no special order):
+
+ * FRS  for JOYTEST.COM,  his help  on JoyMega  and the  CoolColors
+   palette.
+
+ * Grauw for his awesome VGMPLAY.COM tool.
+
+ * Lars the 18th for v2.4 title GFX.
+
+ * Martos for LOADCAS.COM and TAPE2CAS.COM.
+
+ * NearDark for providing sources of they RunIt tool.
+
+ * Nestor Soriano for Nextor.
+
+ * The openMSX & BlueMSX teams for their awesome emulators.
+ 
