@@ -20,7 +20,7 @@ Formatear una tarjeta SD en FAT16 (máx 4GB) y descomprimir el fichero 'msx1_sd_
 
 CTRL+ALT+DEL es Soft reset, CTRL+ALT+F12 es Hard reset (reinicia la máquina MSX como si la hubieses apagado) y CTRL+ALT+BACKSPACE resetea el ZX-Uno.
 
-El puerto de joystick está mapeado como JoyMega, y configurado para usar un joypad de SEGA Genesis / Megadrive
+El puerto del joystick para placas Multicore se asigna como JoyMega y se configura para usar un joypad SEGA Genesis / Megadrive. Otras placas se asignan como un solo joystick / joypad con 2 botones.
 
 Para cargar una ROM en el SCC Megaram se usa el comando ROMLOAD.COM (está en los ficheros de 'msx1_sd_files.zip') con '/S' para que comience inmediatamente. Ejemplo:  ROMLOAD game.rom /S
 

@@ -38,7 +38,7 @@ Some keys and their functions:
  - Page Up: MSX SELECT key;
  - END: MSX STOP key.
  
-The joystick port is mapped as JoyMega, and configured to use a SEGA Genesis/Megadrive joypad.
+The joystick port for Multicore Boards are mapped as JoyMega, and configured to use a SEGA Genesis/Megadrive joypad. Other boards are mapped as single joystick/joypad with 2 buttons.
 
 To go to the BASIC from the MSX-DOS you must execute the BASIC command.
 

@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import sys
-from struct import pack, unpack
 from PIL import Image, ImageDraw
 
 if len(sys.argv) != 2:
