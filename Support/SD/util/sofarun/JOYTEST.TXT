@@ -1,0 +1,163 @@
+Joystick tester v2.4
+--------------------
+By sd_snatcher, 12/2016
+
+This utility lets you test a lot of Human Interface Devices that can be
+connected to the MSX, either directly or by using adapters.
+
+It's based on my own JoyLib library, that is 100% compliant to the MSX coding
+guidelines and can be used either to create new MSX gaming/utilities, or
+patch the old ones to add support for new devices.
+
+
+1) Fully Supported devices, all automatically detected:
+
+1a) MSX native devices
+- Joystick (default)
+- Mouse
+- Trackball
+- Touchpad
+- Keyboard (arrows, SPACE and GRAPH)
+- Light gun (Plus-X Terminator Laser protocol)
+- Light Pen (Sanyo MLP-001 and V9938 built-in)
+
+1b) Joymega adapter devices
+- Sega Megadrive 3-button joypad
+- Sega Megadrive 6-button joypad
+- Sega Megadrive MK-1654 Multi-tap (and compatibles)
+
+Warning: *Never* connect any Megadrive device directly to the MSX as it can
+damage your computer and/or the device! Always connect them using the joymega
+adapter. You can buy one in the MSX community, or DIY following the
+instructions shown here:
+http://frs.badcoffee.info/hardware/joymega-en.html
+
+2) Devices that are detected, but still have no drivers: 
+- Vaus Arkanoid paddle for the MSX
+- Sega Saturn digital joypad
+- Sega Saturn 3linehs devices (i.e.: Saturn analog joystick)
+- Sega Saturn mouse
+
+3) Only planned
+- Extended MSX-Mouse protocol (scrollwheel support)
+- Panasonic FS-JH1 joywheel
+- Micomsoft XE-1AP analog joystick
+
+
+2) Usage
+
+JOYTEST [port][subport]
+
+    [port] can be:
+      0 = keyjoystick
+      1 = joystick port 1
+      2 = joystick port 2
+      P = Light Pen Port
+    [subport] can be:
+      A, B, C or D for the multi-tap
+      1 or 2 for the light pen
+
+3) Examples
+
+A:\JOYTEST
+
+Will run Joytest with the defaults: joyport=1, multitapport=A
+
+A:\JOYTEST 2
+
+Joytest will look for devices in joyport2
+
+A:\JOYTEST 1c
+
+Joytest will look for devices in joyport1, and select multitapport C if a
+multi-tap is connected.
+
+A:\JOYTEST p1
+
+Joytest will test the light pen port 1. Note that the light pens have specific
+ports and do not use the joystick port.
+
+4) Light pen/touchscreen specifics:
+
+- The usual configuration on most MSX models is that the Sanyo Light pen
+  interface is mapped to the port P1, and the V9938 built-in light pen
+  interface is mapped to the port P2.
+- Press GRAPH+SELECT to enable the calibration of the Light pen/touchscreen
+  devices. When calibrating, the pointer will be held at a fixed position
+  on the screen. You just have to click the lightpen where the pointer is
+  located to finish the calibration, and the software will return to normal
+  operation.
+- MSX1 machines only support the 1st light pen port
+
+
+== Thanks and Credits ==
+
+This project wouldn't be possible without the help and contributions of the
+following die hard MSX fans:
+
+- Sergio Guerrero Miralles, for developing the original joymega adapter and the
+  JOYMEGA.COM utility, that inspired this utility.
+- Zeilemaker, for his impressive msxsyssrc project, and for his tips about
+  the V9938 light pen interface present on Daewoo machines
+- Ein Terakawa, for the detailed document about the Sega Genesis 6-button
+  protocol.
+- Raphael Assenat, for his detailed document about the Sega Multitap protocol.
+- antime, for publishing the Sega Saturn SMPC User's Manual, that describes
+  the signature mechanism used to autodetect devices in this utility.
+- Daniel Ravazzi, for his patience and careful tests that allowed me to guess
+  the Panasonic FS-JH1 protocol, and for the high resolution pictures of his
+  Arkanoid paddle circuit board that allowed to reverse engineer its protocol.
+- Jipe, for the Arkanoid paddle schematics.
+- Takamichi, for his invaluable help with many devices, including the
+  Panasonic FS-JH1, the Sharp Cyberstick and specially for searching for the
+  documentation about the Micomsoft XE-1AP protocol.
+- Werner Kai, for his quest to find me a Sony GB-6 trackball.
+- Priscila Folly Castro and Mario Negrello Filho, for storage and delivery of  
+  many of the hardware that was used to test and develop this library.
+- Sturaro and Piter Punk, for testing this software with all their mice &
+  mouse adapters.
+
+== Special donator thanks ==
+
+- Manuel Bilderbeek, for donating a Philips NMS-1150 touchpad.
+- Erik Luppes, of www.msxinfo.net, for donating a rare Sanyo MLP-001 Lightpen 
+
+===========================================================================
+	                     License
+                           Terms of use
+---------------------------------------------------------------------------
+
+1) This software is gratis for non-commercial purposes, and the author retains
+   its copyright. You only can run, make backup copies or distribute this
+   software while observing the non-commercial restriction.
+
+2) You are only allowed distribute this software (online or on a removable
+   media) under the following conditions:
+   2.1) No commercial transaction of any kind is involved.
+   2.2) All the original files are distributed together inside the same
+   compressed file.
+   2.3) This README must be included unmodified inside the same compressed file.
+
+3) If you want to use this software for commercial purposes you MUST first
+   contact me to negotiate the terms and conditions. Send an e-mail to
+   sdsnatcheralpha@gmail.com to contact me.
+
+4) This software is provided ‘as-is’, without any express or implied warranty.
+   In no event will the author be held liable for any damages resulting from the
+   use of this software.
+
+5) USE THIS SOFTWARE SOLELY AT YOUR OWN RISK.
+
+
+===========================================================================
+                          Donations
+---------------------------------------------------------------------------
+ If you like this software and want to show your appreciation for the time
+ invested in making it, you can donate any amount, or MSX hardware, and it will
+ be very welcome and will help future development.
+ Donations can be done via PayPal to sdsnatcheralpha@gmail.com, and for MSX
+ hardware, try contacting me on this e-mail address too.
+ For a hardware wishlist, please check:
+ http://frs.badcoffee.info/wishlist
+
+

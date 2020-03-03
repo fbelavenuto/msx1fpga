@@ -1,12 +1,12 @@
-Documentação da UART genérica
+Documentação do componente UART genérica
 
 O componente UART é uma implementação de um sistema de comunicação serial assíncrono genérico com FIFOs.
 
 A interface com o CPU foi pensado para FPGA e é internamente síncrono, devendo o clock do UART ser maior que o clock do CPU.
 
-Para se comunicar com a UART, foram implementados registros lineares, onde a configuração, comandos e status podem ser enviados/lidos.
+Para se comunicar com o componente UART, foram implementados registros lineares, onde a configuração, comandos e status podem ser enviados/lidos.
 
-A UART implementa o básico da comunicação serial, como controle de fluxo por HW (CTS/RTS ou DSR/DTR), detecção da entrada Ring Indicator, detecção do Data Carrier Detect, detecção/geração de BREAK condition, 5 a 8 bits de dados por quadro, 1 ou 2 stop bits e paridade desligada, par ou ímpar.
+O componente implementa o básico da comunicação serial, como controle de fluxo por HW (CTS/RTS ou DSR/DTR), detecção da entrada Ring Indicator, detecção do Data Carrier Detect, detecção/geração de BREAK condition, 5 a 8 bits de dados por quadro, 1 ou 2 stop bits e paridade desligada, par ou ímpar.
 
 As interrupções podem ser geradas para várias condições, e cada uma pode ser mascarada. O registro de controle pode habilitar ou não a geração de interrupção e mascarar as interrupções que não forem necessárias.
 
@@ -14,7 +14,7 @@ As interrupções podem ser geradas para várias condições, e cada uma pode ser mas
 
 Para a recepção há um FIFO separado da transmissão, onde o tamanho de cada um deles pode ser configurado pelo usuário. O FIFO de recepção receberá os dados até ficar cheio, gerando um erro de Overrun se caso ocorrer uma recepção e o FIFO não for lido a tempo pelo CPU. O FIFO de transmissão começa a transmitir dados assim que for colocado um byte nele, e ignorará dados adicionais escritos caso ele esteja cheio e o CPU enviar um byte.
 
-A taxa de transmissão e recepção pode ser configurada por registros independentes, sendo possível transmitir a uma taxa diferente da recepção. Os registros de taxa são de 16 bits e contém o divisor do clock, então a taxa usada será definida pela fórmula "Clock / Valor do registro".
+A taxa de transmissão e recepção pode ser configurada por registros independentes, sendo possível transmitir a uma taxa diferente da recepção. Os registros de taxa são de 16 bits.
 
 Os pinos do UART são explicados abaixo:
  - clock_i = Entrada de clock principal;
@@ -38,7 +38,11 @@ Os pinos do UART são explicados abaixo:
 
 A entrada genérica 'fifo_size_g' define a quantidade de bytes para o FIFO, tanto de entrada quanto de saída.
 
-Os registros se dividem conforme mapa abaixo, alguns tem funções diferentes dependendo se é uma escrita ou leitura:
+O clock principal é utilizado como base de tempo para o componente, e cálculo das taxas de transmissão e recepção. A escrita e leitura de dados é detectada utilizando o clock principal, então este deve ser maior que o clock utilizado pelo CPU, para correta identificação.
+
+O pino de RESET força o componente a se inicializar, limpando os FIFOs, desativando as interrupções e mantendo os pinos de saída nos seus niveis em stand-by.
+
+Os registros se dividem conforme o mapa abaixo, alguns tem funções diferentes dependendo se é uma escrita ou leitura:
 
 0 = Mode Register (escrita) e Status 1 (leitura)
 1 = Control register
@@ -49,10 +53,10 @@ Os registros se dividem conforme mapa abaixo, alguns tem funções diferentes depe
 6 = Limpar flags de interrupções (escrita) e Status 2 (leitura)
 7 = Recepção ou envio de dados
 
-Para configurar o UART, o registro de modo (0) deve ser configurado:
+Para configurar o UART, o registro de modo (0) deve ser usado:
  - bit 0 e 1 configuram o modo de paridade (00 = nenhum, 01 = par, 10 e 11 = ímpar)
  - bit 2 configura a quantidade de Stop Bits (0 = 1 stop, 1 = 2 stops)
- - bit 3 e 4 configura o tamanho do caracter a ser enviado em bits (00 = 5, 01 = 6, 10 = 7, 11 = 8)
+ - bit 3 e 4 configura o tamanho do caracter a ser enviado (00 = 5 bits, 01 = 6 bits, 10 = 7 bits, 11 = 8 bits)
  - bit 5 habilita (se escrito 1) o controle de fluxo por hardware (uso dos pinos CTS/RTS);
  - bit 6 ativa a geração de BREAK se for escrito 1, mantendo a geração até o software escrever 0 nesse bit;
  - bit 7 é reservado e deve ser escrito 0;
@@ -68,42 +72,41 @@ A leitura do registro 0 informa o status de algumas condições internas do chip e
  - bit 7 = Status do pino externo DSR
 
 O registro 1 pode ser lido/escrito e tem sua definição descrita abaixo:
- - bit 0 = Ligado diretamente ao pino externo DTR
- - bit 1 = Habilita (se 1) a geração de interrupção
- - bit 2 = 
- - bit 3 = 
- - bit 4 = 
- - bit 5 = 
- - bit 6 = 
- - bit 7 = 
+ - bit 0 = Mascara (se 0) a geração de interrupção se o FIFO do TX ficar vazio.
+ - bit 1 = Mascara (se 0) a geração de interrupção se receber dados.
+ - bit 2 = Mascara (se 0) a geração de interrupção se ocorrer erro na recepção de dados.
+ - bit 3 = Mascara (se 0) a geração de interrupção no recebimento de uma condição BREAK.
+ - bit 4 = Mascara (se 0) a geração de interrupção da mudança de estado do pino externo DCD.
+ - bit 5 = Mascara (se 0) a geração de interrupção na borda de descida do pino externo RI.
+ - bit 6 = Habilita (se 1) a geração de interrupção.
+ - bit 7 = Ligado diretamente ao pino externo DTR.
 
+Os registros 2 e 3 definem juntos um valor de 16 bits para ser o divisor do clock de entrada na geração da taxa de transmissão e é definida pela fórmula "Clock / Valor do registro".
 
--- 1 = CTRL
---    b7 = /DTR pin
---    b6 = INTs mask (1 = Generate IRQs)
---    b5 = RI change INT mask (1 = enabled)
---    b4 = DCD change INT mask (1 = enabled)
---    b3 = Break char INT mask (1 = enabled)
---    b2 = RX Errors INT mask (1 = enabled)
---    b1 = RX INT mask (1 = enabled)
---    b0 = TX INT mask (1 = enabled)
--- 2 = TX BAUD LSB
---   b7-b0 = LSB value
--- 3 = TX BAUD MSB
---   b7-b0 = MSB value
--- 4 = RX BAUD LSB
---   b7-b0 = LSB value
--- 5 = RX BAUD MSB
---   b7-b0 = MSB value
--- 6 = Clear IRQ/Error Flags (W) / Status 2
---  Write any value to clear IRQ/Error flags
---  Status:
---    b7 = 1 if IRQ RI occured
---    b6 = 1 if IRQ DCD occured
---    b5 = 1 if Break char detected
---    b4 = 1 if RX Parity Error
---    b3 = 1 if RX Frame Error
---    b2 = 1 if RX Overrun error
---    b1 = 1 if IRQ RX not Empty occured
---    b0 = 1 if IRQ TX Empty occured
--- 7 = Data
+Os registros 4 e 5 definem juntos um valor de 16 bits para ser o divisor do clock de entrada na geração da taxa de recepção e é definida pela fórmula "Clock / Valor do registro".
+
+Para os registros de taxa, o registro 2 e 4 definem o valor menos significativo e os registros 3 e 5 define o valor mais significativo. Como exemplo, para gerar um BAUD RATE de 115200 usando um clock de 18,432 MHz, o valor escrito no registro de taxa deve ser de 160.
+
+Para identificar qual interrupção foi gerada, o registro 6 (status 2) pode ser utilizado para leitura, conforme mapa abaixo:
+ - bit 0 = 1 indica que o FIFO TX ficou vazio (acabou de transmitir todos os dados).
+ - bit 1 = 1 indica que recebeu algum dado.
+ - bit 2 = 1 indica que houve perda de dados, o recebimento de dados ocorreu com o FIFO da recepção cheio.
+ - bit 3 = 1 indica que houve um erro no frame recebido, faltou o(s) stop bit(s).
+ - bit 4 = 1 indica que houve erro de paridade na recepção.
+ - bit 5 = 1 indica que houve o recebimento de uma condição de BREAK.
+ - bit 6 = 1 indica que houve mudança no status do pino externo DCD.
+ - bit 7 = 1 indica que houve uma borda de descida no pino externo DI.
+
+Para limpar as flags, um valor deve ser escrito no registro 6, onde cada posição do bit representa a flag a ser apagada, e se o conteúdo do bit for 1 a flag será apagada. Por exemplo, ao escrever o valor 0xC0 somente as flags dos pinos DCD e RI serão apagadas.
+
+Transferência de dados é efetuada pelo registro 7. Ao escrever um valor nesse registro o conteúdo será colocado no FIFO, caso haja espaço. Se o FIFO estiver cheio o dado será perdido, então o software deve verificar o estado do FIFO antes de enviar mais dados. Ao ler o registro 7 um dado é retirado do FIFO de recepção. Se o FIFO RX estiver vazio o último dado será retornado, então o software deverá verificar o estado do FIFO antes de efetuar a leitura.
+
+O controle de fluxo por hardware usando os pinos CTS e RTS não são controlados pelo software. Se o software ativar o controle de fluxo o componente só enviará algum dado caso o pino de entrada CTS for zero, e sinalizará no pino de saída RTS com zero se pode receber dados e um caso o FIFO de recepção chegar na metade, obrigando a outra ponta de comunicação a pausar a transferência.
+
+O software tem controle dos pinos DSR e DTR podendo ser implementado por software o controle de fluxo por hardware, ou usado para outros fins.
+
+Na comunicação UART há uma condição do barramento chamado BREAK, que pode ser útil para detectar se houve quebra dos fios físicos de comunicação. Essa condição ocorre quando a linha de transmissão vai a zero. O componente pode detectar e também forçar a geração essa condição.
+
+Caso ocorra uma quebra da linha de recepção, ou a outra ponta simule essa condição, uma interrupção é gerada se estiver habilitada e pode ser detectada pelo pino 5 do registro de status 2, porém enquanto a condição de BREAK esteja mantida, ela pode ser lida pelo software pelo bit 4 do registro de status 1. Enquanto a condição de BREAK existir, nenhum dado poderá ser recebido.
+
+Para simular uma condição de BREAK, o software pode escrever um no bit 6 do registro de modo, forçando o pino de saída TX a zero enquando o bit 6 for um. Para desativar o software deve limpar esse bit. Enquando a simulação de BREAK estiver ativa, as funções de transmissão continuará funcionando, podendo ser usado para marcar o tempo da condição de break.

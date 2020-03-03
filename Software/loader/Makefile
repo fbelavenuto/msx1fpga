@@ -19,6 +19,7 @@ SHELL := /bin/bash
 
 CP = cp
 RM = rm -f
+MD = mkdir
 CC = sdcc
 AS = sdasz80
 LD = sdcc
@@ -37,7 +38,7 @@ LDFLAGS = -mz80 --code-loc 0x0100 --data-loc 0x4000 --no-std-crt0
 _OBJS = crt0.rel main.rel mmc.rel fat.rel vdp.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-all: dir loader
+all: $(ODIR) loader
 
 loader: loader.bin
 	$(FILL) $< 8192
@@ -49,13 +50,13 @@ loader.bin: loader.ihx
 loader.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-.PHONY: clean dir
+.PHONY: clean
 
 clean:
 	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx
 
-dir:
-	if not exist obj mkdir obj
+$(ODIR):
+	$(MD) $(ODIR)
 
 $(ODIR)/%.rel: $(SDIR)/%.S
 	$(AS) -o $@ $<

@@ -50,6 +50,18 @@ CODE_ADD:	equ	0F84Ch
 ; Driver configuration constants
 ;
 
+;Driver type:
+;   0 for drive-based
+;   1 for device-based
+
+DRV_TYPE	equ	1
+
+;Hot-plug devices support (device-based drivers only):
+;   0 for no hot-plug support
+;   1 for hot-plug support
+
+DRV_HOTPLUG	equ	1
+
 ;Driver version
 
 VER_MAIN	equ	1
@@ -212,7 +224,8 @@ DRV_START:
 ;
 ; Driver flags:
 ;    bit 0: 0 for drive-based, 1 for device-based
-	db	1
+;    bit 1: 1 for hot-plug devices supported (device-based drivers only)
+	db	DRV_TYPE+(2*DRV_HOTPLUG)
 
 ;-----------------------------------------------------------------------------
 ;

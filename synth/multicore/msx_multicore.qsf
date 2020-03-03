@@ -222,6 +222,7 @@ set_global_assignment -name VHDL_FILE ../../src/peripheral/exp_slot.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/romnextor.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/escci/escci.vhd
 set_global_assignment -name VHDL_FILE ../../src/peripheral/escci/scc_wave.vhd
+set_global_assignment -name VHDL_FILE ../../src/shared/fifo.vhd
 set_global_assignment -name VHDL_FILE ../../src/shared/debounce.vhd
 set_global_assignment -name SDC_FILE "../../src/syn-multicore/timing.sdc"
 set_global_assignment -name CDF_FILE output_files/gravar_jic.cdf

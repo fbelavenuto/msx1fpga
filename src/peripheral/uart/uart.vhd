@@ -46,7 +46,7 @@
 --    b1-b0 = Parity (00 = none, 01 = even, 1x = odd)
 --  Status:
 --    b7 = /DSR pin
---    b6 = RI pin
+--    b6 = /RI pin
 --    b5 = DCD pin
 --    b4 = RX break condition 
 --    b3 = TX FIFO Empty
@@ -56,7 +56,7 @@
 -- 1 = CTRL
 --    b7 = /DTR pin
 --    b6 = INTs enabled (1 = Generate IRQs)
---    b5 = RI change INT mask (1 = generate)
+--    b5 = /RI falling edge INT mask (1 = generate)
 --    b4 = DCD change INT mask (1 = generate)
 --    b3 = Break char INT mask (1 = generate)
 --    b2 = RX Errors INT mask (1 = generate)
@@ -73,7 +73,7 @@
 -- 6 = Clear IRQ/Error Flags (W) / Status 2
 --  Write any value to clear IRQ/Error flags
 --  Status:
---    b7 = 1 if IRQ RI occured
+--    b7 = 1 if IRQ /RI falling edge occured
 --    b6 = 1 if IRQ DCD occured
 --    b5 = 1 if Break char detected
 --    b4 = 1 if RX Parity Error
@@ -111,7 +111,7 @@ entity uart is
 		dsr_n_i		: in  std_logic;
 		dtr_n_o		: out std_logic;
 		dcd_i			: in  std_logic;
-		ri_i			: in  std_logic
+		ri_n_i		: in  std_logic
 	);
 end entity;
 
@@ -155,7 +155,7 @@ architecture Behavior of uart is
 	signal last_rxerror_s	: std_logic;
 	signal last_break_s		: std_logic;
 	signal last_dcd_s			: std_logic;
-	signal last_ri_s			: std_logic;
+	signal last_ri_n_s		: std_logic;
 
 	signal txfifo_wr_s		: std_logic								:= '0';
 	signal txfifo_rd_s		: std_logic								:= '0';
@@ -234,7 +234,6 @@ begin
 		reset_i		=> reset_i,
 		baud_i		=> baudrx_r,
 		char_len_i	=> char_len_a,
-		stop_bits_i	=> stop_bits_a,
 		parity_i		=> parity_a,
 		data_o		=> rxfifo_datai_s,
 		rx_full_i	=> rxfifo_full_s,
@@ -290,12 +289,30 @@ begin
 						baudrx_r(15 downto 8)	<= data_i;
 
 					when "110" =>												-- Register 6 = clear IRQ flags
-						irq_tx_q		<= '0';
-						irq_rx_q		<= '0';
-						rx_errors_q	<= (others => '0');
-						irq_break_q	<= '0';
-						irq_dcd_q	<= '0';
-						irq_ri_q		<= '0';
+						if data_i(7) = '1' then
+							irq_ri_q		<= '0';
+						end if;
+						if data_i(6) = '1' then
+							irq_dcd_q	<= '0';
+						end if;
+						if data_i(5) = '1' then
+							irq_break_q	<= '0';
+						end if;
+						if data_i(4) = '1' then
+							rx_errors_q(0)	<= '0';
+						end if;
+						if data_i(3) = '1' then
+							rx_errors_q(1)	<= '0';
+						end if;
+						if data_i(2) = '1' then
+							rx_errors_q(2)	<= '0';
+						end if;
+						if data_i(1) = '1' then
+							irq_rx_q		<= '0';
+						end if;
+						if data_i(0) = '1' then
+							irq_tx_q		<= '0';
+						end if;
 						
 					when others =>
 						txfifo_wr_s	<= '1';
@@ -326,7 +343,7 @@ begin
 				if last_dcd_s	/= dcd_i then										-- DCD change
 					irq_dcd_q	<= '1';
 				end if;
-				if last_ri_s	/= ri_i then										-- RI change
+				if last_ri_n_s	= '1' and ri_n_i = '0' then					-- RI falling
 					irq_ri_q	<= '1';
 				end if;
 			end if;
@@ -338,7 +355,7 @@ begin
 			last_rxerror_s	<= rx_set_errors_s(2) or rx_set_errors_s(1) or rx_set_errors_s(0);
 			last_break_s	<= rx_break_s;
 			last_dcd_s		<= dcd_i;
-			last_ri_s		<= ri_i;
+			last_ri_n_s		<= ri_n_i;
 
 		end if;
 	end process;
@@ -357,7 +374,7 @@ begin
 					));
 
 	-- Status bytes
-	status1_s	<= dsr_n_i & ri_i & dcd_i & rx_break_s & txfifo_empty_s & txfifo_full_s & rxfifo_empty_s & rxfifo_full_s;
+	status1_s	<= dsr_n_i & ri_n_i & dcd_i & rx_break_s & txfifo_empty_s & txfifo_full_s & rxfifo_empty_s & rxfifo_full_s;
 	status2_s	<= irq_ri_q & irq_dcd_q & irq_break_q & rx_errors_q & irq_tx_q & irq_rx_q;
 
 	data_o	<= (others => '1')						when access_s = '0' or rd_i = '0'	else

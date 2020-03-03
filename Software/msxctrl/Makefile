@@ -34,20 +34,20 @@ LDFLAGS = -mz80 --code-loc 0x0180 --data-loc 0 --no-std-crt0
 _OBJS = crt0.rel conio.rel putchar.rel msxdos.rel getopt.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-all: dir MSXCTRL.COM
+all: $(ODIR) MSXCTRL.COM
 
 MSXCTRL.COM: MSXCTRL.ihx
 
 MSXCTRL.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
-.PHONY: clean dir
+.PHONY: clean
 
 clean:
 	$(RM) $(ODIR)/* *.map *.lk *.noi *.com *.ihx
 
-dir:
-	-$(MD) $(ODIR)
+$(ODIR):
+	$(MD) $(ODIR)
 
 $(ODIR)/%.rel: $(SDIR)/%.S
 	$(AS) -o $@ $<

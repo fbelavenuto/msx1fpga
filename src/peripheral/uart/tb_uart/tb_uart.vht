@@ -70,7 +70,7 @@ architecture testbench of tb is
 		dsr_n_i		: in  std_logic;
 		dtr_n_o		: out std_logic;
 		dcd_i			: in  std_logic;
-		ri_i			: in  std_logic
+		ri_n_i		: in  std_logic
 	);
 	end component;
 
@@ -95,7 +95,7 @@ architecture testbench of tb is
 	signal rts_n_s			: std_logic;
 	signal dtr_n_s			: std_logic;
 	signal dcd_s			: std_logic;
-	signal ri_s				: std_logic;
+	signal ri_n_s			: std_logic;
 
 	procedure z80_io_read(
 		addr_i				: in  std_logic_vector( 2 downto 0);
@@ -234,7 +234,7 @@ begin
 		dsr_n_i		=> '0',
 		dtr_n_o		=> dtr_n_s,
 		dcd_i			=> dcd_s,
-		ri_i			=> ri_s
+		ri_n_i		=> ri_n_s
 	);
 
 	-- ----------------------------------------------------- --
@@ -250,7 +250,7 @@ begin
 		rd_s			<= '0';
 		wr_s			<= '0';
 		dcd_s			<= '0';
-		ri_s			<= '0';
+		ri_n_s		<= '1';
 
 		wait for 4 us;
 
@@ -261,8 +261,8 @@ begin
 		-- I/O write (Mode REG: no HW flux, 8 bits, 1 stop, no parity)
 		z80_io_write("000", X"18", addr_s, data_i_s, cs_s, wr_s);
 
-		-- I/O write (Ctrl REG: DSR=0, All IRQs)
-		z80_io_write("001", X"5F", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write (Ctrl REG: DSR=0, Some IRQs)
+		z80_io_write("001", X"7E", addr_s, data_i_s, cs_s, wr_s);
 
 		-- I/O write (TX BAUD rate LSB) 21429000 / 115200 = 186
 		z80_io_write("010", X"BA", addr_s, data_i_s, cs_s, wr_s);
@@ -285,7 +285,7 @@ begin
 		z80_io_write("111", X"AA", addr_s, data_i_s, cs_s, wr_s);
 
 		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+		z80_io_write("110", X"FF", addr_s, data_i_s, cs_s, wr_s);
 
 		wait for 1 us;
 
@@ -295,7 +295,7 @@ begin
 		wait for 1 ms;
 
 		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+		z80_io_write("110", X"FF", addr_s, data_i_s, cs_s, wr_s);
 
 		wait for 10 us;
 
@@ -303,8 +303,8 @@ begin
 		
 		wait for 5 us;
 
-		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write (Reg 6 write: Clear DCD IRQ)
+		z80_io_write("110", X"40", addr_s, data_i_s, cs_s, wr_s);
 
 		wait for 5 us;
 
@@ -312,28 +312,23 @@ begin
 
 		wait for 5 us;
 
-		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write (Reg 6 write: Clear DCD IRQs)
+		z80_io_write("110", X"40", addr_s, data_i_s, cs_s, wr_s);
 
 		wait for 10 us;
 
-		ri_s		<= '1';
+		ri_n_s	<= '0';
 
 		wait for 5 us;
 
-		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
+		-- I/O write (Reg 6 write: Clear RI IRQ)
+		z80_io_write("110", X"80", addr_s, data_i_s, cs_s, wr_s);
 
 		wait for 10 us;
 
-		ri_s		<= '0';
+		ri_n_s	<= '1';
 
 		wait for 5 us;
-
-		-- I/O write (Reg 6 write: Clear IRQs)
-		z80_io_write("110", X"00", addr_s, data_i_s, cs_s, wr_s);
-
-		wait for 100 us;
 
 		-- I/O read (Data read)
 		z80_io_read("111",         addr_s, data_o_s, cs_s, rd_s);

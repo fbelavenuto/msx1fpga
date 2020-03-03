@@ -46,7 +46,7 @@ use work.msx_pack.all;
 
 entity multicore_top is
 	generic (
-		hdmi_output_g		: boolean	:= true
+		hdmi_output_g		: boolean	:= false
 	);
 	port (
 		-- Clocks

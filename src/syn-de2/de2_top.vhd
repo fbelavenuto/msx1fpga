@@ -676,7 +676,7 @@ begin
 		cts_n_i		=> '0',
 		dtr_n_o		=> open,
 		dcd_i			=> '0',
-		ri_i			=> '0'
+		ri_n_i		=> '1'
 	);
 
 
