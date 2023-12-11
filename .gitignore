@@ -1,6 +1,7 @@
 *.bak
 *.cmd
 *.kmp
+_BINs
 greybox_tmp
 /Software/msxctrl/MSXCTRL.COM
 /Software/nextor/NEXTORH.ROM
