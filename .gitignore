@@ -1,5 +1,10 @@
 *.bak
+*.cmd
+*.kmp
 greybox_tmp
+/Software/msxctrl/MSXCTRL.COM
+/Software/nextor/NEXTORH.ROM
+/Software/nextor/NEXTOR.ROM
 /SD
 /_bak
 /DOCs/hdmi
@@ -378,3 +383,5 @@ greybox_tmp
 /src/peripheral/uart/tb_uart/transcript
 /src/peripheral/uart/tb_uart/vsim.wlf
 /src/peripheral/uart/tb_uart/work
+/Software/updater/msx1upd.com
+_clean.cmd

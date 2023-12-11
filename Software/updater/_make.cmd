@@ -1,3 +1,0 @@
-call setsdcc
-make
-pause
