@@ -34,10 +34,11 @@ ${DESIGN}.bit: ${DESIGN}.ncd
 
 # Clean up all the files from the Vivado run
 clean:
-	rm -rf _xmsgs/ xst/ _ngo/ xlnx_auto_0_xdb/ *.ngc *.nfr \
-	  *.syr *.lso .xrpt *.bld *.ngd *.map *.mrp *.ncd *.ngm \
+	rm -rf _xmsgs/ xst/ _ngo/ xlnx_auto_0_xdb/ iseconfig/ \
+	  *.syr *.lso *.xrpt *.bld *.ngd *.map *.mrp *.ncd *.ngm \
 	  *.xml *.pad *.par *.ptwx *.xpi *.csv *.txt *.unroutes \
-	  *.twr *.twx *.bgn *.bit *.drc *.xwbt
+	  *.twr *.twx *.bgn *.bit *.drc *.xwbt *.cmd_log *.html \
+	  *.ngr *.pcf *.gise *.ngc *.nfr *.log
 
 # Tar and compress all the files
 tar:
