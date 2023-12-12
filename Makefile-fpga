@@ -1,6 +1,14 @@
 
-all: 
-	make -C synth/qmxc6slx16
+#DIRS += synth/qmxc6slx16
+DIRS += synth/wxedax
+
+all: $(DIRS)
+
+.PHONY: $(DIRS)
+$(DIRS):
+	@make -C $@
 
 clean:
-	make -C synth/qmxc6slx16 clean
+	@for dir in $(DIRS); do \
+		make -C $$dir clean; \
+	done
