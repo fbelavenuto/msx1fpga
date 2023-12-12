@@ -24,8 +24,8 @@ LD = sdcc
 H2B = hex2bin
 
 SDIR = src
-LDIR = ../../msxclib/lib
-IDIR = ../../msxclib/inc
+LDIR = ../msxclib/lib
+IDIR = ../msxclib/inc
 ODIR = obj
 
 CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -Iinc -I..
@@ -49,7 +49,7 @@ clean:
 $(ODIR):
 	$(MD) $(ODIR)
 
-$(ODIR)/%.rel: $(SDIR)/%.S
+$(ODIR)/%.rel: $(SDIR)/%.s
 	$(AS) -o $@ $<
 
 $(ODIR)/%.rel: $(SDIR)/%.c

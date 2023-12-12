@@ -1,11 +1,12 @@
+#!/usr/bin/env python3
+
 import sys
 
 if len(sys.argv) != 3:
 	raise Exception('Error in parameters, see README.TXT')
 
-f = open(sys.argv[1], 'r')
-t = f.readlines()
-f.close
+with open(sys.argv[1], 'r') as f:
+	t = f.readlines()
 
 kmp = []
 for i in range(512):
@@ -30,14 +31,14 @@ for i in t:
 			continue
 		if mode == 1:
 			d = l.split(',')
-			if len(d) < 6 and len(d) > 8:
+			if 6 > len(d) > 8:
 				raise Exception('Error in section [ROM]: ', d)
 			for c in d:
-				v = 0;
+				v = 0
 				if c[0] == "$":
 					v = int(c[1:], 16)
 				if c[0] == '"':
-					v = ord(c[1]);
+					v = ord(c[1])
 				kmp[count] = v
 				count += 1
 
@@ -56,7 +57,7 @@ for i in t:
 				raise Exception('Row range error: ', d[0])
 			kmp[scancode] = col * 16 + row
 
-f = open(sys.argv[2], 'wb')
-f.write("".join(chr(i) for i in kmp))
-f.close
-print "File generated with no errors.\n"
+with open(sys.argv[2], 'wb') as f:
+	f.write("".join(chr(i) for i in kmp))
+
+print("File generated with no errors.")

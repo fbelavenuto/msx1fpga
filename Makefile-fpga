@@ -1,0 +1,6 @@
+
+all: 
+	make -C synth/qmxc6slx16
+
+clean:
+	make -C synth/qmxc6slx16 clean

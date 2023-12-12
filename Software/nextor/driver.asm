@@ -28,11 +28,8 @@
 
 ; Comments in Brazilian Portuguese, sorry :(
 
-	output	"driver.bin"
-
 ; Uses HW (1) or SW (0) disk-change:
-HWDS = 1
-
+;HWDS: equ 1
 
 ;-----------------------------------------------------------------------------
 ;
