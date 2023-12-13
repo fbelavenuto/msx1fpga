@@ -1,4 +1,4 @@
-vhdl work "ipcore_dir/pll1.vhd"
+vhdl work "../../src/syn-qmxc6slx16/ipcore_dir/pll1.vhd"
 verilog work "../../src/audio/jt51/jt51_sh.v"
 vhdl work "../../src/audio/vm2413/vm2413.vhd"
 verilog work "../../src/audio/jt51/jt51_mod.v"

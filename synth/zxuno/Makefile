@@ -7,5 +7,6 @@ UCF_FILE = ../../src/syn-zxuno/zxuno_pins_v4.ucf
 
 # Make all runs to place & route
 all: bitstream
+	bit2bin zxuno_top.bit COREX.ZX1
 
 include ../makefile.inc
