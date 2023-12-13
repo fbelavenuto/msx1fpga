@@ -1,0 +1,17 @@
+
+DIRS += synth/DE1
+DIRS += synth/DE2
+DIRS += synth/multicore
+DIRS += synth/multicore2
+DIRS += synth/wxeda
+
+all: $(DIRS)
+
+.PHONY: $(DIRS)
+$(DIRS):
+	@make -C $@
+
+clean:
+	@for dir in $(DIRS); do \
+		make -C $$dir clean; \
+	done
