@@ -46,7 +46,7 @@ jobs:
       - name: Pack
         shell: bash
         run: |
-          tar czvf MSX1FPGA_v13.tar.gz -C _BINs . -C Support SD
+          tar czvf MSX1FPGA_v13.tar.gz -C $PWD/_BINs . -C $PWD/Support SD
 
       # Upload artifact
       - name: Upload
