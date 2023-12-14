@@ -15,8 +15,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-SHELL := /bin/bash
-
 CP = cp
 RM = rm -f
 MD = mkdir
@@ -53,12 +51,12 @@ loader.ihx: $(OBJS)
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx
+	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx *.mif
 
 $(ODIR):
 	$(MD) $(ODIR)
 
-$(ODIR)/%.rel: $(SDIR)/%.S
+$(ODIR)/%.rel: $(SDIR)/%.s
 	$(AS) -o $@ $<
 
 $(ODIR)/%.rel: $(SDIR)/%.c

@@ -255,7 +255,7 @@ begin
 		CLK_IN1	=> clock_48M_i,
 		CLK_OUT1	=> clock_master_s,		-- 21.429 MHz (6x NTSC)
 		CLK_OUT2	=> clock_sdram_s,			-- 85.716 MHz (4x master)
-		CLK_OUT3	=> sdram_clock_o,			-- 85.716 MHz -90°
+		CLK_OUT3	=> sdram_clock_o,			-- 85.716 MHz -90ï¿½
 		CLK_OUT4	=> clock_8m_s				-- 8 MHz (for MIDI)
 	);
 
@@ -754,7 +754,7 @@ begin
 		dsr_n_i		=> '0',
 		dtr_n_o		=> open,
 		dcd_i			=> '0',
-		ri_i			=> '0'
+		ri_n_i			=> '1'
 	);
 	
 	-- DEBUG

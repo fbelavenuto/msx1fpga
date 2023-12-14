@@ -24,8 +24,8 @@ LD = sdcc
 H2B = hex2bin
 
 SDIR = src
-LDIR = ../../msxclib/lib
-IDIR = ../../msxclib/inc
+LDIR = ../msxclib/lib
+IDIR = ../msxclib/inc
 ODIR = obj
 
 CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -Iinc -I..
@@ -35,32 +35,33 @@ LDFLAGS = -mz80 --code-loc 0x0180 --data-loc 0 --no-std-crt0
 _OBJS = crt0.rel msxdos.rel getchar.rel putchar.rel conio.rel mem.rel heap.rel spi.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-all: $(ODIR) msx1upd.com
+all: $(ODIR) MSX1UPD.COM
+	${CP} MSX1UPD.COM ../../Support/SD/UTIL
 
-msx1upd.com: msx1upd.ihx
+MSX1UPD.COM: MSX1UPD.ihx
 
-msx1upd.ihx: $(OBJS)
+MSX1UPD.ihx: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS)
 
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/* *.map *.lk *.noi *.com *.ihx
+	$(RM) $(ODIR)/* *.map *.lk *.noi *.COM *.ihx
 
 $(ODIR):
 	$(MD) $(ODIR)
 
-$(ODIR)/%.rel: $(SDIR)/%.S
+$(ODIR)/%.rel: $(SDIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ODIR)/%.rel: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(ODIR)/%.rel: $(LDIR)/%.S
+$(ODIR)/%.rel: $(LDIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ODIR)/%.rel: $(LDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-%.com: %.ihx
-	$(H2B) -e com $<
+%.COM: %.ihx
+	$(H2B) -e COM $<

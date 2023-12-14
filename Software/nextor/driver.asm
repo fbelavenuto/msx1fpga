@@ -28,11 +28,8 @@
 
 ; Comments in Brazilian Portuguese, sorry :(
 
-	output	"driver.bin"
-
 ; Uses HW (1) or SW (0) disk-change:
-HWDS = 1
-
+;HWDS: equ 1
 
 ;-----------------------------------------------------------------------------
 ;
@@ -1825,7 +1822,7 @@ WRKAREA.BLOCKS2	    ds 3	; 3 bytes. Size of card2, in blocks.
 WRKAREA.TEMP		ds 1	; Temporary data
 
  IF HWDS = 0
-FLAGS		ds 1	; Flags for soft-diskchange
+WRKAREA.FLAGS		ds 1	; Flags for soft-diskchange
  ENDIF
 ; ENDS
 

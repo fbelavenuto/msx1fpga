@@ -24,8 +24,8 @@ LD = sdcc
 H2B = hex2bin
 
 SDIR = src
-LDIR = ../../msxclib/lib
-IDIR = ../../msxclib/inc
+LDIR = ../msxclib/lib
+IDIR = ../msxclib/inc
 ODIR = obj
 
 CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -Iinc -I..
@@ -35,6 +35,7 @@ _OBJS = crt0.rel conio.rel putchar.rel msxdos.rel getopt.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 all: $(ODIR) MSXCTRL.COM
+	${CP} MSXCTRL.COM ../../Support/SD/UTIL
 
 MSXCTRL.COM: MSXCTRL.ihx
 
@@ -44,12 +45,12 @@ MSXCTRL.ihx: $(OBJS)
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/* *.map *.lk *.noi *.com *.ihx
+	$(RM) $(ODIR)/* *.map *.lk *.noi *.COM *.ihx
 
 $(ODIR):
 	$(MD) $(ODIR)
 
-$(ODIR)/%.rel: $(SDIR)/%.S
+$(ODIR)/%.rel: $(SDIR)/%.s
 	$(AS) -o $@ $<
 
 $(ODIR)/%.rel: $(SDIR)/%.c

@@ -1,0 +1,16 @@
+
+DIRS += Software/loader
+DIRS +=	Software/msxctrl
+DIRS +=	Software/nextor
+DIRS +=	Software/updater
+
+all: $(DIRS)
+
+.PHONY: $(DIRS)
+$(DIRS):
+	@make -C $@
+
+clean:
+	@for dir in $(DIRS); do \
+		make -C $$dir clean; \
+	done
