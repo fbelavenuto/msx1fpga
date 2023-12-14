@@ -221,7 +221,7 @@ set_global_assignment -name VHDL_FILE ../../src/cpu/t80.vhd
 set_global_assignment -name VHDL_FILE ../../src/rom/ipl_rom.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/spram.vhd
 set_global_assignment -name VHDL_FILE ../../src/ram/dpram.vhd
-set_global_assignment -name VHDL_FILE ../../src/ram/ssdram256Mb.vhd
+set_global_assignment -name VHDL_FILE ../../src/ram/ssdram256mb.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/ym2149.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/mixeru.vhd
 set_global_assignment -name VHDL_FILE ../../src/audio/dac.vhd
