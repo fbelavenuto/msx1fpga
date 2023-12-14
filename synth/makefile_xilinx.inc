@@ -1,4 +1,9 @@
 
+# Xilinx
+
+# Create pld file
+pld: ${DESIGN}.pld
+
 # bitstream : Creates device bitstream
 bitstream: ${DESIGN}.bit
 
@@ -31,6 +36,9 @@ ${DESIGN}.twr: ${DESIGN}.ncd
 # Produces: _xmsgs/ .bgn .bit .drc _bitgen.xwbt _summary.xml _usage.xml webtalk.log
 ${DESIGN}.bit: ${DESIGN}.ncd
 	bitgen -intstyle ise -f ${DESIGN}.ut $?
+
+$(DESIGN).pld: ${DESIGN}.bit
+	bit2bin $? $@
 
 # Clean up all the files from the Vivado run
 clean:

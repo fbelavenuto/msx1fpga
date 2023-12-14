@@ -1,10 +1,29 @@
 
-PROJECT = msx_de2
-all:
-	quartus_map $(PROJECT)
-	quartus_fit $(PROJECT)
-	quartus_asm $(PROJECT)
-	quartus_sta $(PROJECT)
+CP = cp
 
-clean:
-	rm -rf db incremental_db output_files simulation *.qws *.txt
+###################################################################
+# Project Configuration:
+#
+# Specify the name of the design (project), the Quartus II Settings
+# File (.qsf), and the list of source files used.
+###################################################################
+
+PROJECT = msx_de2
+#SOURCE_FILES = 
+
+###################################################################
+# Executable Configuration
+###################################################################
+
+MAP_ARGS = #--family="Cyclone II"
+FIT_ARGS = #--part=EP2C35F672C6
+ASM_ARGS =
+STA_ARGS =
+CPF_ARGS = -s EP2C35 -d EPCS16
+
+all: bitstream
+	$(CP) $(OUTPUT_FOLDER)/$(PROJECT).?of ../../_BINs
+	$(CP) $(OUTPUT_FOLDER)/$(PROJECT).jic ../../_BINs
+	$(CP) $(OUTPUT_FOLDER)/$(PROJECT).rbf ../../_BINs
+
+include ../makefile_altera.inc

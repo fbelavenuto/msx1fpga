@@ -35,6 +35,7 @@ _OBJS = crt0.rel conio.rel putchar.rel msxdos.rel getopt.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 all: $(ODIR) MSXCTRL.COM
+	${CP} MSXCTRL.COM ../../Support/SD/UTIL
 
 MSXCTRL.COM: MSXCTRL.ihx
 
@@ -44,7 +45,7 @@ MSXCTRL.ihx: $(OBJS)
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/* *.map *.lk *.noi *.com *.ihx
+	$(RM) $(ODIR)/* *.map *.lk *.noi *.COM *.ihx
 
 $(ODIR):
 	$(MD) $(ODIR)

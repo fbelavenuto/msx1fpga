@@ -1,12 +1,16 @@
 
-all: 
-	make -C Software/loader
-	make -C Software/msxctrl
-	make -C Software/nextor
-	make -C Software/updater
+DIRS += Software/loader
+DIRS +=	Software/msxctrl
+DIRS +=	Software/nextor
+DIRS +=	Software/updater
+
+all: $(DIRS)
+
+.PHONY: $(DIRS)
+$(DIRS):
+	@make -C $@
 
 clean:
-	make -C Software/loader clean
-	make -C Software/msxctrl clean
-	make -C Software/nextor clean
-	make -C Software/updater clean
+	@for dir in $(DIRS); do \
+		make -C $$dir clean; \
+	done

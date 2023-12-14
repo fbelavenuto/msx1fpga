@@ -1,11 +1,29 @@
 
-PROJECT = msx_multicore2
-all:
-	quartus_map $(PROJECT)
-	quartus_fit $(PROJECT)
-	quartus_asm $(PROJECT)
-	quartus_sta $(PROJECT)
-	quartus_cpf -c .\output_files\msx_multicore2.sof -s EP4CE10 -d EPCS16 ..\..\_BINs\msx_multicore2.jic
+CP = cp
 
-clean:
-	rm -rf db incremental_db output_files simulation *.qws *.txt
+###################################################################
+# Project Configuration:
+#
+# Specify the name of the design (project), the Quartus II Settings
+# File (.qsf), and the list of source files used.
+###################################################################
+
+PROJECT = msx_multicore2
+#SOURCE_FILES = 
+
+###################################################################
+# Executable Configuration
+###################################################################
+
+MAP_ARGS = #--family="Cyclone IV E"
+FIT_ARGS = #--part=EP4CE22F17C8
+ASM_ARGS =
+STA_ARGS =
+CPF_ARGS = -s EP4CE22 -d EPCS16
+
+all: bitstream
+	$(CP) $(OUTPUT_FOLDER)/$(PROJECT).?of ../../_BINs
+	$(CP) $(OUTPUT_FOLDER)/$(PROJECT).jic ../../_BINs
+	$(CP) $(OUTPUT_FOLDER)/$(PROJECT).rbf ../../_BINs
+
+include ../makefile_altera.inc

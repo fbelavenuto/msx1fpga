@@ -51,7 +51,7 @@ loader.ihx: $(OBJS)
 .PHONY: clean
 
 clean:
-	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx
+	$(RM) $(ODIR)/* *.map *.lk *.noi *.bin *.ihx *.mif
 
 $(ODIR):
 	$(MD) $(ODIR)
