@@ -31,7 +31,7 @@ ODIR = obj
 CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -Iinc -I..
 LDFLAGS = -mz80 --code-loc 0x0180 --data-loc 0 --no-std-crt0
 
-_OBJS = crt0.rel conio.rel putchar.rel msxdos.rel getopt.rel main.rel
+_OBJS = crt0.rel conio.rel msxdos.rel getopt.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 all: $(ODIR) MSXCTRL.COM

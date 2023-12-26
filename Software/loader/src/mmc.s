@@ -67,6 +67,7 @@ _MMC_IsPresent::
 	jr z,	.ispresent
 	ld		l, #0
 .ispresent:
+	ld		a, l
 	ret
 
 ; ------------------------------------------------
@@ -96,9 +97,9 @@ SD_SEND_CMD0:
 	pop		bc
 	jp	nc, testaSDCV2					; cartao respondeu ao CMD0, pula
 	djnz	SD_SEND_CMD0
-	ld		l, #0						; cartao nao respondeu ao CMD0, retornar 0
 	ld		a, #0xFF
 	out		(SPI_CTRL), a				; desabilita SD
+	ld		a, #0						; cartao nao respondeu ao CMD0, retornar 0
 	ret
 testaSDCV2:
 	ld		a, #CMD8
@@ -118,9 +119,9 @@ testaSDCV2:
 	dec		c
 	jr		nz, .loop
 deuerroi:
-	ld		l, #0						; erro, retornar 0
 	ld		a, #0xFF
 	out		(SPI_CTRL), a				; desabilita SD
+	ld		a, #0						; erro, retornar 0
 	ret
 .jumpHL:
 	jp		(hl)						; chamar rotina correta em HL
@@ -137,10 +138,10 @@ iniciou:
 	ld		a, #0xFF
 	out		(SPI_CTRL), a				; desabilita SD
 	ld		a, (mmc_type)				; retornar tipo de cartao
-	ld		l, #3
 	cp		#0x40
+	ld		a, #3
 	ret z
-	ld		l, #2
+	ld		a, #2
 	ret
 
 ; ------------------------------------------------
@@ -157,7 +158,7 @@ mudarTamanhoBlocoPara512:
 ; ------------------------------------------------
 ; Ler um bloco de 512 bytes do cartao
 ; ------------------------------------------------
-; unsigned char MMC_Read(unsigned long lba, unsigned int *buffer)
+; unsigned char MMC_Read(unsigned long lba, unsigned int *buffer) __sdcccall(0)
 _MMC_Read::
 	ld		iy, #0
 	add		iy, sp
@@ -326,7 +327,7 @@ WAIT_RESP_FE:
 	push	bc
 	call	WAIT_RESP_NO_FF				; esperar resposta diferente de $FF
 	pop		bc
-	cp		#0xFE						; resposta é $FE ?
+	cp		#0xFE						; resposta ï¿½ $FE ?
 	ret	z								; sim, retornamos com carry=0
 	djnz	.loop1
 	scf									; erro, carry=1

@@ -32,7 +32,7 @@ CFLAGS = -mz80 --opt-code-size --fomit-frame-pointer -I$(IDIR) -Iinc -I..
 ASFLAGS = -Iinc -I..
 LDFLAGS = -mz80 --code-loc 0x0180 --data-loc 0 --no-std-crt0
 
-_OBJS = crt0.rel msxdos.rel getchar.rel putchar.rel conio.rel mem.rel heap.rel spi.rel main.rel
+_OBJS = crt0.rel msxdos.rel conio.rel mem.rel heap.rel spi.rel main.rel
 OBJS = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 all: $(ODIR) MSX1UPD.COM

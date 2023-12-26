@@ -58,7 +58,7 @@ architecture testbench of tb is
 		rd_i			: in  std_logic;
 		wr_i			: in  std_logic;
 		--
-		ram_addr_o	: out std_logic_vector(18 downto 0);	-- 512KB
+		ram_addr_o	: out std_logic_vector(19 downto 0);	-- 1MB
 		ram_data_i	: in  std_logic_vector( 7 downto 0);
 		ram_ce_o		: out std_logic;
 		ram_oe_o		: out std_logic;
@@ -66,7 +66,7 @@ architecture testbench of tb is
 		--
 		map_type_i	: in  std_logic_vector( 1 downto 0);  -- "-0" : SCC+, "01" : ASC8K, "11" : ASC16K
 		--
-		wave_o		: out std_logic_vector(14 downto 0)
+		wave_o		: out signed(14 downto 0)
 	);
 	end component;
 
@@ -80,13 +80,13 @@ architecture testbench of tb is
 	signal cs_s			: std_logic;
 	signal rd_s			: std_logic;
 	signal wr_s			: std_logic;
-	signal ram_addr_s	: std_logic_vector(18 downto 0);	-- 512KB
+	signal ram_addr_s	: std_logic_vector(19 downto 0);	-- 1MB
 	signal ram_data_s	: std_logic_vector( 7 downto 0);
 	signal ram_ce_s		: std_logic;
 	signal ram_oe_s		: std_logic;
 	signal ram_we_s		: std_logic;
 	signal map_type_s	: std_logic_vector( 1 downto 0);  -- "-0" : SCC+, "01" : ASC8K, "11" : ASC16K
-	signal wave_s		: std_logic_vector(14 downto 0);
+	signal wave_s		: signed(14 downto 0);
 
 begin
 

@@ -50,7 +50,7 @@ enum {
 };
 
 void vdp_writereg(uint8 reg, uint8 val);
-void vdp_setaddr(uint16 addr, uint8 rw);
+void vdp_setaddr(uint8 rw, uint16 addr);
 void vdp_writedata(uint8 *source, uint16 addr, uint16 count);
 void vdp_init();
 void vdp_setcolor(uint8 border, uint8 background, uint8 foreground);

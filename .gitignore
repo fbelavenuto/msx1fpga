@@ -6,6 +6,9 @@ _BINs
 *.log
 *.pld
 greybox_tmp
+transcript
+vsim.wlf
+work
 /Software/*/*.COM
 /Software/*/*.bin
 /Software/*/*.ihx
@@ -107,9 +110,6 @@ greybox_tmp
 /src/syn-wxeda/*.cmp
 /src/syn-de1/*.cmp
 /src/rom/*.cmp
-/src/tb/transcript
-/src/tb/vsim.wlf
-/src/tb/work
 /src/peripheral/ese-ram/tb/transcript
 /src/peripheral/ese-ram/tb/vsim.wlf
 /src/peripheral/ese-ram/tb/work

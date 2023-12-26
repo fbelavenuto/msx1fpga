@@ -177,6 +177,7 @@ int fat_init()
 		return FALSE;
 	}
 	switch (data_buffer[0x1C2]) {
+	case 0x0E:
 	case 0x06:
 	case 0x04:
 #if USE_FAT32 == 1

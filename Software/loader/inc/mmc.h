@@ -104,7 +104,7 @@ __sfr __at 0x9F SPI_DATA;
 
 unsigned char MMC_IsPresent();
 unsigned char MMC_Init(void);
-unsigned char MMC_Read(unsigned long lba, unsigned char *pReadBuffer);
+unsigned char MMC_Read(unsigned long lba, unsigned char *pReadBuffer) __sdcccall(0);
 
 #endif
 
