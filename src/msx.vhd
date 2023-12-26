@@ -351,9 +351,9 @@ begin
 	-- IPL ROM
 	ipl: entity work.ipl_rom
 	port map (
-		clk		=> clock_i,
-		addr		=> iplrom_addr_s,
-		data		=> d_from_iplrom_s
+		clock_i		=> clock_i,
+		addr_i		=> iplrom_addr_s,
+		data_o		=> d_from_iplrom_s
 	);
 
 	-- VDP
