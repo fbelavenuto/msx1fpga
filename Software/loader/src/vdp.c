@@ -57,7 +57,7 @@ void vdp_writereg(uint8 reg, uint8 val)
 }
 
 //------------------------------------------------------------------------------
-void vdp_setaddr(uint16 addr, uint8 rw)
+void vdp_setaddr(uint8 rw, uint16 addr)
 {
 	VDP_CMD = addr & 0xFF;
 	VDP_CMD = ((addr >> 8) & 0x3F) | ((rw & 0x01) << 6);
@@ -69,7 +69,7 @@ void vdp_writedata(uint8 *source, uint16 addr, uint16 count)
 	uint8 i;
 	uint16 c;
 
-	vdp_setaddr(addr, 1);
+	vdp_setaddr(1, addr);
 	for (c = 0; c < count; c++) {
 		VDP_DATA = source[c];
 		for (i=0; i < 10; i++) ;
@@ -99,17 +99,17 @@ void vdp_init()
 	for (i=0; i < 8; i++) {
 		vdp_writereg(i, init[i]);
 	}
-	vdp_setaddr(0, 1);
+	vdp_setaddr(1, 0);
 	for (c=0; c < 256; c++)
 		VDP_DATA = 0;					// 00-31
 	vdp_writedata(font, 256, 768);		// 32-7F
-	vdp_setaddr(1024, 1);
+	vdp_setaddr(1, 1024);
 	for (c=0; c < 1024; c++)
 		VDP_DATA = 0;
 	cx = cy = 0;
 	fg = 15;
 	bg = 7;
-	vdp_setaddr(2048, 1);
+	vdp_setaddr(1, 2048);
 	for (c=0; c < 768; c++)
 		VDP_DATA = ' ';
 }
@@ -121,7 +121,7 @@ void vdp_setcolor(uint8 border, uint8 background, uint8 foreground)
 	uint8 v = ((foreground & 0x0F) << 4) | (background & 0x0F);
 
 	vdp_writereg(7, ((foreground & 0x0F) << 4) | (border & 0x0F));
-	vdp_setaddr(0xB00, 1);
+	vdp_setaddr(1, 0xB00);
 	for (i=0; i < 32; i++) {
 		VDP_DATA = v;
 	}
@@ -133,7 +133,7 @@ void vdp_setcolor(uint8 border, uint8 background, uint8 foreground)
 void vdp_cls()
 {
 	uint16 c;
-	vdp_setaddr(2048, 1);
+	vdp_setaddr(1, 2048);
 	for (c=0; c < 768; c++)
 		VDP_DATA = ' ';
 }
@@ -155,7 +155,7 @@ void vdp_putcharxy(uint8 x, uint8 y, uint8 c)
 	cy = y;
 	if (cy > 23) cy = 23;
 	addr = 0x800 + cy*32 + cx;
-	vdp_setaddr(addr, 1);
+	vdp_setaddr(1, addr);
 	VDP_DATA = c;
 	vdp_cursorinc();
 }
@@ -178,7 +178,7 @@ void vdp_putcharcolor(uint8 c, uint8 color)
 {
 	uint16 addr = 0xB00 + cx;
 	uint8 v = ((color & 0x0F) << 4) | bg;
-	vdp_setaddr(addr, 1);
+	vdp_setaddr(1, addr);
 	VDP_DATA = v;
 	vdp_putcharxy(cx, cy, c);
 }
@@ -194,7 +194,7 @@ void vdp_putstring(char *s)
 //------------------------------------------------------------------------------
 void puthex(uint8 nibbles, uint16 v)
 {
-	int8 i = (int8)nibbles - 1;
+	int i = (int8)nibbles - 1;
 	while (i >= 0) {
 		uint16 aux = (v >> (i << 2)) & 0x000F;
 		uint8 n = aux & 0x000F;
