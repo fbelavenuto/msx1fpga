@@ -55,25 +55,25 @@ use work.vdp18_pack.access_t;
 entity vdp18_ctrl is
 
 	port (
-		clock_i        : in  std_logic;
-		clk_en_5m37_i : in  boolean;
-		reset_i       : in  boolean;
-		opmode_i      : in  opmode_t;
-		vram_read_i		: in  boolean;
-		vram_write_i	: in  boolean;
-		vram_ce_o		: out std_logic;
-		vram_oe_o		: out std_logic;
-		num_pix_i     : in  hv_t;
-		num_line_i    : in  hv_t;
-		vert_inc_i    : in  boolean;
-		reg_blank_i   : in  boolean;
-		reg_size1_i   : in  boolean;
-		stop_sprite_i : in  boolean;
-		clk_en_acc_o  : out boolean;
-		access_type_o : out access_t;
-		vert_active_o : out boolean;
-		hor_active_o  : out boolean;
-		irq_o         : out boolean
+		clock_i			: in  std_logic;
+		clk_en_5m37_i	: in  std_logic;
+		reset_i			: in  std_logic;
+		opmode_i		: in  opmode_t;
+		vram_read_i		: in  std_logic;
+		vram_write_i	: in  std_logic;
+		vram_ce_n_o		: out std_logic;
+		vram_oe_n_o		: out std_logic;
+		num_pix_i		: in  hv_t;
+		num_line_i		: in  hv_t;
+		vert_inc_i		: in  std_logic;
+		reg_blank_i		: in  std_logic;
+		reg_size1_i		: in  std_logic;
+		stop_sprite_i	: in  std_logic;
+		clk_en_acc_o	: out std_logic;
+		access_type_o	: out access_t;
+		vert_active_o	: out std_logic;
+		hor_active_o	: out std_logic;
+		irq_o			: out std_logic
 	);
 
 end vdp18_ctrl;
@@ -87,7 +87,7 @@ architecture rtl of vdp18_ctrl is
 	-- This enables a workaround for a bug in XST.
 	-- ISE 8.1.02i implements wrong functionality otherwise :-(
 	--
-	constant xst_bug_wa_c : boolean := true;
+	constant xst_bug_wa_c : std_logic := '1';
 	--
 	-----------------------------------------------------------------------------
 
@@ -102,9 +102,9 @@ architecture rtl of vdp18_ctrl is
 	-- pragma translate_on
 
 	signal vert_active_q,
-			hor_active_q			: boolean;
-	signal sprite_active_q		: boolean;
-	signal sprite_line_act_q	: boolean;
+			hor_active_q		: std_logic;
+	signal sprite_active_q		: std_logic;
+	signal sprite_line_act_q	: std_logic;
 
 begin
 
@@ -147,9 +147,9 @@ begin
 				--
 				-- Patterns
 				--
-				if vert_active_q then
+				if vert_active_q = '1' then
 					if num_pix_plus_8_v(0) = '0' then
-						if not xst_bug_wa_c then
+						if xst_bug_wa_c = '0' then
 
 							-- original code, we want this
 							case num_pix_plus_8_v(6 to 7) is
@@ -186,7 +186,7 @@ begin
 				--
 				-- Sprite test
 				--
-				if sprite_line_act_q then
+				if sprite_line_act_q = '1' then
 					if num_pix_i(0) = '0'            and
 						num_pix_i(0 to 5) /= "011111" and
 						num_pix_i(6 to 7)  = "00"     and
@@ -222,7 +222,7 @@ begin
 							access_type_s		<= AC_SPTH;
 						when -82 | -66 |
 							  -50 | -34 =>
-							if reg_size1_i then
+							if reg_size1_i = '1' then
 								access_type_s	<= AC_SPTL;
 							end if;
 						when others =>
@@ -232,9 +232,9 @@ begin
 
 			-- Text Mode ------------------------------------------------------------
 			when OPMODE_TEXTM =>
-				if vert_active_q                       and
-					num_pix_plus_6_v(0) = '0'           and
-					num_pix_plus_6_v(0 to 4) /= "01111" then
+				if vert_active_q = '1'					and
+					num_pix_plus_6_v(0) = '0'			and
+					num_pix_plus_6_v(0 to 4) /= "01111"	then
 					--
 					mod_6_v := mod_6_f(num_pix_plus_6_v);
 					case mod_6_v(6 to 7) is
@@ -266,60 +266,60 @@ begin
 	--
 	vert_flags: process (clock_i, reset_i)
 	begin
-		if reset_i then
-			vert_active_q     <= false;
-			sprite_active_q   <= false;
-			sprite_line_act_q <= false;
+		if reset_i = '1' then
+			vert_active_q     <= '0';
+			sprite_active_q   <= '0';
+			sprite_line_act_q <= '0';
 
-		elsif clock_i'event and clock_i = '1' then
-			if clk_en_5m37_i then
+		elsif rising_edge(clock_i) then
+			if clk_en_5m37_i = '1' then
 				-- line-local sprite processing
-				if sprite_active_q then
+				if sprite_active_q = '1' then
 					-- sprites are globally enabled
-					if vert_inc_i then
+					if vert_inc_i = '1' then
 						-- reload at beginning of every new line
 						-- => scan with STST
-						sprite_line_act_q <= true;
+						sprite_line_act_q <= '1';
 					end if;
 
 					if num_pix_i = hv_sprite_start_c then
 						-- reload when access to sprite memory starts
-						sprite_line_act_q <= true;
+						sprite_line_act_q <= '1';
 					end if;
 				end if;
 
-				if vert_inc_i then
+				if vert_inc_i = '1' then
 					-- global sprite processing
-					if    reg_blank_i then
-						sprite_active_q   <= false;
-						sprite_line_act_q <= false;
+					if    reg_blank_i = '1' then
+						sprite_active_q   <= '0';
+						sprite_line_act_q <= '0';
 					elsif num_line_i = -2 then
 						-- start at line -1
-						sprite_active_q   <= true;
+						sprite_active_q   <= '1';
 						-- initialize immediately
-						sprite_line_act_q <= true;
+						sprite_line_act_q <= '1';
 					elsif num_line_i = 191 then
 						-- stop at line 192
-						sprite_active_q   <= false;
+						sprite_active_q   <= '0';
 						-- force stop
-						sprite_line_act_q <= false;
+						sprite_line_act_q <= '0';
 					end if;
 
 					-- global vertical display
-					if    reg_blank_i then
-						vert_active_q <= false;
+					if    reg_blank_i = '1' then
+						vert_active_q <= '0';
 					elsif num_line_i = -1 then
 						-- start vertical display at line 0
-						vert_active_q <= true;
+						vert_active_q <= '1';
 					elsif num_line_i = 191 then
 						-- stop at line 192
-						vert_active_q <= false;
+						vert_active_q <= '0';
 					end if;
 				end if;
 
-				if stop_sprite_i then
+				if stop_sprite_i = '1' then
 					-- stop processing of sprites in this line
-					sprite_line_act_q <= false;
+					sprite_line_act_q <= '0';
 				end if;
 
 			end if;
@@ -337,22 +337,20 @@ begin
 	--
 	hor_flags: process (clock_i, reset_i)
 	begin
-		if reset_i then
-			hor_active_q     <= false;
-
-		elsif clock_i'event and clock_i = '1' then
-			if clk_en_5m37_i then
-				if not reg_blank_i and num_pix_i = -1  then
-					hor_active_q <= true;
+		if reset_i = '1' then
+			hor_active_q     <= '0';
+		elsif rising_edge(clock_i) then
+			if clk_en_5m37_i = '1' then
+				if reg_blank_i = '0' and num_pix_i = -1  then
+					hor_active_q <= '1';
 				end if;
-
 				if opmode_i = OPMODE_TEXTM then
 					if num_pix_i = 239 then
-						hor_active_q <= false;
+						hor_active_q <= '0';
 					end if;
 				else
 					if num_pix_i = 255 then
-						hor_active_q <= false;
+						hor_active_q <= '0';
 					end if;
 				end if;
 			end if;
@@ -362,31 +360,31 @@ begin
 	-----------------------------------------------------------------------------
 
 	vram_ctrl: process (clock_i)
-		variable read_b_v	: boolean;
+		variable read_b_v	: std_logic;
 	begin
 		if rising_edge(clock_i) then
-			if clk_en_5m37_i then
-				vram_ce_o	<= '0';
-				vram_oe_o	<= '0';
+			if clk_en_5m37_i = '1' then
+				vram_ce_n_o	<= '1';
+				vram_oe_n_o	<= '1';
 				if access_type_s = AC_CPU then
-					if vram_read_i and not read_b_v then
-						vram_ce_o	<= '1';
-						vram_oe_o	<= '1';
-						read_b_v		:= true;
-					elsif vram_write_i and not read_b_v then
-						vram_ce_o	<= '1';
+					if vram_read_i = '1' and read_b_v = '0' then
+						vram_ce_n_o	<= '0';
+						vram_oe_n_o	<= '0';
+						read_b_v	:= '1';
+					elsif vram_write_i = '1' and read_b_v = '0' then
+						vram_ce_n_o	<= '0';
 						--
-						read_b_v		:= true;
+						read_b_v	:= '1';
 					else
-						read_b_v		:= false;
+						read_b_v	:= '0';
 					end if;
 				else
-					if not read_b_v then
-						vram_ce_o	<= '1';
-						vram_oe_o	<= '1';
-						read_b_v		:= true;
+					if read_b_v = '0' then
+						vram_ce_n_o	<= '0';
+						vram_oe_n_o	<= '0';
+						read_b_v	:= '1';
 					else
-						read_b_v		:= false;
+						read_b_v	:= '0';
 					end if;
 				end if;
 			end if;
@@ -397,10 +395,10 @@ begin
 	-- Ouput mapping
 	-----------------------------------------------------------------------------
 	-- generate clock enable for flip-flops working on access_type
-	clk_en_acc_o  <= clk_en_5m37_i and num_pix_i(8) = '1';
+	clk_en_acc_o  <= '1'	when clk_en_5m37_i = '1' and num_pix_i(8) = '1'	else '0';
 	access_type_o <= access_type_s;
 	vert_active_o <= vert_active_q;
 	hor_active_o  <= hor_active_q;
-	irq_o         <= vert_inc_i and num_line_i = 191;
+	irq_o         <= '1'	when vert_inc_i = '1' and num_line_i = 191	else '0';
 
 end rtl;

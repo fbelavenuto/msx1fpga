@@ -94,6 +94,11 @@ TIMESPEC TS_clock_50_i = PERIOD "clock_50_i" 20 ns HIGH 50%;
 NET "clock_master_s" TNM_NET = clock_master_s;
 TIMESPEC TS_clock_master_s = PERIOD "clock_master_s" 46.56 ns HIGH 50%;
 
-NET "clks/clock_cpu_s" TNM_NET = clks/clock_cpu_s;
-TIMESPEC TS_clks_clock_cpu_s = PERIOD "clks/clock_cpu_s" 279.365 ns HIGH 50%;
+NET "clks/clock_3m_en_s" TNM_NET = clks/clock_3m_en_s;
+TIMESPEC TS_clks_clock_3m_en_s = PERIOD "clks/clock_3m_en_s" 279.365 ns HIGH 17%;
 
+NET "clks/clock_7m_en_s" TNM_NET = clks/clock_7m_en_s;
+TIMESPEC TS_clks_clock_7m_en_s = PERIOD "clks/clock_7m_en_s" 139.682 ns HIGH 33%;
+
+NET "clks/clock_10m_en_s" TNM_NET = clks/clock_10m_en_s;
+TIMESPEC TS_clks_clock_10m_en_s = PERIOD "clks/clock_10m_en_s" 93.121 ns HIGH 50%;

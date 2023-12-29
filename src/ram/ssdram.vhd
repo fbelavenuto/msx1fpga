@@ -57,9 +57,9 @@ entity ssdram is
 		addr_i		: in    std_logic_vector(22 downto 0);		-- 8MB
 		data_i		: in    std_logic_vector( 7 downto 0);
 		data_o		: out   std_logic_vector( 7 downto 0);
-		cs_i			: in    std_logic;
-		oe_i			: in    std_logic;
-		we_i			: in    std_logic;
+		cs_n_i		: in    std_logic;
+		oe_n_i		: in    std_logic;
+		we_n_i		: in    std_logic;
 		-- SD-RAM ports
 		mem_cke_o	: out   std_logic;
 		mem_cs_n_o	: out   std_logic;
@@ -108,9 +108,9 @@ begin
 	begin
 		if reset_i = '1' then
 			data_o			<= (others => '1');
-			ram_we_s			<= '0';
+			ram_we_s		<= '0';
 			ram_req_s		<= '0';
-			pcs_v				:= "00";
+			pcs_v			:= "11";
 		elsif rising_edge(clock_i) then
 			if ram_req_s = '1' and ram_ack_s = '1' then
 				if ram_we_s = '0' then
@@ -119,10 +119,10 @@ begin
 				ram_req_s <= '0';
 			end if;
 
-			if pcs_v = "01" then
+			if pcs_v = "10" then
 				ram_addr_s	<= addr_i;
 				ram_req_s	<= '1';
-				if we_i = '1' then
+				if we_n_i = '0' then
 					ram_din_s	<= data_i;
 					ram_we_s		<= '1';
 				else
@@ -130,7 +130,7 @@ begin
 				end if;
 			end if;
 
-			acess_v	:= cs_i and (oe_i or we_i);
+			acess_v	:= cs_n_i or (oe_n_i and we_n_i);
 			pcs_v		:= pcs_v(0) & acess_v;
 
 		end if;

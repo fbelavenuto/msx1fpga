@@ -52,21 +52,18 @@ entity vdp18_clk_gen is
   port (
     clock_i       : in  std_logic;
     clk_en_10m7_i : in  std_logic;
-    reset_i       : in  boolean;
-    clk_en_5m37_o : out boolean;
-    clk_en_3m58_o : out boolean;
-    clk_en_2m68_o : out boolean
+    reset_i       : in  std_logic;
+    clk_en_5m37_o : out std_logic
   );
 
 end vdp18_clk_gen;
-
 
 library ieee;
 use ieee.numeric_std.all;
 
 architecture rtl of vdp18_clk_gen is
 
-  signal cnt_q         : unsigned(3 downto 0);
+  signal cnt_q  : unsigned(3 downto 0);
 
 begin
 
@@ -80,10 +77,9 @@ begin
   seq: process (clock_i, reset_i)
     variable cnt_v : integer range -256 to 255;
   begin
-    if reset_i then
+    if reset_i = '1' then
       cnt_q     <= (others => '0');
-
-    elsif clock_i'event and clock_i = '1' then
+    elsif rising_edge(clock_i) then
       if clk_en_10m7_i = '1' then
         if cnt_q = 11 then
           -- wrap after counting 12 clocks
@@ -105,8 +101,7 @@ begin
   -- Purpose:
   --   Generates the derived clock enable signals.
   --
-  clk_en: process (clk_en_10m7_i,
-                   cnt_q)
+  clk_en: process (clk_en_10m7_i, cnt_q)
     variable cnt_v : integer range -256 to 255;
   begin
     cnt_v := to_integer(cnt_q);
@@ -115,36 +110,12 @@ begin
     if clk_en_10m7_i = '1' then
       case cnt_v is
         when 1 | 3 | 5 | 7 | 9 | 11 =>
-          clk_en_5m37_o <= true;
+          clk_en_5m37_o <= '1';
         when others =>
-          clk_en_5m37_o <= false;
+          clk_en_5m37_o <= '0';
       end case;
     else
-      clk_en_5m37_o     <= false;
-    end if;
-
-    -- 3.58 MHz clock enable --------------------------------------------------
-    if clk_en_10m7_i = '1' then
-      case cnt_v is
-        when 2 | 5 | 8 | 11 =>
-          clk_en_3m58_o <= true;
-        when others =>
-          clk_en_3m58_o <= false;
-      end case;
-    else
-      clk_en_3m58_o     <= false;
-    end if;
-
-    -- 2.68 MHz clock enable --------------------------------------------------
-    if clk_en_10m7_i = '1' then
-      case cnt_v is
-        when 3 | 7 | 11 =>
-          clk_en_2m68_o <= true;
-        when others =>
-          clk_en_2m68_o <= false;
-      end case;
-    else
-      clk_en_2m68_o     <= false;
+      clk_en_5m37_o     <= '0';
     end if;
 
   end process clk_en;

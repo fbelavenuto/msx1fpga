@@ -55,14 +55,14 @@ entity vdp18_pattern is
 
   port (
     clock_i       : in  std_logic;
-    clk_en_5m37_i : in  boolean;
-    clk_en_acc_i  : in  boolean;
-    reset_i       : in  boolean;
+    clk_en_5m37_i : in  std_logic;
+    clk_en_acc_i  : in  std_logic;
+    reset_i       : in  std_logic;
     opmode_i      : in  opmode_t;
     access_type_i : in  access_t;
     num_line_i    : in  hv_t;
     vram_d_i      : in  std_logic_vector(0 to 7);
-    vert_inc_i    : in  boolean;
+    vert_inc_i    : in  std_logic;
     vsync_n_i     : in  std_logic;
     reg_col1_i    : in  std_logic_vector(0 to 3);
     reg_col0_i    : in  std_logic_vector(0 to 3);
@@ -100,20 +100,20 @@ begin
   --
   seq: process (clock_i, reset_i)
   begin
-    if reset_i then
+    if reset_i = '1' then
       pat_cnt_q   <= (others => '0');
       pat_name_q  <= (others => '0');
       pat_tmp_q   <= (others => '0');
       pat_shift_q <= (others => '0');
       pat_col_q   <= (others => '0');
 
-    elsif clock_i'event and clock_i = '1' then
-      if clk_en_5m37_i then
+    elsif rising_edge(clock_i) then
+      if clk_en_5m37_i = '1' then
         -- shift pattern with every pixel clock
         pat_shift_q(0 to 6) <= pat_shift_q(1 to 7);
       end if;
 
-      if clk_en_acc_i then
+      if clk_en_acc_i = '1' then
         -- determine register update based on current access type -------------
         case access_type_i is
           when AC_PNT =>
@@ -149,7 +149,7 @@ begin
 
       end if;
 
-      if vert_inc_i then
+      if vert_inc_i = '1' then
         -- redo patterns of if there are more lines inside this pattern
         if num_line_i(0) = '0' then
           case opmode_i is

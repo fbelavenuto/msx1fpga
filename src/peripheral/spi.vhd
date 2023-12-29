@@ -37,11 +37,13 @@
 -- you have the latest version of this file.
 --
 -------------------------------------------------------------------------------
----
----   SPI ports:
----	0 - Control
----	1 - Data
----
+--
+-- SPI ports:
+--	 0 - Control
+--	 1 - Data
+--
+-- The theoretical maximum for the SPI clock is 25 MHz.
+--
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -49,15 +51,15 @@ use ieee.numeric_std.all;
 
 entity spi is
 	port (
-		clock_i			: in    std_logic;
 		reset_i			: in    std_logic;
+		clock_i			: in    std_logic;
 		addr_i			: in    std_logic;
-		cs_i				: in    std_logic;
-		wr_i				: in    std_logic;
-		rd_i				: in    std_logic;
+		req_i			: in    std_logic;									-- One pulse
+		cs_n_i			: in    std_logic;
+		wr_n_i			: in    std_logic;
+		rd_n_i			: in    std_logic;
 		data_i			: in    std_logic_vector(7 downto 0);
 		data_o			: out   std_logic_vector(7 downto 0);
-		has_data_o		: out   std_logic;
 		-- SD card interface
 		spi_cs_n_o		: out   std_logic_vector(2 downto 0)	:= "111";
 		spi_sclk_o		: out   std_logic;
@@ -75,46 +77,37 @@ architecture rtl of spi is
 	-- Shift register has an extra bit because we write on the
 	-- falling edge and read on the rising edge
 	signal shift_r			: std_logic_vector(8 downto 0);
-	signal port0_r			: std_logic_vector(7 downto 0);
+	signal port0_s			: std_logic_vector(7 downto 0);
 	signal port1_r			: std_logic_vector(7 downto 0);
-	signal enable_s		: std_logic;
-	signal sd_chg_s		: std_logic;
-	signal sd_chg_q		: std_logic;
-	signal spi_ctrl_rd_s	: std_logic;
+	signal read_ctrl_s		: std_logic;
+	signal sd_chg_s			: std_logic		:= '0';
+	signal sd_chg_q			: std_logic		:= '0';
 
 begin
 
-	enable_s <= '1'	when cs_i = '1' and (wr_i = '1' or rd_i = '1')	else '0';
-
-	spi_ctrl_rd_s	<= '1' when enable_s = '1' and addr_i = '0' and rd_i = '1'	else '0';
+	port0_s	<= "00000" & sd_wp_i & sd_pres_n_i & sd_chg_s;
 
 	-- Port reading
-	has_data_o	<= '1'	when enable_s = '1' and rd_i = '1'  else	
-						'0';
-	data_o <=	port0_r	when spi_ctrl_rd_s = '1'										else
-					port1_r	when enable_s = '1' and addr_i = '1' and rd_i = '1'	else
-					(others => '1');
-
-	port0_r	<= "00000" & sd_wp_i & sd_pres_n_i & sd_chg_s;
+	data_o	<= port0_s	when addr_i = '0' and cs_n_i = '0' and rd_n_i = '0'		else
+			   port1_r	when addr_i = '1' and cs_n_i = '0' and rd_n_i = '0'		else
+			   (others => '1');
 
 	-- Disk change
-	process (reset_i, spi_ctrl_rd_s, sd_pres_n_i)
-	begin
-		if reset_i = '1' then
-			sd_chg_q <= '0';
-		elsif sd_pres_n_i = '1' then
-			sd_chg_q <= '1';
-		elsif falling_edge(spi_ctrl_rd_s) then
-			sd_chg_q <= '0';
-		end if;
-	end process;
+	read_ctrl_s	<= '1' when addr_i = '0' and cs_n_i = '0' and rd_n_i = '0'	else '0';
 
-	process (reset_i, spi_ctrl_rd_s)
+	disk_change: process (reset_i, sd_pres_n_i, clock_i)
+		variable edge_s		: std_logic_vector(1 downto 0);
 	begin
-		if reset_i = '1' then
-			sd_chg_s <= '0';
-		elsif rising_edge(spi_ctrl_rd_s) then
-			sd_chg_s <= sd_chg_q;
+		if reset_i = '1' then							-- Reset clear disk change flag
+			sd_chg_q	<= '0';
+		elsif sd_pres_n_i = '1' then					-- Remove card set disk change flag
+			sd_chg_q	<= '1';
+		elsif rising_edge(clock_i) then
+			sd_chg_s	<= sd_chg_q;					-- Delay flag
+			edge_s		:= edge_s(1) & read_ctrl_s;
+			if edge_s = "10" then						-- End of read clear disk change flag
+				sd_chg_q <= '0';
+			end if;
 		end if;
 	end process;
 
@@ -123,12 +116,13 @@ begin
 	--      Implementa um SPI Master Mode 0         --
 	--------------------------------------------------
 
-	process(clock_i, reset_i)
+	-- Control port write
+	ctrl_port: process(clock_i, reset_i)
 	begin
 		if reset_i = '1' then
 			spi_cs_n_o <= "111";
 		elsif rising_edge(clock_i) then
-			if enable_s = '1' and addr_i = '0' and wr_i = '1'  then
+			if req_i = '1' and addr_i = '0' and cs_n_i = '0' and wr_n_i = '0'  then
 				spi_cs_n_o(2)	<= data_i(7);
 				spi_cs_n_o(1)	<= data_i(1);
 				spi_cs_n_o(0)	<= data_i(0);
@@ -141,7 +135,7 @@ begin
 	spi_mosi_o  <= shift_r(8);
 
 	-- Atrasa SCK para dar tempo do bit mais significativo mudar de estado e acertar MOSI antes do SCK
-	process (clock_i, reset_i)
+	sck_dly: process (clock_i, reset_i)
 	begin
 		if reset_i = '1' then
 			sck_delayed_s <= '0';
@@ -150,8 +144,8 @@ begin
 		end if;
 	end process;
 
-	-- SPI write
-	process(clock_i, reset_i)
+	-- Data port write
+	data_port: process(clock_i, reset_i)
 	begin		
 		if reset_i = '1' then
 			shift_r		<= (others => '1');
@@ -159,25 +153,24 @@ begin
 			counter_s	<= "1111"; -- Idle
 		elsif rising_edge(clock_i) then
 			if counter_s = "1111" then
-				port1_r		<= shift_r(7 downto 0);		-- Store previous shift register value in input register
-				shift_r(8)	<= '1';							-- MOSI repousa em '1'
+				port1_r		<= shift_r(7 downto 0);			-- Store previous shift register value in input register
+				shift_r(8)	<= '1';							-- MOSI starts on '1'
 
 				-- Idle - check for a bus access
-				if enable_s = '1' and addr_i = '1'  then
+				if req_i = '1' and addr_i = '1' and cs_n_i = '0'  then
 					-- Write loads shift register with data
 					-- Read loads it with all 1s
-					if rd_i = '1' then
-						shift_r <= (others => '1');								-- Uma leitura seta 0xFF para enviar e dispara a transmissão
+					if rd_n_i = '0' then
+						shift_r <= (others => '1');								-- One read operation sets 0xFF to send and start transmission
 					else
-						shift_r <= data_i & '1';									-- Uma escrita seta o valor a enviar e dispara a transmissão
+						shift_r <= data_i & '1';								-- One write operation gets data input and start transmission
 					end if;
 					counter_s <= "0000"; -- Initiates transfer
 				end if;
 			else
 				counter_s <= counter_s + 1;										-- Transfer in progress
-
 				if sck_delayed_s = '0' then
-					shift_r(0)	<= spi_miso_i;										-- Input next bit on rising edge
+					shift_r(0)	<= spi_miso_i;									-- Input next bit on rising edge
 				else
 					shift_r		<= shift_r(7 downto 0) & '1';					-- Output next bit on falling edge
 				end if;

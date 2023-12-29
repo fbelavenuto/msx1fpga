@@ -1,12 +1,12 @@
 TODO:
-N√O Adicionar SOFARUN (n„o roda bem em MSX1)
+N√ÉO Adicionar SOFARUN (n√£o roda bem em MSX1)
 OK Adicionar sistema de troca de paleta
 OK Adicionar turbo de 7MHz
 OK Adicionar scanlines
-OK Adicionar saÌda HDMI para ZX-Uno
-OK Adicionar controlador de memÛria para usar toda a memÛria de cada placa
+OK Adicionar sa√≠da HDMI para ZX-Uno
+OK Adicionar controlador de mem√≥ria para usar toda a mem√≥ria de cada placa
 OK Fazer atualizador para o FPGA
-OK Consertar bug do teclado, refazer toda a lÛgica e dar suporte ao mapa pela ROM
+OK Consertar bug do teclado, refazer toda a l√≥gica e dar suporte ao mapa pela ROM
 
 Bugs:
 OK Jevilon e jsj tendo problemas com boot do Nextor!
@@ -14,6 +14,6 @@ OK fran_matsusaka reclamou que sprites do nemesis 2 e 3 piscam muito
 OK Vanfanel reclamou que o chefe do penguim adventure nao aparece as bolas de fogo!
 OK	https://youtu.be/05kTZArlAtI?t=5m46s
 OK	https://www.youtube.com/watch?v=EoDIlTr_Y5w&feature=youtu.be
-OK Bug com Hard-reset: Loader n„o È executado para reconfigurar par‚metros.
-OK Vanfanel reportou que h· bugs relacionados com o teclado, em teclas com SHIFT (olhar TODO)
-desUBIKado: Jogo HUNCHBACK via LOADCAX n„o carrega, em um MSX1 real funciona 
+OK Bug com Hard-reset: Loader n√£o √© executado para reconfigurar par√¢metros.
+OK Vanfanel reportou que h√° bugs relacionados com o teclado, em teclas com SHIFT (olhar TODO)
+desUBIKado: Jogo HUNCHBACK via LOADCAX n√£o carrega, em um MSX1 real funciona 

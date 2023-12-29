@@ -34,6 +34,8 @@ jobs:
       - name: Build files
         id: build
         run: |
+          VERSION=$(awk '/actual_version/{print substr($8,3,1) "." substr($8,4,1)}' src/msx_pack.vhd)
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo Building software
           docker run --rm -t -e TZ=America/Sao_Paulo -v $PWD:/src fbelavenuto/8bitcompilers make -f Makefile-software
           mkdir _BINs
@@ -46,7 +48,7 @@ jobs:
       - name: Pack
         shell: bash
         run: |
-          tar czvf MSX1FPGA_v13.tar.gz -C $PWD/_BINs $(ls $PWD/_BINs) -C $PWD/Support SD
+          tar czvf MSX1FPGA_v${{ steps.build.outputs.VERSION }}.tar.gz -C $PWD/_BINs $(ls $PWD/_BINs) -C $PWD/Support SD
 
       # Upload artifact
       - name: Upload
@@ -54,7 +56,7 @@ jobs:
         with:
           name: Images
           path: |
-            MSX1FPGA_v13.tar.gz
+            MSX1FPGA_v${{ steps.build.outputs.VERSION }}.tar.gz
           retention-days: 5
 
       # Publish a release if is a tag
@@ -63,4 +65,4 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            MSX1FPGA_v13.tar.gz
+            MSX1FPGA_v${{ steps.build.outputs.VERSION }}.tar.gz

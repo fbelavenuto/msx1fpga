@@ -46,11 +46,13 @@ use ieee.std_logic_misc.and_reduce;
 entity exp_slot is
 	port(
 		reset_i			: in  std_logic;
-		ipl_en_i			: in  std_logic;
+		clock_i			: in  std_logic;
+		ipl_en_i		: in  std_logic;
 		addr_i			: in  std_logic_vector(15 downto 0);
 		data_i			: in  std_logic_vector(7 downto 0);
 		data_o			: out std_logic_vector(7 downto 0);
 		has_data_o		: out std_logic;
+		req_i			: in  std_logic;
 		sltsl_n_i		: in  std_logic;
 		rd_n_i			: in  std_logic;
 		wr_n_i			: in  std_logic;
@@ -63,17 +65,12 @@ architecture rtl of exp_slot is
 	signal ffff_s		: std_logic;
 	signal exp_reg_s	: std_logic_vector(7 downto 0);
 	signal exp_sel_s	: std_logic_vector(1 downto 0);
-	signal exp_wr_s	: std_logic;
-	signal exp_rd_s	: std_logic;
 
 begin
 
-	--
-	ffff_s	<= and_reduce(addr_i);
-	exp_wr_s <= not (sltsl_n_i or wr_n_i or not ffff_s);
-	exp_rd_s <= not (sltsl_n_i or rd_n_i or not ffff_s);
+	ffff_s	<= and_reduce(addr_i);		-- '1' when address=0xFFFF
 
-	process(reset_i, ipl_en_i, exp_wr_s)
+	process(reset_i, ipl_en_i, clock_i)
 	begin
 		if reset_i = '1' then
 			if ipl_en_i = '1' then
@@ -81,28 +78,32 @@ begin
 			else
 				exp_reg_s <= X"00";
 			end if;
-		elsif falling_edge(exp_wr_s) then
-			exp_reg_s <= data_i;
+		elsif rising_edge(clock_i) then
+			if req_i = '1' and sltsl_n_i = '0' and wr_n_i = '0'and ffff_s = '1' then
+				exp_reg_s <= data_i;
+			end if;
 		end if;
 	end process;
 
 	-- Read
-	has_data_o	<= exp_rd_s;
-	data_o		<= (not exp_reg_s) when exp_rd_s = '1' else
-						(others => '1');
+	data_o		<= (not exp_reg_s)	when sltsl_n_i = '0' and rd_n_i = '0' and ffff_s = '1'	else
+				   (others => '1');
+	has_data_o	<= '1' 				when sltsl_n_i = '0' and rd_n_i = '0' and ffff_s = '1'	else
+				   '0';
 
 	-- subslot mux
-	with addr_i(15 downto 14) select exp_sel_s <=
-		exp_reg_s(1 downto 0) when "00",
-		exp_reg_s(3 downto 2) when "01",
-		exp_reg_s(5 downto 4) when "10",
-		exp_reg_s(7 downto 6) when others;
+	with addr_i(15 downto 14) select 
+		exp_sel_s <=
+			exp_reg_s(1 downto 0) when "00",
+			exp_reg_s(3 downto 2) when "01",
+			exp_reg_s(5 downto 4) when "10",
+			exp_reg_s(7 downto 6) when others;
 
 	-- Demux 2-to-4
 	expsltsl_n_o	<= "1111" when ffff_s = '1' or sltsl_n_i = '1'      else
-							"1110" when sltsl_n_i = '0' and exp_sel_s = "00" else
-							"1101" when sltsl_n_i = '0' and exp_sel_s = "01" else
-							"1011" when sltsl_n_i = '0' and exp_sel_s = "10" else
-							"0111";
+					   "1110" when sltsl_n_i = '0' and exp_sel_s = "00" else
+					   "1101" when sltsl_n_i = '0' and exp_sel_s = "01" else
+					   "1011" when sltsl_n_i = '0' and exp_sel_s = "10" else
+					   "0111";
 
 end architecture;

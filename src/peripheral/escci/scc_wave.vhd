@@ -40,9 +40,9 @@ use ieee.std_logic_signed.all;
 
 entity scc_wave_mul is
     port(
-        a           : in    std_logic_vector(  7 downto 0 );    -- 8bit ‚Q‚Ì•â”
-        b           : in    std_logic_vector(  3 downto 0 );    -- 4bit ƒoƒCƒiƒŠ
-        c           : out   std_logic_vector( 11 downto 0 )     -- 12bit ‚Q‚Ì•â”
+        a           : in    std_logic_vector(  7 downto 0 );    -- 8bit ２の補数
+        b           : in    std_logic_vector(  3 downto 0 );    -- 4bit バイナリ
+        c           : out   std_logic_vector( 11 downto 0 )     -- 12bit ２の補数
     );
 end scc_wave_mul;
 
@@ -65,8 +65,8 @@ entity scc_wave is
 		clock_i		: in    std_logic;
 		clock_en_i	: in    std_logic;
 		reset_i		: in    std_logic;
-		cs_i			: in    std_logic;
-		wr_i			: in    std_logic;
+		cs_n_i		: in    std_logic;
+		wr_n_i		: in    std_logic;
 		addr_i		: in    std_logic_vector( 7 downto 0 );
 		data_o		: out   std_logic_vector( 7 downto 0 );
 		data_i		: in    std_logic_vector( 7 downto 0 );
@@ -76,11 +76,10 @@ end entity;
 
 architecture Behavior of scc_wave is
 
---	signal clock_mem_s		: std_logic;
 	-- wire signal
-	signal w_wave_we			: std_logic;
-	signal w_wave_adr			: std_logic_vector(  7 downto 0 );
-	signal w_wave_data_s		: std_logic_vector(  7 downto 0 );
+	signal w_wave_we_n_s	: std_logic;
+	signal w_wave_adr		: std_logic_vector(  7 downto 0 );
+	signal w_wave_data_s	: std_logic_vector(  7 downto 0 );
     signal w_ch_dec         : std_logic_vector(  4 downto 0 );
     signal w_ch_bit         : std_logic;
     signal w_ch_mask        : std_logic_vector(  7 downto 0 );
@@ -117,7 +116,6 @@ architecture Behavior of scc_wave is
     signal ff_ch_num        : std_logic_vector(  2 downto 0 );
     signal ff_ch_num_dl     : std_logic_vector(  2 downto 0 );
     signal ff_mix           : std_logic_vector( 14 downto 0 );
-    signal ff_req_dl        : std_logic;
     signal ff_wave_dat      : std_logic_vector(  7 downto 0 );
     signal ff_wave          : std_logic_vector( 14 downto 0 );
 
@@ -129,19 +127,19 @@ begin
 		data_width_g	=> 8
 	)
 	port map (
-		clk_a_i		=> clock_i,--clock_mem_s,
-		we_i			=> w_wave_we,
-		addr_a_i		=> addr_i,
-		data_a_i		=> data_i,
-		data_a_o		=> w_wave_data_s,
-		clk_b_i		=> clock_i,--clock_mem_s,
-		addr_b_i		=> w_wave_adr,
-		data_b_o		=> ram_dbi
+		clk_a_i		=> clock_i,
+		we_n_i		=> w_wave_we_n_s,
+		addr_a_i	=> addr_i,
+		data_a_i	=> data_i,
+		data_a_o	=> w_wave_data_s,
+		clk_b_i		=> clock_i,
+		addr_b_i	=> w_wave_adr,
+		data_b_o	=> ram_dbi
 	);
 
 --	clock_mem_s	<= clock_i;
-	data_o 		<= w_wave_data_s	when addr_i < X"A0"	else (others => '1');
-	w_wave_we	<= wr_i				when cs_i = '1' and addr_i < X"A0"	else '0';
+	data_o 			<= w_wave_data_s	when addr_i < X"A0"	else (others => '1');
+	w_wave_we_n_s	<= wr_n_i			when cs_n_i = '0' and addr_i < X"A0"	else '1';
 
 	----------------------------------------------------------------
 	-- scc register access
@@ -149,7 +147,6 @@ begin
 	process(clock_i, reset_i)
 	begin
 		if reset_i = '1' then
-			ff_req_dl       <= '0';
 
 			reg_freq_ch_a   <= (others => '0');
 			reg_freq_ch_b   <= (others => '0');
@@ -174,7 +171,7 @@ begin
 
 		elsif rising_edge(clock_i) then
 			-- mapped i/o port access on B8A0-B8AFh ( translated 9880-988Fh) ... register write
-			if cs_i = '1' and wr_i = '1' and ff_req_dl = '0' and addr_i(7 downto 5) = "101" then
+			if cs_n_i = '0' and wr_n_i = '0' and addr_i(7 downto 5) = "101" then
 				case addr_i(3 downto 0) is
 					when "0000" => reg_freq_ch_a(  7 downto 0 ) <= data_i( 7 downto 0 ); ff_rst_ch_a <= reg_mode_sel(5);
 					when "0001" => reg_freq_ch_a( 11 downto 8 ) <= data_i( 3 downto 0 ); ff_rst_ch_a <= reg_mode_sel(5);
@@ -202,11 +199,9 @@ begin
 			end if;
 
 			-- mapped i/o port access on B8C0-B8DFh (translated 98E0-98FFh) ... register write
-			if cs_i = '1' and wr_i = '1' and addr_i(7 downto 5) = "110" then
+			if cs_n_i = '0' and wr_n_i = '0' and addr_i(7 downto 5) = "110" then
 				reg_mode_sel <= data_i;
 			end if;
-
-			ff_req_dl <= cs_i;
 
 		end if;
 	end process;
@@ -295,10 +290,10 @@ begin
 	-- wave memory control
 	----------------------------------------------------------------
 	w_wave_adr <=	"000" & ff_ptr_ch_a	when ff_ch_num = "000" else
-						"001" & ff_ptr_ch_b	when ff_ch_num = "001" else
-						"010" & ff_ptr_ch_c	when ff_ch_num = "010" else
-						"011" & ff_ptr_ch_d	when ff_ch_num = "011" else
-						"100" & ff_ptr_ch_e;
+					"001" & ff_ptr_ch_b	when ff_ch_num = "001" else
+					"010" & ff_ptr_ch_c	when ff_ch_num = "010" else
+					"011" & ff_ptr_ch_d	when ff_ch_num = "011" else
+					"100" & ff_ptr_ch_e;
 
 
 	----------------------------------------------------------------

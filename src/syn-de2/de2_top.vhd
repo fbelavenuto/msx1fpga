@@ -50,17 +50,13 @@ use work.msx_pack.all;
 
 -- Generic top-level entity for Altera DE2 board
 entity de2_top is
-	generic (
-		per_opll_g		: boolean		:= true;
-		per_jt51_g		: boolean		:= true
-	);
 	port (
 		-- Clocks
 		clk50_i			: in    std_logic;
 		clk27_i			: in    std_logic;
 		clk_ext_i		: in    std_logic;
 		-- Switches
-		sw_i				: in    std_logic_vector(17 downto 0);
+		sw_i			: in    std_logic_vector(17 downto 0);
 		-- Buttons
 		key_n_i			: in    std_logic_vector( 3 downto 0);
 		-- 7 segment displays
@@ -78,155 +74,153 @@ entity de2_top is
 		ledg_o			: out   std_logic_vector( 8 downto 0)		:= (others => '0');
 		-- Serial
 		uart_rx_i		: in    std_logic;
-		uart_tx_o		: out   std_logic									:= '1';
+		uart_tx_o		: out   std_logic							:= '1';
 		-- IRDA
 		irda_rx_i		: in    std_logic;
-		irda_tx_o		: out   std_logic									:= '0';
+		irda_tx_o		: out   std_logic							:= '0';
 		-- SRAM
-		sram_addr_o		: out   std_logic_vector(17 downto 0)		:= (others => '0');
+		sram_addr_o		: out   std_logic_vector(17 downto 0)		:= (others => '0');		-- 256Kx16 = 512Kx8
 		sram_data_io	: inout std_logic_vector(15 downto 0)		:= (others => '0');
-		sram_ce_n_o		: out   std_logic									:= '1';
-		sram_oe_n_o		: out   std_logic									:= '1';
-		sram_we_n_o		: out   std_logic									:= '1';
-		sram_ub_n_o		: out   std_logic									:= '1';
-		sram_lb_n_o		: out   std_logic									:= '1';
+		sram_ce_n_o		: out   std_logic							:= '1';
+		sram_oe_n_o		: out   std_logic							:= '1';
+		sram_we_n_o		: out   std_logic							:= '1';
+		sram_ub_n_o		: out   std_logic							:= '1';
+		sram_lb_n_o		: out   std_logic							:= '1';
 		-- SDRAM
-		dram_cke_o		: out   std_logic									:= '1';
-		dram_clk_o		: out   std_logic									:= '1';
-		dram_addr_o		: out   std_logic_vector(11 downto 0)		:= (others => '0');
+		dram_cke_o		: out   std_logic							:= '1';
+		dram_clk_o		: out   std_logic							:= '1';
+		dram_addr_o		: out   std_logic_vector(11 downto 0)		:= (others => '0');		-- 
 		dram_data_io	: inout std_logic_vector(15 downto 0)		:= (others => '0');
-		dram_cas_n_o	: out   std_logic									:= '1';
-		dram_ras_n_o	: out   std_logic									:= '1';
-		dram_cs_n_o		: out   std_logic									:= '1';
-		dram_we_n_o		: out   std_logic									:= '1';
+		dram_cas_n_o	: out   std_logic							:= '1';
+		dram_ras_n_o	: out   std_logic							:= '1';
+		dram_cs_n_o		: out   std_logic							:= '1';
+		dram_we_n_o		: out   std_logic							:= '1';
 		dram_ba_o		: out   std_logic_vector( 1 downto 0)		:= "11";
-		dram_ldqm_o		: out   std_logic									:= '1';
-		dram_udqm_o		: out   std_logic									:= '1';
+		dram_ldqm_o		: out   std_logic							:= '1';
+		dram_udqm_o		: out   std_logic							:= '1';
 		-- Flash
-		fl_rst_n_o		: out   std_logic									:= '1';
-		fl_addr_o		: out   std_logic_vector(21 downto 0)		:= (others => '0');
+		fl_rst_n_o		: out   std_logic							:= '1';
+		fl_addr_o		: out   std_logic_vector(21 downto 0)		:= (others => '0');		-- 4MBx8
 		fl_data_io		: inout std_logic_vector( 7 downto 0)		:= (others => 'Z');
-		fl_ce_n_o		: out   std_logic									:= '1';
-		fl_oe_n_o		: out   std_logic									:= '1';
-		fl_we_n_o		: out   std_logic									:= '1';
-		--	ISP1362 Interface
+		fl_ce_n_o		: out   std_logic							:= '1';
+		fl_oe_n_o		: out   std_logic							:= '1';
+		fl_we_n_o		: out   std_logic							:= '1';
+		--	ISP1362 Interface (USB)
 		otg_addr_o		: out   std_logic_vector( 1 downto 0)		:= (others => '0');
 		otg_data_io		: inout std_logic_vector(15 downto 0)		:= (others => 'Z');
-		otg_cs_n_o		: out   std_logic									:= '1';
-		otg_rd_n_o		: out   std_logic									:= '1';
-		otg_wr_n_o		: out   std_logic									:= '1';
-		otg_rst_n_o		: out   std_logic									:= '1';
-		otg_fspeed_o	: out   std_logic									:= 'Z';
-		otg_lspeed_o	: out   std_logic									:= 'Z';
+		otg_cs_n_o		: out   std_logic							:= '1';
+		otg_rd_n_o		: out   std_logic							:= '1';
+		otg_wr_n_o		: out   std_logic							:= '1';
+		otg_rst_n_o		: out   std_logic							:= '1';
+		otg_fspeed_o	: out   std_logic							:= 'Z';
+		otg_lspeed_o	: out   std_logic							:= 'Z';
 		otg_int0_i		: in    std_logic;
 		otg_int1_i		: in    std_logic;
 		otg_dreq0_i		: in    std_logic;
 		otg_dreq1_i		: in    std_logic;
-		otg_dack0_n_o	: out   std_logic									:= '1';
-		otg_dack1_n_o	: out   std_logic									:= '1';
+		otg_dack0_n_o	: out   std_logic							:= '1';
+		otg_dack1_n_o	: out   std_logic							:= '1';
 		--	LCD Module 16X2
-		lcd_on_o			: out   std_logic									:= '0';
-		lcd_blon_o		: out   std_logic									:= '0';
+		lcd_on_o		: out   std_logic							:= '0';
+		lcd_blon_o		: out   std_logic							:= '0';
 		lcd_data_io		: inout std_logic_vector(7 downto 0)		:= (others => '0');
-		lcd_rw_o			: out   std_logic									:= '1';		-- 0=Write
-		lcd_en_o			: out   std_logic									:= '1';
-		lcd_rs_o			: out   std_logic									:= '1';		-- 0=Command
+		lcd_rw_o		: out   std_logic							:= '1';		-- 0=Write
+		lcd_en_o		: out   std_logic							:= '1';
+		lcd_rs_o		: out   std_logic							:= '1';		-- 0=Command
 		-- SD card (SPI mode)
 		sd_miso_i		: in    std_logic;
-		sd_mosi_o		: out   std_logic									:= '1';
-		sd_cs_n_o		: out   std_logic									:= '1';
-		sd_sclk_o		: out   std_logic									:= '1';
+		sd_mosi_o		: out   std_logic							:= '1';
+		sd_cs_n_o		: out   std_logic							:= '1';
+		sd_sclk_o		: out   std_logic							:= '1';
 		-- I2C
-		i2c_sclk_io		: inout std_logic									:= '1';
-		i2c_sdat_io		: inout std_logic									:= '1';
+		i2c_sclk_io		: inout std_logic							:= '1';
+		i2c_sdat_io		: inout std_logic							:= '1';
 		-- PS/2 Keyboard
-		ps2_clk_io		: inout std_logic									:= '1';
-		ps2_dat_io		: inout std_logic									:= '1';
+		ps2_clk_io		: inout std_logic							:= '1';
+		ps2_dat_io		: inout std_logic							:= '1';
 		-- VGA
-		vga_clk_o		: out   std_logic									:= '0';
+		vga_clk_o		: out   std_logic							:= '0';
 		vga_r_o			: out   std_logic_vector( 9 downto 0)		:= (others => '0');
 		vga_g_o			: out   std_logic_vector( 9 downto 0)		:= (others => '0');
 		vga_b_o			: out   std_logic_vector( 9 downto 0)		:= (others => '0');
-		vga_hsync_n_o	: out   std_logic									:= '1';
-		vga_vsync_n_o	: out   std_logic									:= '1';
-		vga_blank_n_o	: out   std_logic									:= '1';
-		vga_sync_o		: out   std_logic									:= '0';
+		vga_hsync_n_o	: out   std_logic							:= '1';
+		vga_vsync_n_o	: out   std_logic							:= '1';
+		vga_blank_n_o	: out   std_logic							:= '1';
+		vga_sync_o		: out   std_logic							:= '0';
 		-- Ethernet Interface
-		enet_clk_o		: out   std_logic									:= '0';
+		enet_clk_o		: out   std_logic							:= '0';
 		enet_data_io	: inout std_logic_vector(15 downto 0)		:= (others => 'Z');
-		enet_cmd_o		: out   std_logic									:= '0';		-- 0=Command
-		enet_cs_n_o		: out   std_logic									:= '1';
-		enet_wr_n_o		: out   std_logic									:= '1';
-		enet_rd_n_o		: out   std_logic									:= '1';
-		enet_rst_n_o	: out   std_logic									:= '1';
+		enet_cmd_o		: out   std_logic							:= '0';		-- 0=Command
+		enet_cs_n_o		: out   std_logic							:= '1';
+		enet_wr_n_o		: out   std_logic							:= '1';
+		enet_rd_n_o		: out   std_logic							:= '1';
+		enet_rst_n_o	: out   std_logic							:= '1';
 		enet_int_i		: in    std_logic;
 		-- Audio
-		aud_xck_o		: out   std_logic									:= '0';
-		aud_bclk_o		: out   std_logic									:= '0';
-		aud_adclrck_o	: out   std_logic									:= '0';
+		aud_xck_o		: out   std_logic							:= '0';
+		aud_bclk_o		: out   std_logic							:= '0';
+		aud_adclrck_o	: out   std_logic							:= '0';
 		aud_adcdat_i	: in    std_logic;
-		aud_daclrck_o	: out   std_logic									:= '0';
-		aud_dacdat_o	: out   std_logic									:= '0';
+		aud_daclrck_o	: out   std_logic							:= '0';
+		aud_dacdat_o	: out   std_logic							:= '0';
 		-- TV Decoder
 		td_data_i		: in    std_logic_vector(7 downto 0);
 		td_hsync_n_i	: in    std_logic;
 		td_vsync_n_i	: in    std_logic;
-		td_reset_n_o	: out   std_logic									:= '1';
+		td_reset_n_o	: out   std_logic							:= '1';
 		-- GPIO
-		gpio0_io			: inout std_logic_vector(35 downto 0)		:= (others => 'Z');
-		gpio1_io			: inout std_logic_vector(35 downto 0)		:= (others => 'Z')
+		gpio0_io		: inout std_logic_vector(35 downto 0)		:= (others => 'Z');
+		gpio1_io		: inout std_logic_vector(35 downto 0)		:= (others => 'Z')
 	);
 end entity;
 
 architecture behavior of de2_top is
 
 	-- Resets
-	signal pll_locked_s		: std_logic;
+	signal pll_locked_s			: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
 	signal soft_por_s			: std_logic;
-	signal soft_reset_k_s	: std_logic;
-	signal soft_reset_s_s	: std_logic;
-	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
-
+	signal soft_reset_k_s		: std_logic;
+	signal soft_reset_s_s		: std_logic;
+	signal soft_rst_cnt_s		: unsigned(7 downto 0)	:= X"FF";
 	-- Clocks
-	signal clock_master_s	: std_logic;
+	signal clock_master_s		: std_logic;
 	signal clock_sdram_s		: std_logic;
+	signal clock_3m_en_s		: std_logic;
+	signal clock_7m_en_s		: std_logic;
+	signal clock_10m_en_s		: std_logic;
+	signal clock_cpu_en_s		: std_logic;
 	signal clock_audio_s		: std_logic;
-	signal clock_vdp_s		: std_logic;
-	signal clock_cpu_s		: std_logic;
-	signal clock_psg_en_s	: std_logic;
-	signal clock_3m_s			: std_logic;
-	signal clock_16m_s		: std_logic;
-	signal clock_8m_s			: std_logic;
-
+	signal clock_16m_s			: std_logic;
 	signal turbo_on_s			: std_logic;
-
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
-	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
+	signal ram_data_from_s		: std_logic_vector( 7 downto 0);
 	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
-	signal ram_ce_s			: std_logic;
-	signal ram_oe_s			: std_logic;
-	signal ram_we_s			: std_logic;
-
+	signal ram_ce_n_s			: std_logic;
+	signal ram_oe_n_s			: std_logic;
+	signal ram_we_n_s			: std_logic;
+	-- ROM
+--	signal rom_addr_s			: std_logic_vector(14 downto 0);		-- 32K
+--	signal rom_data_from_s		: std_logic_vector( 7 downto 0);
+--	signal rom_ce_n_s			: std_logic;
+--	signal rom_oe_n_s			: std_logic;
 	-- VRAM memory
-	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
-	signal vram_data_from_s	: std_logic_vector( 7 downto 0);
-	signal vram_data_to_s	: std_logic_vector( 7 downto 0);
-	signal vram_ce_s			: std_logic;
-	signal vram_oe_s			: std_logic;
-	signal vram_we_s			: std_logic;
-
+	signal vram_addr_s			: std_logic_vector(13 downto 0);		-- 16K
+	signal vram_data_from_s		: std_logic_vector( 7 downto 0);
+	signal vram_data_to_s		: std_logic_vector( 7 downto 0);
+	signal vram_ce_n_s			: std_logic;
+	signal vram_oe_n_s			: std_logic;
+	signal vram_we_n_s			: std_logic;
 	-- Audio
-	signal audio_scc_s		: signed(14 downto 0);
-	signal audio_psg_s		: unsigned(7 downto 0);
+	signal audio_scc_s			: signed(14 downto 0);
+	signal audio_psg_s			: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
 	signal ear_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
 	signal volumes_s			: volumes_t;
-
 	-- Video
 	signal rgb_r_s				: std_logic_vector( 3 downto 0);
 	signal rgb_g_s				: std_logic_vector( 3 downto 0);
@@ -234,19 +228,17 @@ architecture behavior of de2_top is
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
 	signal ntsc_pal_s			: std_logic;
-	signal vga_en_s			: std_logic;
-
+	signal vga_en_s				: std_logic;
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector( 3 downto 0);
-	signal keyb_valid_s		: std_logic;
-	signal keyb_data_s		: std_logic_vector( 7 downto 0);
+	signal extra_keys_s			: std_logic_vector( 3 downto 0);
+	signal keyb_valid_s			: std_logic;
+	signal keyb_data_s			: std_logic_vector( 7 downto 0);
 	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
-	signal keymap_we_s		: std_logic;
-
+	signal keymap_we_n_s		: std_logic;
 	-- Joystick (Minimig Standard)
 	alias J0_UP					: std_logic						is gpio1_io(34);	-- Pin 1
 	alias J0_DOWN				: std_logic						is gpio1_io(32);	-- Pin 2
@@ -262,98 +254,97 @@ architecture behavior of de2_top is
 	alias J1_MMB				: std_logic						is gpio1_io(27);
 	alias J1_BTN				: std_logic						is gpio1_io(25);
 	alias J1_BTN2				: std_logic						is gpio1_io(21);
-
 	-- SD
 	signal sd_cs_n_s			: std_logic;
-
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
-	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
+	signal bus_data_from_s		: std_logic_vector( 7 downto 0)		:= (others => '1');
 	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
 	signal bus_rd_n_s			: std_logic;
 	signal bus_wr_n_s			: std_logic;
 	signal bus_m1_n_s			: std_logic;
-	signal bus_iorq_n_s		: std_logic;
-	signal bus_mreq_n_s		: std_logic;
-	signal bus_sltsl1_n_s	: std_logic;
-	signal bus_sltsl2_n_s	: std_logic;
-	signal bus_int_n_s		: std_logic;
-
+	signal bus_iorq_n_s			: std_logic;
+	signal bus_mreq_n_s			: std_logic;
+	signal bus_sltsl1_n_s		: std_logic;
+	signal bus_sltsl2_n_s		: std_logic;
+	signal bus_int_n_s			: std_logic;
 	-- JT51
-	signal jt51_cs_n_s		: std_logic								:= '1';
-	signal jt51_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
-	signal jt51_hd_s			: std_logic								:= '0';
-	signal jt51_left_s		: signed(15 downto 0)				:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)				:= (others => '0');
-
+--	signal jt51_cs_n_s			: std_logic							:= '1';
+--	signal jt51_data_from_s		: std_logic_vector( 7 downto 0)		:= (others => '1');
+--	signal jt51_hd_s			: std_logic							:= '0';
+--	signal jt51_left_s			: signed(15 downto 0)				:= (others => '0');
+--	signal jt51_right_s			: signed(15 downto 0)				:= (others => '0');
 	-- OPLL
-	signal opll_cs_n_s		: std_logic								:= '1';
 	signal opll_mo_s			: signed(12 downto 0)				:= (others => '0');
 	signal opll_ro_s			: signed(12 downto 0)				:= (others => '0');
-
 	-- Serial interface
-	signal serial_cs_s		: std_logic								:= '0';
-	signal serial_data_from_s: std_logic_vector( 7 downto 0)	:= (others => '1');
-	signal serial_hd_s		: std_logic								:= '0';
-
-
+--	signal serial_cs_s			: std_logic							:= '0';
+--	signal serial_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
+--	signal serial_hd_s			: std_logic							:= '0';
 	-- Debug
-	signal D_display_s		: std_logic_vector(15 downto 0);
+	signal D_wait_n_s			: std_logic;
+	signal D_ipl_en_s			: std_logic;
+	signal D_generic_s			: std_logic;
+	signal D_display_s			: std_logic_vector(15 downto 0);
+	signal D_slots_s			: std_logic_vector( 7 downto 0);
 
 begin
 
 	-- PLL
 	pll_1: entity work.pll1
 	port map (
-		inclk0	=> clk50_i,
-		c0			=> clock_master_s,		-- 21.428571 MHz (6x NTSC)
+		inclk0		=> clk50_i,
+		c0			=> clock_master_s,			-- 21.428571 MHz (6x NTSC)
 		c1			=> clock_sdram_s,			-- 85.714286
-		c2			=> dram_clk_o,				-- 85.714286 90°
-		locked	=> pll_locked_s
+		c2			=> dram_clk_o,				-- 85.714286 -45°
+		locked		=> pll_locked_s
 	);
 
 	pll_2: entity work.pll2
 	port map (
-		inclk0	=> clk27_i,
-		c0			=> clock_audio_s,		-- 24.000000 MHz
-		c1			=> clock_16m_s			-- 16 MHz
+		inclk0		=> clk27_i,
+		c0			=> clock_audio_s,			-- 24.000000 MHz
+		c1			=> clock_16m_s				-- 16 MHz
 	);
 
 	-- Clocks
 	clks: entity work.clocks
 	port map (
-		clock_i			=> clock_master_s,
-		por_i				=> not pll_locked_s,
-		turbo_on_i		=> turbo_on_s,
-		clock_vdp_o		=> clock_vdp_s,
+		clock_master_i	=> clock_master_s,
+		por_i			=> not pll_locked_s,
+		clock_3m_en_o	=> clock_3m_en_s,
 		clock_5m_en_o	=> open,
-		clock_cpu_o		=> clock_cpu_s,
-		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_7m_en_o	=> clock_7m_en_s,
+		clock_10m_en_o	=> clock_10m_en_s
 	);
+
+	clock_cpu_en_s	<= clock_3m_en_s	when turbo_on_s = '0' else clock_7m_en_s;
+	--clock_cpu_en_s	<= clock_3m_en_s;
 
 	-- The MSX1
 	the_msx: entity work.msx
 	generic map (
 		hw_id_g			=> 2,
-		hw_txt_g			=> "DE-2 Board",
+		hw_txt_g		=> "DE-2 Board",
 		hw_version_g	=> actual_version,
-		video_opt_g		=> 1,						-- dblscan configurable
-		ramsize_g		=> 8192
+		video_opt_g		=> 1,		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		ramsize_g		=> 8192,
+		opll_en_g		=> true
 	)
 	port map (
+		-- Resets
+		por_i			=> por_s,
+		softreset_o		=> soft_reset_s_s,
+		reload_o		=> open,
+		reset_i			=> reset_s,
 		-- Clocks
-		clock_i			=> clock_master_s,
-		clock_vdp_i		=> clock_vdp_s,
-		clock_cpu_i		=> clock_cpu_s,
-		clock_psg_en_i	=> clock_psg_en_s,
+		clock_master_i	=> clock_master_s,
+		clock_vdp_en_i	=> clock_10m_en_s,
+		clock_cpu_en_i	=> clock_cpu_en_s,
+		clock_psg_en_i	=> clock_3m_en_s,
 		-- Turbo
 		turbo_on_k_i	=> extra_keys_s(3),	-- F11
 		turbo_on_o		=> turbo_on_s,
-		-- Resets
-		reset_i			=> reset_s,
-		por_i				=> por_s,
-		softreset_o		=> soft_reset_s_s,
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> sw_i(2 downto 1),
@@ -362,14 +353,14 @@ begin
 		ram_addr_o		=> ram_addr_s,
 		ram_data_i		=> ram_data_from_s,
 		ram_data_o		=> ram_data_to_s,
-		ram_ce_o			=> ram_ce_s,
-		ram_we_o			=> ram_we_s,
-		ram_oe_o			=> ram_oe_s,
+		ram_ce_n_o		=> ram_ce_n_s,
+		ram_we_n_o		=> ram_we_n_s,
+		ram_oe_n_o		=> ram_oe_n_s,
 		-- ROM
-		rom_addr_o		=> open,
+		rom_addr_o		=> open,--rom_addr_s,
 		rom_data_i		=> ram_data_from_s,
-		rom_ce_o			=> open,
-		rom_oe_o			=> open,
+		rom_ce_n_o		=> open,--rom_ce_n_s,
+		rom_oe_n_o		=> open,--rom_oe_n_s,
 		-- External bus
 		bus_addr_o		=> bus_addr_s,
 		bus_data_i		=> bus_data_from_s,
@@ -388,9 +379,9 @@ begin
 		vram_addr_o		=> vram_addr_s,
 		vram_data_i		=> vram_data_from_s,
 		vram_data_o		=> vram_data_to_s,
-		vram_ce_o		=> vram_ce_s,
-		vram_oe_o		=> vram_oe_s,
-		vram_we_o		=> vram_we_s,
+		vram_ce_n_o		=> vram_ce_n_s,
+		vram_oe_n_o		=> vram_oe_n_s,
+		vram_we_n_o		=> vram_we_n_s,
 		-- Keyboard
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
@@ -399,11 +390,13 @@ begin
 		keyb_data_i		=> keyb_data_s,
 		keymap_addr_o	=> keymap_addr_s,
 		keymap_data_o	=> keymap_data_s,
-		keymap_we_o		=> keymap_we_s,
+		keymap_we_n_o	=> keymap_we_n_s,
 		-- Audio
 		audio_scc_o		=> audio_scc_s,
 		audio_psg_o		=> audio_psg_s,
 		beep_o			=> beep_s,
+		opll_mo_o		=> opll_mo_s,
+		opll_ro_o		=> opll_ro_s,
 		volumes_o		=> volumes_s,
 		-- K7
 		k7_motor_o		=> open,
@@ -436,8 +429,8 @@ begin
 		vsync_n_o		=> rgb_vsync_n_s,
 		ntsc_pal_o		=> ntsc_pal_s,
 		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
-		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
-		vga_en_o			=> vga_en_s,
+		scanline_on_k_i	=> extra_keys_s(1),		-- Scroll Lock
+		vga_en_o		=> vga_en_s,
 		-- SPI/SD
 		flspi_cs_n_o	=> open,
 		spi_cs_n_o		=> sd_cs_n_s,
@@ -447,22 +440,23 @@ begin
 		sd_pres_n_i		=> '0',
 		sd_wp_i			=> '0',
 		-- DEBUG
-		D_wait_o			=> open,
-		D_slots_o		=> open,
-		D_ipl_en_o		=> open
+		D_wait_o		=> D_wait_n_s,
+		D_slots_o		=> D_slots_s,
+		D_ipl_en_o		=> D_ipl_en_s,
+		D_generic_o		=> D_generic_s
 	);
 
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
-		clock_i			=> clock_3m_s,
+		clock_i			=> clock_3m_en_s,
 		reset_i			=> reset_s,
 		-- MSX
 		rows_coded_i	=> rows_s,
 		cols_o			=> cols_s,
 		keymap_addr_i	=> keymap_addr_s,
 		keymap_data_i	=> keymap_data_s,
-		keymap_we_i		=> keymap_we_s,
+		keymap_we_n_i	=> keymap_we_n_s,
 		-- LEDs
 		led_caps_i		=> caps_en_s,
 		-- PS/2 interface
@@ -473,7 +467,7 @@ begin
 		keyb_data_o		=> keyb_data_s,
 		--
 		reset_o			=> soft_reset_k_s,
-		por_o				=> soft_por_s,
+		por_o			=> soft_por_s,
 		reload_core_o	=> open,
 		extra_keys_o	=> extra_keys_s
 	);
@@ -481,25 +475,17 @@ begin
 	-- VRAM
 	vram: entity work.spram
 	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
+		addr_width_g 	=> 14,
+		data_width_g 	=> 8
 	)
 	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_data_to_s,
-		data_o	=> vram_data_from_s
+		clock_i			=> clock_master_s,
+		clock_en_i		=> clock_10m_en_s,
+		we_n_i			=> vram_we_n_s,
+		addr_i			=> vram_addr_s,
+		data_i			=> vram_data_to_s,
+		data_o			=> vram_data_from_s
 	);
---	sram_addr_o	<= "0000" & vram_addr_s;
---	sram_data_io		<= "ZZZZZZZZ" & vram_data_to_s	when vram_we_s = '1' else
---						(others => 'Z');
---	vram_data_from_s	<= sram_data_io( 7 downto 0);
---	sram_ub_n_o			<= '1';
---	sram_lb_n_o			<= '0';
---	sram_ce_n_o			<= not vram_ce_s;
---	sram_oe_n_o			<= not vram_oe_s;
---	sram_we_n_o			<= not vram_we_s;
 
 	-- RAM
 	ram: entity work.ssdram
@@ -514,9 +500,9 @@ begin
 		addr_i		=> ram_addr_s,
 		data_i		=> ram_data_to_s,
 		data_o		=> ram_data_from_s,
-		cs_i			=> ram_ce_s,
-		oe_i			=> ram_oe_s,
-		we_i			=> ram_we_s,
+		cs_n_i		=> ram_ce_n_s,
+		oe_n_i		=> ram_oe_n_s,
+		we_n_i		=> ram_we_n_s,
 		-- SD-RAM ports
 		mem_cke_o	=> dram_cke_o,
 		mem_cs_n_o	=> dram_cs_n_o,
@@ -533,15 +519,14 @@ begin
 	-- Audio
 	mixer: entity work.mixers
 	port map (
-		clock_i			=> clock_master_s,
-		reset_i			=> reset_s,
+		clock_audio_i	=> clock_audio_s,
 		volumes_i		=> volumes_s,
 		beep_i			=> beep_s,
-		ear_i				=> ear_s,
+		ear_i			=> ear_s,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		jt51_left_i		=> jt51_left_s,
-		jt51_right_i	=> jt51_right_s,
+--		jt51_left_i		=> jt51_left_s,
+--		jt51_right_i	=> jt51_right_s,
 		opll_mo_i		=> opll_mo_s,
 		opll_ro_i		=> opll_ro_s,
 		audio_mix_l_o	=> audio_l_s,
@@ -571,7 +556,7 @@ begin
 	-- Glue logic
 
 	-- Resets
-	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or key_n_i(3) = '0'	else '0';
+	por_s		<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or key_n_i(3) = '0'	else '0';
 	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1'  or key_n_i(0) = '0'	else '0';
 
 	process(clock_master_s)
@@ -598,98 +583,85 @@ begin
 	vga_clk_o		<= clock_master_s;
 
 	-- Peripheral BUS control
-	bus_data_from_s	<= jt51_data_from_s		when jt51_hd_s = '1'		else
-							   serial_data_from_s	when serial_hd_s = '1'	else
-								(others => '1');
+--	bus_data_from_s	<= jt51_data_from_s		when jt51_hd_s = '1'		else
+--							   serial_data_from_s	when serial_hd_s = '1'	else
+--								(others => '1');
 	bus_int_n_s		<= '1';
+--
+--	ptjt: if per_jt51_g generate
+--		-- JT51 tests
+--		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
+--	
+--		jt51: entity work.jt51_wrapper
+--		port map (
+--			clock_i			=> clock_3m_s,
+--			reset_i			=> reset_s,
+--			addr_i			=> bus_addr_s(0),
+--			cs_n_i			=> jt51_cs_n_s,
+--			wr_n_i			=> bus_wr_n_s,
+--			rd_n_i			=> bus_rd_n_s,
+--			data_i			=> bus_data_to_s,
+--			data_o			=> jt51_data_from_s,
+--			has_data_o		=> jt51_hd_s,
+--			ct1_o			=> open,
+--			ct2_o			=> open,
+--			irq_n_o			=> open,
+--			p1_o			=> open,
+--			-- Low resolution output (same as real chip)
+--			sample_o		=> open,
+--			left_o			=> open,
+--			right_o			=> open,
+--			-- Full resolution output
+--			xleft_o			=> jt51_left_s,
+--			xright_o		=> jt51_right_s,
+--			-- unsigned outputs for sigma delta converters, full resolution
+--			dacleft_o		=> open,
+--			dacright_o		=> open
+--		);
+--	end generate;
 
-	ptjt: if per_jt51_g generate
-		-- JT51 tests
-		jt51_cs_n_s <= '0' when bus_addr_s(7 downto 1) = "0010000" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x20 - 0x21
-	
-		jt51: entity work.jt51_wrapper
-		port map (
-			clock_i			=> clock_3m_s,
-			reset_i			=> reset_s,
-			addr_i			=> bus_addr_s(0),
-			cs_n_i			=> jt51_cs_n_s,
-			wr_n_i			=> bus_wr_n_s,
-			rd_n_i			=> bus_rd_n_s,
-			data_i			=> bus_data_to_s,
-			data_o			=> jt51_data_from_s,
-			has_data_o		=> jt51_hd_s,
-			ct1_o				=> open,
-			ct2_o				=> open,
-			irq_n_o			=> open,
-			p1_o				=> open,
-			-- Low resolution output (same as real chip)
-			sample_o			=> open,
-			left_o			=> open,
-			right_o			=> open,
-			-- Full resolution output
-			xleft_o			=> jt51_left_s,
-			xright_o			=> jt51_right_s,
-			-- unsigned outputs for sigma delta converters, full resolution
-			dacleft_o		=> open,
-			dacright_o		=> open
-		);
-	end generate;
-
-	popll: if per_opll_g generate
-		-- OPLL tests
-		opll_cs_n_s	<= '0' when bus_addr_s(7 downto 1) = "0111110" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '1';	-- 0x7C - 0x7D
-		
-		opll1 : entity work.OPLL 
-		port map (
-			clock_i		=> clock_master_s,
-			clock_en_i	=> clock_psg_en_s,
-			reset_i		=> reset_s,
-			data_i		=> bus_data_to_s,
-			addr_i		=> bus_addr_s(0),
-			cs_n        => opll_cs_n_s,
-			we_n        => bus_wr_n_s,
-			melody_o		=> opll_mo_s,
-			rythm_o		=> opll_ro_s
-		);
-	end generate;
-
-	-- Tests UART
-	serial_cs_s	<= '1'	when bus_addr_s(7 downto 3) = "11001" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '0';	-- 0xC8 - 0xCF
-	
-	serial: entity work.uart
-	port map (
-		clock_i		=> clock_16m_s,
-		reset_i		=> reset_s,
-		addr_i		=> bus_addr_s(2 downto 0),
-		data_i		=> bus_data_to_s,
-		data_o		=> serial_data_from_s,
-		has_data_o	=> serial_hd_s,
-		cs_i			=> serial_cs_s,
-		rd_i			=> not bus_rd_n_s,
-		wr_i			=> not bus_wr_n_s,
-		int_n_o		=> open,
-		--
-		rxd_i			=> uart_rx_i,
-		txd_o			=> uart_tx_o,
-		dsr_n_i		=> '0',
-		rts_n_o		=> open,
-		cts_n_i		=> '0',
-		dtr_n_o		=> open,
-		dcd_i			=> '0',
-		ri_n_i		=> '1'
-	);
+--	-- Tests UART
+--	serial_cs_s	<= '1'	when bus_addr_s(7 downto 3) = "11001" and bus_iorq_n_s = '0' and bus_m1_n_s = '1'	else '0';	-- 0xC8 - 0xCF
+--	
+--	serial: entity work.uart
+--	port map (
+--		clock_i		=> clock_16m_s,
+--		reset_i		=> reset_s,
+--		addr_i		=> bus_addr_s(2 downto 0),
+--		data_i		=> bus_data_to_s,
+--		data_o		=> serial_data_from_s,
+--		has_data_o	=> serial_hd_s,
+--		cs_i		=> serial_cs_s,
+--		rd_i		=> not bus_rd_n_s,
+--		wr_i		=> not bus_wr_n_s,
+--		int_n_o		=> open,
+--		--
+--		rxd_i		=> uart_rx_i,
+--		txd_o		=> uart_tx_o,
+--		dsr_n_i		=> '0',
+--		rts_n_o		=> open,
+--		cts_n_i		=> '0',
+--		dtr_n_o		=> open,
+--		dcd_i		=> '0',
+--		ri_n_i		=> '1'
+--	);
 
 
 	-- DEBUG
 	D_display_s	<= bus_addr_s;
 
-	ledg_o(7) <= turbo_on_s;
-	ledg_o(6) <= vga_en_s;
-	ledg_o(5) <= ntsc_pal_s;
-	ledg_o(4) <= not jt51_cs_n_s;
-	ledg_o(0) <= not sd_cs_n_s;
+--	ledg_o(3 downto 0) <= rows_s;
+--	ledr_o(7 downto 0) <= cols_s;
 
-	ledr_o(15 downto 0) <= std_logic_vector(jt51_left_s);
+	ledg_o(7) <= turbo_on_s;
+--	ledg_o(6) <= vga_en_s;
+--	ledg_o(5) <= ntsc_pal_s;
+--	ledg_o(4) <= not jt51_cs_n_s;
+--	ledg_o(2) <= D_ipl_en_s;
+--	ledg_o(1) <= D_generic_s;
+	ledg_o(0) <= D_wait_n_s;
+--
+--	ledr_o(15 downto 0) <= std_logic_vector(jt51_left_s);
 
 	ld3: entity work.seg7
 	port map(

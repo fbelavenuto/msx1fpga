@@ -78,36 +78,35 @@ use ieee.std_logic_unsigned.all;
 use work.vdp18_pack.opmode_t;
 use work.vdp18_pack.hv_t;
 use work.vdp18_pack.access_t;
-use work.vdp18_pack.to_boolean_f;
-use work.vdp18_pack.to_std_logic_f;
 
 entity vdp18_core is
 	generic (
-		video_opt_g	: integer		:= 0		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		video_opt_g		: integer		:= 0;		-- 0 = no dblscan, 1 = dblscan configurable, 2 = dblscan always enabled, 3 = no dblscan and external palette
+		start_on_g		: boolean		:= false	-- false = VDP starts off, true = VDP start showing video
 	);
 	port (
 		-- Global Interface -------------------------------------------------------
 		clock_i			: in  std_logic;
 		clk_en_10m7_i	: in  std_logic;
-		por_i				: in  std_logic;
+		por_i			: in  std_logic;
 		reset_i			: in  std_logic;
 		-- CPU Interface ----------------------------------------------------------
 		csr_n_i			: in  std_logic;
 		csw_n_i			: in  std_logic;
 		mode_i			: in  std_logic_vector( 0 to  1);
 		int_n_o			: out std_logic;
-		cd_i				: in  std_logic_vector( 0 to  7);
-		cd_o				: out std_logic_vector( 0 to  7);
-		wait_o			: out std_logic;
+		cd_i			: in  std_logic_vector( 0 to  7);
+		cd_o			: out std_logic_vector( 0 to  7);
+		wait_n_o		: out std_logic;
 		-- VRAM Interface ---------------------------------------------------------
-		vram_ce_o		: out std_logic;
-		vram_oe_o		: out std_logic;
-		vram_we_o		: out std_logic;
-		vram_a_o			: out std_logic_vector( 0 to 13);
-		vram_d_o			: out std_logic_vector( 0 to  7);
-		vram_d_i			: in  std_logic_vector( 0 to  7);
+		vram_ce_n_o		: out std_logic;
+		vram_oe_n_o		: out std_logic;
+		vram_we_n_o		: out std_logic;
+		vram_a_o		: out std_logic_vector( 0 to 13);
+		vram_d_o		: out std_logic_vector( 0 to  7);
+		vram_d_i		: in  std_logic_vector( 0 to  7);
 		-- Video Interface --------------------------------------------------------
-		vga_en_i			: in  std_logic;
+		vga_en_i		: in  std_logic;
 		scanline_en_i	: in  std_logic;
 		cnt_hor_o		: out std_logic_vector( 8 downto 0);
 		cnt_ver_o		: out std_logic_vector( 7 downto 0);
@@ -120,43 +119,35 @@ entity vdp18_core is
 		vertfreq_csw_o	: out std_logic;
 		vertfreq_d_o	: out std_logic
 	);
-end vdp18_core;
+end entity;
 
 architecture struct of vdp18_core is
 
-	signal por_s				: boolean;
-	signal reset_s				: boolean;
+	signal clk_en_5m37_s,
+	       clk_en_acc_s			: std_logic;
 
-	signal clk_en_10m7_s,
-	       clk_en_5m37_s,
---	       clk_en_3m58_s,
-	       clk_en_acc_s		: boolean;
-
-	signal opmode_s			: opmode_t;
+	signal opmode_s				: opmode_t;
 	signal access_type_s		: access_t;
 	signal num_pix_s,
-				num_line_s		: hv_t;
+			num_line_s			: hv_t;
 
 	signal rgb_hsync_n_s		: std_logic;
 	signal rgb_vsync_n_s		: std_logic;
 	signal vga_hsync_n_s		: std_logic;
 	signal vga_vsync_n_s		: std_logic;
 
-	signal blank_s          : boolean;
-	signal vert_inc_s       : boolean;
+	signal blank_s          	: std_logic;
+	signal vert_inc_s       	: std_logic;
 	signal reg_blank_s,
-				reg_size1_s,
-				reg_mag1_s		: boolean;
+			reg_size1_s,
+			reg_mag1_s			: std_logic;
 
-	signal spr_5th_s			: boolean;
+	signal spr_5th_s			: std_logic;
 	signal spr_5th_num_s		: std_logic_vector(0 to 4);
 
-	signal stop_sprite_s		: boolean;
+	signal stop_sprite_s		: std_logic;
 	signal vert_active_s,
-				hor_active_s	: boolean;
-
-	signal rd_s,
-				wr_s				: boolean;
+			hor_active_s		: std_logic;
 
 	signal reg_ntb_s			: std_logic_vector(0 to  3);
 	signal reg_ctb_s			: std_logic_vector(0 to  7);
@@ -164,10 +155,10 @@ architecture struct of vdp18_core is
 	signal reg_satb_s			: std_logic_vector(0 to  6);
 	signal reg_spgb_s			: std_logic_vector(0 to  2);
 	signal reg_col1_s,
-				reg_col0_s		: std_logic_vector(0 to  3);
-	signal cpu_vram_a_s		: std_logic_vector(0 to 13);
+			reg_col0_s			: std_logic_vector(0 to  3);
+	signal cpu_vram_a_s			: std_logic_vector(0 to 13);
 
-	signal pat_table_s		: std_logic_vector(0 to  9);
+	signal pat_table_s			: std_logic_vector(0 to  9);
 	signal pat_name_s			: std_logic_vector(0 to  7);
 	signal pat_col_s			: std_logic_vector(0 to  3);
 
@@ -175,32 +166,26 @@ architecture struct of vdp18_core is
 	signal spr_line_s			: std_logic_vector(0 to  3);
 	signal spr_name_s			: std_logic_vector(0 to  7);
 	signal spr0_col_s,
-				spr1_col_s,
-				spr2_col_s,
-				spr3_col_s		: std_logic_vector(0 to  3);
-	signal spr_coll_s			: boolean;
+			spr1_col_s,
+			spr2_col_s,
+			spr3_col_s			: std_logic_vector(0 to  3);
+	signal spr_coll_s			: std_logic;
 
-	signal irq_s				: boolean;
+	signal irq_s				: std_logic;
  
-	signal vram_read_s		: boolean;
-	signal vram_write_s		: boolean;
+	signal vram_read_s			: std_logic;
+	signal vram_write_s			: std_logic;
 	signal col_s				: std_logic_vector(0 to  3);
 	signal col_rgb_s			: std_logic_vector(0 to  3);
 	signal col_vga_s			: std_logic_vector(0 to  3);
 	signal rgb_s				: std_logic_vector(0 to 15);
 	signal palette_idx_s		: std_logic_vector(0 to  3);
 	signal palette_val_s		: std_logic_vector(0 to 15);
-	signal palette_wr_s		: std_logic;
-	signal ntsc_pal_e_s		: std_logic;
+	signal palette_wr_s			: std_logic;
+	signal ntsc_pal_e_s			: std_logic;
 	signal oddline_s			: std_logic							:= '0';
 
 begin
-
-	clk_en_10m7_s <= to_boolean_f(clk_en_10m7_i);
-	rd_s          <= not to_boolean_f(csr_n_i);
-	wr_s          <= not to_boolean_f(csw_n_i);
-	por_s				<= por_i = '1';
-	reset_s			<= reset_i = '1';
 
 	-----------------------------------------------------------------------------
 	-- Clock Generator
@@ -209,12 +194,9 @@ begin
 	port map (
 		clock_i			=> clock_i,
 		clk_en_10m7_i	=> clk_en_10m7_i,
-		reset_i			=> por_s,
-		clk_en_5m37_o	=> clk_en_5m37_s,
-		clk_en_3m58_o	=> open, --clk_en_3m58_s,
-		clk_en_2m68_o	=> open
+		reset_i			=> por_i,
+		clk_en_5m37_o	=> clk_en_5m37_s
 	);
-
 
 	-----------------------------------------------------------------------------
 	-- Horizontal and Vertical Timing Generator
@@ -223,8 +205,8 @@ begin
 	port map (
 		clock_i			=> clock_i,
 		clk_en_5m37_i	=> clk_en_5m37_s,
-		reset_i			=> por_s,
-		opmode_i			=> opmode_s,
+		reset_i			=> por_i,
+		opmode_i		=> opmode_s,
 		ntsc_pal_i		=> ntsc_pal_e_s,
 		num_pix_o		=> num_pix_s,
 		num_line_o		=> num_line_s,
@@ -243,12 +225,12 @@ begin
 	port map (
 		clock_i			=> clock_i,
 		clk_en_5m37_i	=> clk_en_5m37_s,
-		reset_i			=> reset_s,
-		opmode_i			=> opmode_s,
+		reset_i			=> reset_i,
+		opmode_i		=> opmode_s,
 		vram_read_i		=> vram_read_s,
 		vram_write_i	=> vram_write_s,
-		vram_ce_o		=> vram_ce_o,
-		vram_oe_o		=> vram_oe_o,
+		vram_ce_n_o		=> vram_ce_n_o,
+		vram_oe_n_o		=> vram_oe_n_o,
 		num_pix_i		=> num_pix_s,
 		num_line_i		=> num_line_s,
 		vert_inc_i		=> vert_inc_s,
@@ -259,37 +241,39 @@ begin
 		access_type_o	=> access_type_s,
 		vert_active_o	=> vert_active_s,
 		hor_active_o	=> hor_active_s,
-		irq_o				=> irq_s
+		irq_o			=> irq_s
 	);
 
 	-----------------------------------------------------------------------------
 	-- CPU I/O Module
 	-----------------------------------------------------------------------------
 	cpu_io_b: entity  work.vdp18_cpuio
+	generic map (
+		start_on_g		=> start_on_g
+	)
 	port map (
 		clock_i			=> clock_i,
-		clk_en_10m7_i	=> clk_en_10m7_s,
+		clk_en_10m7_i	=> clk_en_10m7_i,
 		clk_en_acc_i	=> clk_en_acc_s,
-		reset_i			=> por_s,
-		rd_i				=> rd_s,
-		wr_i				=> wr_s,
+		reset_i			=> por_i,
+		csr_n_i			=> csr_n_i,
+		csw_n_i			=> csw_n_i,
 		mode_i			=> mode_i,
-		cd_i				=> cd_i,
-		cd_o				=> cd_o,
-		cd_oe_o			=> open,
-		wait_o			=> wait_o,
+		cd_i			=> cd_i,
+		cd_o			=> cd_o,
+		wait_n_o		=> wait_n_o,
 		access_type_i	=> access_type_s,
-		opmode_o			=> opmode_s,
+		opmode_o		=> opmode_s,
 		vram_read_o		=> vram_read_s,
 		vram_write_o	=> vram_write_s,
-		vram_we_o		=> vram_we_o,
-		vram_a_o			=> cpu_vram_a_s,
-		vram_d_o			=> vram_d_o,
-		vram_d_i			=> vram_d_i,
+		vram_we_n_o		=> vram_we_n_o,
+		vram_a_o		=> cpu_vram_a_s,
+		vram_d_o		=> vram_d_o,
+		vram_d_i		=> vram_d_i,
 		spr_coll_i		=> spr_coll_s,
 		spr_5th_i		=> spr_5th_s,
 		spr_5th_num_i	=> spr_5th_num_s,
-		reg_ev_o			=> open,
+		reg_ev_o		=> open,
 		reg_16k_o		=> open,
 		reg_blank_o		=> reg_blank_s,
 		reg_size1_o		=> reg_size1_s,
@@ -304,7 +288,7 @@ begin
 		palette_idx_o	=> palette_idx_s,
 		palette_val_o	=> palette_val_s,
 		palette_wr_o	=> palette_wr_s,
-		irq_i				=> irq_s,
+		irq_i			=> irq_s,
 		int_n_o			=> int_n_o,
 		vertfreq_csw_o	=> vertfreq_csw_o,
 		vertfreq_d_o	=> vertfreq_d_o
@@ -316,7 +300,7 @@ begin
 	addr_mux_b: entity work.vdp18_addr_mux
 	port map (
 		access_type_i	=> access_type_s,
-		opmode_i			=> opmode_s,
+		opmode_i		=> opmode_s,
 		num_line_i		=> num_line_s,
 		reg_ntb_i		=> reg_ntb_s,
 		reg_ctb_i		=> reg_ctb_s,
@@ -330,7 +314,7 @@ begin
 		spr_num_i		=> spr_num_s,
 		spr_line_i		=> spr_line_s,
 		spr_name_i		=> spr_name_s,
-		vram_a_o			=> vram_a_o
+		vram_a_o		=> vram_a_o
 	);
 
 	-----------------------------------------------------------------------------
@@ -341,11 +325,11 @@ begin
 		clock_i			=> clock_i,
 		clk_en_5m37_i	=> clk_en_5m37_s,
 		clk_en_acc_i	=> clk_en_acc_s,
-		reset_i			=> reset_s,
-		opmode_i			=> opmode_s,
+		reset_i			=> reset_i,
+		opmode_i		=> opmode_s,
 		access_type_i	=> access_type_s,
 		num_line_i		=> num_line_s,
-		vram_d_i			=> vram_d_i,
+		vram_d_i		=> vram_d_i,
 		vert_inc_i		=> vert_inc_s,
 		vsync_n_i		=> rgb_vsync_n_s,
 		reg_col1_i		=> reg_col1_s,
@@ -363,11 +347,11 @@ begin
 		clock_i			=> clock_i,
 		clk_en_5m37_i	=> clk_en_5m37_s,
 		clk_en_acc_i	=> clk_en_acc_s,
-		reset_i			=> reset_s,
+		reset_i			=> reset_i,
 		access_type_i	=> access_type_s,
 		num_pix_i		=> num_pix_s,
 		num_line_i		=> num_line_s,
-		vram_d_i			=> vram_d_i,
+		vram_d_i		=> vram_d_i,
 		vert_inc_i		=> vert_inc_s,
 		reg_size1_i		=> reg_size1_s,
 		reg_mag1_i		=> reg_mag1_s,
@@ -398,7 +382,7 @@ begin
 		spr1_col_i		=> spr1_col_s,
 		spr2_col_i		=> spr2_col_s,
 		spr3_col_i		=> spr3_col_s,
-		col_o				=> col_rgb_s
+		col_o			=> col_rgb_s
 	);
 
 	von3: if video_opt_g /= 3 generate
@@ -410,9 +394,9 @@ begin
 		-----------------------------------------------------------------------------
 		palette: entity work.vdp18_palette
 		port map (
-			reset_i		=> reset_s,
+			reset_i		=> reset_i,
 			clock_i		=> clock_i,
-			we_i			=> palette_wr_s,
+			we_i		=> palette_wr_s,
 			addr_wr_i	=> palette_idx_s,
 			data_i		=> palette_val_s,
 			addr_rd_i	=> col_s,
@@ -426,14 +410,14 @@ begin
 		--   Converts the color information to simple RGB and saves these in
 		--   output registers.
 		--
-		rgb_reg: process (clock_i, por_s)
+		rgb_reg: process (clock_i, por_i)
 		begin
-			if por_s then
+			if por_i = '1' then
 				rgb_r_o   <= (others => '0');
 				rgb_g_o   <= (others => '0');
 				rgb_b_o   <= (others => '0');
 			elsif rising_edge(clock_i) then
-				if clk_en_10m7_s then
+				if clk_en_10m7_i = '1' then
 					if scanline_en_i = '1' and vga_en_i = '1' then
 						if rgb_s( 0 to 3) > 1 and oddline_s = '1' then
 							rgb_r_o <= rgb_s( 0 to 3) - 2;
@@ -464,7 +448,7 @@ begin
 
 	vo0: if video_opt_g = 0 generate
 
-		col_s			<= col_rgb_s;
+		col_s		<= col_rgb_s;
 		hsync_n_o	<= rgb_hsync_n_s;
 		vsync_n_o	<= rgb_vsync_n_s;
 
@@ -485,15 +469,13 @@ begin
 
 		col_s	<= col_vga_s	when vga_en_i = '1' or video_opt_g = 2	else col_rgb_s;
 
-		scandbl: entity work.dblscan
+		dblscan: entity work.dblscan
 		port map (
-			--  NOTE CLOCKS MUST BE PHASE LOCKED !!
-			clk_6m_i			=> clock_i,
-			clk_en_6m_i		=> to_std_logic_f(clk_en_5m37_s),
-			clk_12m_i		=> clock_i,
-			clk_en_12m_i	=> to_std_logic_f(clk_en_10m7_s),
-			col_i				=> col_rgb_s,
-			col_o				=> col_vga_s,
+			clock_master_i	=> clock_i,
+			clock_low_en_i	=> clk_en_5m37_s,
+			clock_high_en_i	=> clk_en_10m7_i,
+			color_i			=> col_rgb_s,
+			color_o			=> col_vga_s,
 			oddline_o		=> oddline_s,
 			hsync_n_i		=> rgb_hsync_n_s,
 			vsync_n_i		=> rgb_vsync_n_s,

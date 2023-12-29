@@ -51,9 +51,9 @@ use ieee.numeric_std.all;
 
 entity vdp18_palette is
 	port (
-		reset_i			: in  boolean;
+		reset_i			: in  std_logic;
 		clock_i			: in  std_logic;
-		we_i				: in  std_logic;
+		we_i			: in  std_logic;
 		addr_wr_i		: in  std_logic_vector(0 to  3);
 		data_i			: in  std_logic_vector(0 to 15);
 		addr_rd_i		: in  std_logic_vector(0 to  3);
@@ -71,7 +71,7 @@ begin
 
 	process (reset_i, clock_i)
 	begin
-		if reset_i then
+		if reset_i = '1' then
 			ram_q <= (
 				--      RB0G
 				0  => X"0000",

@@ -55,9 +55,9 @@ entity ssdram256Mb is
 		addr_i		: in    std_logic_vector(24 downto 0);		-- 32MB
 		data_i		: in    std_logic_vector( 7 downto 0);
 		data_o		: out   std_logic_vector( 7 downto 0);
-		cs_i			: in    std_logic;
-		oe_i			: in    std_logic;
-		we_i			: in    std_logic;
+		cs_n_i		: in    std_logic;
+		oe_n_i		: in    std_logic;
+		we_n_i		: in    std_logic;
 		-- SD-RAM ports
 		mem_cke_o	: out   std_logic;
 		mem_cs_n_o	: out   std_logic;
@@ -66,7 +66,7 @@ entity ssdram256Mb is
 		mem_we_n_o	: out   std_logic;
 		mem_udq_o	: out   std_logic;
 		mem_ldq_o	: out   std_logic;
-		mem_ba_o		: out   std_logic_vector( 1 downto 0);
+		mem_ba_o	: out   std_logic_vector( 1 downto 0);
 		mem_addr_o	: out   std_logic_vector(12 downto 0);
 		mem_data_io	: inout std_logic_vector(15 downto 0)
 	);
@@ -95,7 +95,7 @@ architecture Behavior of ssdram256Mb is
 	signal ram_addr_s		: std_logic_vector(24 downto 0);
 	signal ram_din_s		: std_logic_vector( 7 downto 0);
 	signal ram_dout_s		: std_logic_vector( 7 downto 0);
-	signal ram_we_s		: std_logic;
+	signal ram_we_n_s		: std_logic;
 
 begin
 
@@ -106,29 +106,29 @@ begin
 	begin
 		if reset_i = '1' then
 			data_o			<= (others => '1');
-			ram_we_s			<= '0';
+			ram_we_n_s		<= '1';
 			ram_req_s		<= '0';
-			pcs_v				:= "00";
+			pcs_v				:= "11";
 		elsif rising_edge(clock_i) then
 			if ram_req_s = '1' and ram_ack_s = '1' then
-				if ram_we_s = '0' then
+				if ram_we_n_s = '1' then
 					data_o <= ram_dout_s;
 				end if;
 				ram_req_s <= '0';
 			end if;
 
-			if pcs_v = "01" then
+			if pcs_v = "10" then
 				ram_addr_s	<= addr_i;
 				ram_req_s	<= '1';
-				if we_i = '1' then
+				if we_n_i = '0' then
 					ram_din_s	<= data_i;
-					ram_we_s		<= '1';
+					ram_we_n_s	<= '0';
 				else
-					ram_we_s		<= '0';
+					ram_we_n_s	<= '1';
 				end if;
 			end if;
 
-			acess_v	:= cs_i and (oe_i or we_i);
+			acess_v	:= cs_n_i or (oe_n_i and we_n_i);
 			pcs_v		:= pcs_v(0) & acess_v;
 
 		end if;
@@ -190,7 +190,7 @@ begin
 
 					if ram_req_s = '1' and ram_ack_s = '0' then
 						SdrAddress_v	:= ram_addr_s;
-						if ram_we_s = '1' then
+						if ram_we_n_s = '0' then
 							SdrRoutine_v := SdrRoutine_WriteOne;
 						else
 							SdrRoutine_v := SdrRoutine_ReadOne;

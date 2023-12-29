@@ -1,11 +1,11 @@
-set -tmpdir "/tmp"
+set -tmpdir "xst/projnav.tmp"
 set -xsthdpdir "xst"
 run
 -ifn zxuno.prj
 -ofn zxuno
 -ofmt NGC
 -p xc6slx9-2-tqg144
--top zxuno_top
+-top zxuno
 -opt_mode Area
 -opt_level 2
 -power NO
@@ -15,7 +15,7 @@ run
 -rtlview Yes
 -glob_opt AllClockNets
 -read_cores YES
--sd {"ipcore_dir"  }
+-sd {"../../src/syn-zxuno/ipcore_dir"  }
 -write_timing_constraints NO
 -cross_clock_analysis NO
 -hierarchy_separator /

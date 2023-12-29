@@ -9,7 +9,6 @@ add wave -noupdate /tb/u_target/keyb_valid_s
 add wave -noupdate -radix hexadecimal /tb/u_target/matrix_s
 add wave -noupdate /tb/u_target/break_s
 add wave -noupdate /tb/u_target/extended_s
-add wave -noupdate /tb/u_target/shift_s
 add wave -noupdate /tb/u_target/has_keycode_s
 add wave -noupdate -radix hexadecimal /tb/u_target/keymap_addr_s
 add wave -noupdate -radix hexadecimal /tb/u_target/keymap_data_s
@@ -29,10 +28,10 @@ add wave -noupdate /tb/u_target/ps2_port/sigclkreleased
 add wave -noupdate /tb/u_target/ps2_port/sigsendend_s
 add wave -noupdate /tb/u_target/ps2_port/sigsending_s
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {132733 ns} 0}
+WaveRestoreCursors {{Cursor 1} {700 ns} 0}
 quietly wave cursor active 1
-configure wave -namecolwidth 235
-configure wave -valuecolwidth 100
+configure wave -namecolwidth 223
+configure wave -valuecolwidth 57
 configure wave -justifyvalue left
 configure wave -signalnamewidth 0
 configure wave -snapdistance 10
@@ -45,4 +44,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {72637 ns} {192829 ns}
+WaveRestoreZoom {0 ns} {275412 ns}

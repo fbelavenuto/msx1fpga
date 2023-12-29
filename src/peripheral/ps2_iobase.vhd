@@ -19,7 +19,7 @@ USE ieee.numeric_std.all;
 
 entity ps2_iobase is
 	port(
-		enable_i			: in    std_logic;							-- Enable
+		enable_i		: in    std_logic;							-- Enable
 		clock_i			: in    std_logic;							-- system clock
 		reset_i			: in    std_logic;							-- Reset when '1'
 		ps2_data_io		: inout std_logic;							-- PS2 data pin

@@ -1,11 +1,11 @@
-set -tmpdir "/tmp"
+set -tmpdir "xst/projnav.tmp"
 set -xsthdpdir "xst"
 run
 -ifn wxedax.prj
 -ofn wxedax
 -ofmt NGC
 -p xc6slx9-2-tqg144
--top wxedax_top
+-top wxedax
 -opt_mode Speed
 -opt_level 1
 -power NO
@@ -15,7 +15,7 @@ run
 -rtlview Yes
 -glob_opt AllClockNets
 -read_cores YES
--sd {"ipcore_dir"  }
+-sd {"../../src/syn-wxedax/ipcore_dir"  }
 -write_timing_constraints NO
 -cross_clock_analysis NO
 -hierarchy_separator /

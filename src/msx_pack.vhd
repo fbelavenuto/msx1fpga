@@ -46,7 +46,7 @@ use ieee.numeric_std.all;
 package msx_pack is
 
 	-- Actual version
-	constant actual_version	: std_logic_vector(7 downto 0)	:= X"13";
+	constant actual_version	: std_logic_vector(7 downto 0)	:= X"14";
 
 	type volumes_t is record
 		beep		: std_logic_vector(7 downto 0);
@@ -60,8 +60,8 @@ package msx_pack is
 	constant default_vol_beep	: integer := 128;
 	constant default_vol_ear	: integer := 20;
 	constant default_vol_psg	: integer := 240;
-	constant default_vol_scc	: integer := 255;
-	constant default_vol_opll	: integer := 255;
+	constant default_vol_scc	: integer := 200;
+	constant default_vol_opll	: integer := 200;
 	constant default_vol_aux1	: integer := 255;
 
 end package;

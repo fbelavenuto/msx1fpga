@@ -14,6 +14,7 @@ translate: ${DESIGN}.ngd
 
 # Produces: .ngc .nfr .syr _top.lso .xrpt _xmsgs/ xst/
 ${DESIGN}.ngc: ${DESIGN}.xst
+	mkdir -p xst/projnav.tmp
 	xst -intstyle ise -ifn $< -ofn ${DESIGN}.syr
 
 # Produces: _ngo/ _xmsgs/ .bld .ngd _ngdbuild.xrpt xlnx_auto_0_xdb/
@@ -27,7 +28,6 @@ ${DESIGN}_map.ncd: ${DESIGN}.ngd
 # Produces: _xmsgs/ par_usage_statistics.html .ncd .pad .par .ptwx .xpi _pad.csv _pad.txt _top_par.xrpt .unroutes
 ${DESIGN}.ncd: ${DESIGN}_map.ncd
 	par -intstyle ise -w -ol high -mt 4 $? $@ ${DESIGN}.pcf
-#	par -intstyle ise -w -ol high -mt 4 qmxc6slx16_map.ncd qmxc6slx16.ncd qmxc6slx16.pcf
 
 # Produces: _xmsgs/ .twr .twx
 ${DESIGN}.twr: ${DESIGN}.ncd

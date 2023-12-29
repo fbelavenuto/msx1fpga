@@ -163,7 +163,7 @@ BEGIN
 		clk2_divide_by => 7,
 		clk2_duty_cycle => 50,
 		clk2_multiply_by => 12,
-		clk2_phase_shift => "-2917",
+		clk2_phase_shift => "-1458",
 		compensate_clock => "CLK0",
 		gate_lock_signal => "NO",
 		inclk0_input_frequency => 20000,
@@ -285,7 +285,7 @@ END SYN;
 -- Retrieval info: PRIVATE: MULT_FACTOR2 NUMERIC "12"
 -- Retrieval info: PRIVATE: NORMAL_MODE_RADIO STRING "1"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ0 STRING "21.42857100"
--- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "100.00000000"
+-- Retrieval info: PRIVATE: OUTPUT_FREQ1 STRING "85.90800000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ2 STRING "100.00000000"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE0 STRING "0"
 -- Retrieval info: PRIVATE: OUTPUT_FREQ_MODE1 STRING "0"
@@ -297,7 +297,7 @@ END SYN;
 -- Retrieval info: PRIVATE: PHASE_RECONFIG_INPUTS_CHECK STRING "0"
 -- Retrieval info: PRIVATE: PHASE_SHIFT0 STRING "0.00000000"
 -- Retrieval info: PRIVATE: PHASE_SHIFT1 STRING "0.00000000"
--- Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "-90.00000000"
+-- Retrieval info: PRIVATE: PHASE_SHIFT2 STRING "-45.00000000"
 -- Retrieval info: PRIVATE: PHASE_SHIFT_STEP_ENABLED_CHECK STRING "0"
 -- Retrieval info: PRIVATE: PHASE_SHIFT_UNIT0 STRING "deg"
 -- Retrieval info: PRIVATE: PHASE_SHIFT_UNIT1 STRING "ps"
@@ -350,7 +350,7 @@ END SYN;
 -- Retrieval info: CONSTANT: CLK2_DIVIDE_BY NUMERIC "7"
 -- Retrieval info: CONSTANT: CLK2_DUTY_CYCLE NUMERIC "50"
 -- Retrieval info: CONSTANT: CLK2_MULTIPLY_BY NUMERIC "12"
--- Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "-2917"
+-- Retrieval info: CONSTANT: CLK2_PHASE_SHIFT STRING "-1458"
 -- Retrieval info: CONSTANT: COMPENSATE_CLOCK STRING "CLK0"
 -- Retrieval info: CONSTANT: GATE_LOCK_SIGNAL STRING "NO"
 -- Retrieval info: CONSTANT: INCLK0_INPUT_FREQUENCY NUMERIC "20000"

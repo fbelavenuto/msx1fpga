@@ -62,7 +62,7 @@ entity vdp18_addr_mux is
     reg_pgb_i     : in  std_logic_vector(0 to  2);
     reg_satb_i    : in  std_logic_vector(0 to  6);
     reg_spgb_i    : in  std_logic_vector(0 to  2);
-    reg_size1_i   : in  boolean;
+    reg_size1_i   : in  std_logic;
     cpu_vram_a_i  : in  std_logic_vector(0 to 13);
     pat_table_i   : in  std_logic_vector(0 to  9);
     pat_name_i    : in  std_logic_vector(0 to  7);
@@ -198,7 +198,7 @@ begin
       -- Sprite Pattern, Upper Part -------------------------------------------
       when AC_SPTH =>
         vram_a_o( 0 to  2)   <= reg_spgb_i;
-        if not reg_size1_i then
+        if reg_size1_i = '0' then
           -- 8x8 sprite
           vram_a_o( 3 to 10) <= spr_name_i;
           vram_a_o(11 to 13) <= spr_line_i(1 to 3);
