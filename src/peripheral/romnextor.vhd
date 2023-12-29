@@ -46,15 +46,16 @@ entity romnextor is
 	port (
 		reset_i		: in  std_logic;
 		clock_i		: in  std_logic;
-		enable_i		: in  std_logic;
+		enable_i	: in  std_logic;
 		addr_i		: in  std_logic_vector(15 downto 0);
 		data_i		: in  std_logic_vector( 7 downto 0);
+		req_i		: in  std_logic;
 		sltsl_n_i	: in  std_logic;
 		rd_n_i		: in  std_logic;
 		wr_n_i		: in  std_logic;
 		--
-		rom_cs_o		: out std_logic;
-		rom_wr_o		: out std_logic;
+		rom_cs_n_o	: out std_logic;
+		rom_wr_n_o	: out std_logic;
 		rom_page_o	: out std_logic_vector( 2 downto 0)
 	);
 end entity;
@@ -62,7 +63,7 @@ end entity;
 architecture Behavior of romnextor is
 
 	signal rom_page_s	: std_logic_vector(2 downto 0);
-	signal ram_wr_s	: std_logic;
+	signal ram_wr_n_s	: std_logic;
 
 begin
 
@@ -71,9 +72,9 @@ begin
 	begin
 		if reset_i = '1' then
 			rom_page_s	<= (others => '0');
-		elsif falling_edge(clock_i) then
+		elsif rising_edge(clock_i) then
 			if enable_i = '1' then
-				if sltsl_n_i = '0' and wr_n_i = '0' and addr_i = X"6000" then
+				if req_i = '1' and sltsl_n_i = '0' and wr_n_i = '0' and addr_i = X"6000" then
 					rom_page_s <= data_i(2 downto 0);
 				end if;
 			end if;
@@ -82,17 +83,17 @@ begin
 
 	rom_page_o <= rom_page_s;
 
-	ram_wr_s	<= '1' when sltsl_n_i = '0' and wr_n_i = '0' and rom_page_s = "111" and
+	ram_wr_n_s	<= '0' when sltsl_n_i = '0' and wr_n_i = '0' and rom_page_s = "111" and
 								addr_i >= X"7000" and addr_i <= X"7FD0"									else
-					'0';
+					'1';
 
-	rom_cs_o <=	'0' when enable_i = '0'																		else
-					'1' when sltsl_n_i = '0' and rd_n_i = '0' and addr_i(15 downto 14) = "01"	else
-					'1' when ram_wr_s = '1'																		else
-					'0';
+	rom_cs_n_o <=	'1' when enable_i = '0'																		else
+					'0' when sltsl_n_i = '0' and rd_n_i = '0' and addr_i(15 downto 14) = "01"	else
+					'0' when ram_wr_n_s = '0'																		else
+					'1';
 
-	rom_wr_o	<= '0' when enable_i = '0'																		else
-					'1' when ram_wr_s = '1'																		else
-					'0';
+	rom_wr_n_o	<= '1' when enable_i = '0'																		else
+					'0' when ram_wr_n_s = '0'																		else
+					'1';
 
 end architecture;

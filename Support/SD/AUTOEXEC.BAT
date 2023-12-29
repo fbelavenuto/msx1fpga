@@ -3,7 +3,7 @@ path %1\dos;%1\util
 set temp %1\temp
 set help %1\help
 alias .bas basic
-alias .rom srom /q
+alias .rom srom
 alias .dsk sri /q
 alias .mbm mbmplay.com
 alias .mod mmp.com

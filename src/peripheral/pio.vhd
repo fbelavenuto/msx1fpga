@@ -43,67 +43,60 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity PIO is
+entity pio is
 	port (
 		reset_i			: in  std_logic;
-		ipl_en_i			: in  std_logic;
+		clock_master_i	: in  std_logic;
+		ipl_en_i		: in  std_logic;
 		addr_i			: in  std_logic_vector(1 downto 0);
 		data_i			: in  std_logic_vector(7 downto 0);
 		data_o			: out std_logic_vector(7 downto 0);
-		has_data_o		: out std_logic;
-		cs_i				: in  std_logic;
-		rd_i				: in  std_logic;
-		wr_i				: in  std_logic;
-		port_a_o			: out std_logic_vector(7 downto 0);
-		port_b_i			: in  std_logic_vector(7 downto 0);
-		port_c_o			: out std_logic_vector(7 downto 0)
+		req_i			: in  std_logic;
+		cs_n_i			: in  std_logic;
+		rd_n_i			: in  std_logic;
+		wr_n_i			: in  std_logic;
+		port_a_o		: out std_logic_vector(7 downto 0);
+		port_b_i		: in  std_logic_vector(7 downto 0);
+		port_c_o		: out std_logic_vector(7 downto 0)
 	);
 end entity;
 
 architecture Behavior of PIO is
 
-	signal porta_r		: std_logic_vector(7 downto 0);
-	signal portc_r		: std_logic_vector(7 downto 0);
-	signal rd_cs_s		: std_logic;
-	signal wr_cs_s		: std_logic;
+	signal port_a_r		: std_logic_vector(7 downto 0);
+	signal port_c_r		: std_logic_vector(7 downto 0);
 
 begin
 
-	-- Sinais de selecao de escrita e leitura
-	rd_cs_s <= '1' when cs_i = '1' and rd_i = '1'	else '0';
-	wr_cs_s <= '1' when cs_i = '1' and wr_i = '1'	else '0';
+	-- Read request
+	data_o	<= port_a_r			when cs_n_i = '0' and rd_n_i = '0' and addr_i = "00"	else
+			   port_b_i			when cs_n_i = '0' and rd_n_i = '0' and addr_i = "01"	else
+			   port_c_r			when cs_n_i = '0' and rd_n_i = '0' and addr_i = "10"	else
+			   (others => '0');
 
-	-- Portas de saida
-	process(reset_i, ipl_en_i, wr_cs_s)
-		variable portc_addr_v	: integer range 0 to 7;
+	-- Write request
+	process(reset_i, ipl_en_i, clock_master_i)
+		variable port_c_addr_v	: integer range 0 to 7;
 	begin
 		if reset_i = '1' then
-			porta_r	<= (others => ipl_en_i);
-			portc_r	<= (7 => '0', others => '1');	-- beep silent
-		elsif falling_edge(wr_cs_s) then
-			if addr_i = "00" then
-				porta_r <= data_i;
-			elsif addr_i = "10" then
-				portc_r <= data_i;
-			elsif addr_i = "11" and data_i(7) = '0' then
-				portc_addr_v := to_integer(unsigned(data_i(3 downto 1)));
-				portc_r(portc_addr_v) <= data_i(0);
-			else
-				-- Ignora resto
+			port_a_r	<= (others => ipl_en_i);
+			port_c_r	<= (7 => '0', others => '1');	-- MSB=0: beep silent
+		elsif rising_edge(clock_master_i) then
+			if req_i = '1' and cs_n_i = '0' and wr_n_i = '0' then
+				if addr_i = "00" then
+					port_a_r <= data_i;
+				elsif addr_i = "10" then
+					port_c_r <= data_i;
+				elsif addr_i = "11" and data_i(7) = '0' then
+					port_c_addr_v := to_integer(unsigned(data_i(3 downto 1)));
+					port_c_r(port_c_addr_v) <= data_i(0);
+				end if;
 			end if;
 		end if;
 	end process;
 
-	-- Leitura
-	data_o	<= porta_r				when rd_cs_s = '1' and addr_i = "00"	else
-	            port_b_i				when rd_cs_s = '1' and addr_i = "01"	else
-					portc_r				when rd_cs_s = '1' and addr_i = "10"	else
-					(others => '0');
-
-	has_data_o	<= '1' when rd_cs_s = '1' and addr_i /= "11"	else '0';
-
 	-- I/O
-	port_a_o <= porta_r;
-	port_c_o <= portc_r;
+	port_a_o <= port_a_r;
+	port_c_o <= port_c_r;
 
 end;

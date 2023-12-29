@@ -58,6 +58,6 @@ for i in t:
 			kmp[scancode] = col * 16 + row
 
 with open(sys.argv[2], 'wb') as f:
-	f.write("".join(chr(i) for i in kmp))
+	f.write("".join(chr(i) for i in kmp).encode(encoding='iso8859'))
 
 print("File generated with no errors.")

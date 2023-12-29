@@ -154,11 +154,11 @@ TIMESPEC TS_sdram_clock_o = PERIOD "sdram_clock_o" 11.645 ns HIGH 50% PHASE -90;
 
 PIN "pll_1/clkout3_buf.O" CLOCK_DEDICATED_ROUTE = FALSE;
 
-NET "clks/clock_3m_s" TNM_NET = clks/clock_3m_s;
-TIMESPEC TS_clks_clock_3m_s = PERIOD "clks/clock_3m_s" 279.365 ns HIGH 50%;
+NET "clks/clock_3m_en_s" TNM_NET = clks/clock_3m_en_s;
+TIMESPEC TS_clks_clock_3m_en_s = PERIOD "clks/clock_3m_en_s" 279.365 ns HIGH 17%;
 
-NET "clks/clock_vdp_s" TNM_NET = clks/clock_vdp_s;
-TIMESPEC TS_clks_clock_vdp_s = PERIOD "clks/clock_vdp_s" 93.121 ns HIGH 50%;
+NET "clks/clock_7m_en_s" TNM_NET = clks/clock_7m_en_s;
+TIMESPEC TS_clks_clock_7m_en_s = PERIOD "clks/clock_7m_en_s" 139.682 ns HIGH 33%;
 
-NET "clock_8m_s" TNM_NET = clock_8m_s;
-TIMESPEC TS_clock_8m_s = PERIOD "clock_8m_s" 125 ns HIGH 50%;
+NET "clks/clock_10m_en_s" TNM_NET = clks/clock_10m_en_s;
+TIMESPEC TS_clks_clock_10m_en_s = PERIOD "clks/clock_10m_en_s" 93.121 ns HIGH 50%;

@@ -58,17 +58,17 @@ entity multicore_top is
 		btn_clr_n_i			: in    std_logic;
 
 		-- SRAM (AS7C34096)
-		sram_addr_o			: out   std_logic_vector(18 downto 0)	:= (others => '0');
-		sram_data_io		: inout std_logic_vector( 7 downto 0)	:= (others => 'Z');
+		sram_addr_o			: out   std_logic_vector(18 downto 0)			:= (others => '0');
+		sram_data_io		: inout std_logic_vector( 7 downto 0)			:= (others => 'Z');
 		sram_we_n_o			: out   std_logic								:= '1';
-		sram_ce_n_o			: out   std_logic_vector( 1 downto 0)	:= (others => '1');
+		sram_ce_n_o			: out   std_logic_vector( 1 downto 0)			:= (others => '1');
 		sram_oe_n_o			: out   std_logic								:= '1';
 
 		-- PS2
 		ps2_clk_io			: inout std_logic								:= 'Z';
 		ps2_data_io			: inout std_logic								:= 'Z';
-		ps2_mouse_clk_io  : inout std_logic								:= 'Z';
-		ps2_mouse_data_io : inout std_logic								:= 'Z';
+		ps2_mouse_clk_io  	: inout std_logic								:= 'Z';
+		ps2_mouse_data_io 	: inout std_logic								:= 'Z';
 
 		-- SD Card
 		sd_cs_n_o			: out   std_logic								:= '1';
@@ -95,67 +95,67 @@ entity multicore_top is
 		-- Audio
 		dac_l_o				: out   std_logic								:= '0';
 		dac_r_o				: out   std_logic								:= '0';
-		ear_i					: in    std_logic;
-		mic_o					: out   std_logic								:= '0';
+		ear_i				: in    std_logic;
+		mic_o				: out   std_logic								:= '0';
 
 		-- VGA
-		vga_r_o				: out   std_logic_vector( 2 downto 0)	:= (others => '0');
-		vga_g_o				: out   std_logic_vector( 2 downto 0)	:= (others => '0');
-		vga_b_o				: out   std_logic_vector( 2 downto 0)	:= (others => '0');
+		vga_r_o				: out   std_logic_vector( 2 downto 0)			:= (others => '0');
+		vga_g_o				: out   std_logic_vector( 2 downto 0)			:= (others => '0');
+		vga_b_o				: out   std_logic_vector( 2 downto 0)			:= (others => '0');
 		vga_hsync_n_o		: out   std_logic								:= '1';
 		vga_vsync_n_o		: out   std_logic								:= '1';
 
 		-- Debug
-		leds_n_o				: out   std_logic_vector( 7 downto 0)	:= (others => '0')
+		leds_n_o			: out   std_logic_vector( 7 downto 0)			:= (others => '0')
 	);
 end entity;
 
 architecture behavior of multicore_top is
 
 	-- Buttons
-	signal btn_por_n_s		: std_logic;
+	signal btn_por_n_s			: std_logic;
 	signal btn_reset_n_s		: std_logic;
 	signal btn_scan_s			: std_logic;
 
 	-- Resets
-	signal pll_locked_s		: std_logic;
+	signal pll_locked_s			: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
-	signal soft_reset_k_s	: std_logic;
-	signal soft_reset_s_s	: std_logic;
+	signal soft_reset_k_s		: std_logic;
+	signal soft_reset_s_s		: std_logic;
 	signal soft_por_s			: std_logic;
-	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
+	signal soft_rst_cnt_s		: unsigned(7 downto 0)	:= X"FF";
 
 	-- Clocks
-	signal clock_mem_s		: std_logic;
-	signal clock_master_s	: std_logic;
-	signal clock_vdp_s		: std_logic;
-	signal clock_cpu_s		: std_logic;
-	signal clock_psg_en_s	: std_logic;
-	signal clock_3m_s			: std_logic;
+	signal clock_mem_s			: std_logic;
+	signal clock_master_s		: std_logic;
+	signal clock_3m_en_s		: std_logic;
+	signal clock_7m_en_s		: std_logic;
+	signal clock_10m_en_s		: std_logic;
+	signal clock_cpu_en_s		: std_logic;
+	signal clock_vga_s			: std_logic;
+	signal clock_dvi_s			: std_logic;
 	signal turbo_on_s			: std_logic;
-	signal clock_vga_s		: std_logic;
-	signal clock_dvi_s		: std_logic;
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
-	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
+	signal ram_data_from_s		: std_logic_vector( 7 downto 0);
 	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
-	signal ram_ce_s			: std_logic;
-	signal ram_oe_s			: std_logic;
-	signal ram_we_s			: std_logic;
+	signal ram_ce_n_s			: std_logic;
+	signal ram_oe_n_s			: std_logic;
+	signal ram_we_n_s			: std_logic;
 
 	-- VRAM memory
-	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
-	signal vram_do_s			: std_logic_vector( 7 downto 0);
-	signal vram_di_s			: std_logic_vector( 7 downto 0);
-	signal vram_ce_s			: std_logic;
-	signal vram_oe_s			: std_logic;
-	signal vram_we_s			: std_logic;
+	signal vram_addr_s			: std_logic_vector(13 downto 0);		-- 16K
+	signal vram_data_from_s		: std_logic_vector( 7 downto 0);
+	signal vram_data_to_s		: std_logic_vector( 7 downto 0);
+	signal vram_ce_n_s			: std_logic;
+	signal vram_oe_n_s			: std_logic;
+	signal vram_we_n_s			: std_logic;
 
 	-- Audio
-	signal audio_scc_s		: signed(14 downto 0);
-	signal audio_psg_s		: unsigned( 7 downto 0);
+	signal audio_scc_s			: signed(14 downto 0);
+	signal audio_psg_s			: unsigned( 7 downto 0);
 	signal beep_s				: std_logic;
 	signal audio_l_s			: unsigned(15 downto 0);
 	signal audio_r_s			: unsigned(15 downto 0);
@@ -171,31 +171,31 @@ architecture behavior of multicore_top is
 	signal cnt_ver_s			: std_logic_vector( 7 downto 0);
 	signal vga_hsync_n_s		: std_logic;
 	signal vga_vsync_n_s		: std_logic;
-	signal vga_blank_s		: std_logic;
+	signal vga_blank_s			: std_logic;
 	signal vga_col_s			: std_logic_vector( 3 downto 0);
 	signal vga_r_s				: std_logic_vector( 3 downto 0);
 	signal vga_g_s				: std_logic_vector( 3 downto 0);
 	signal vga_b_s				: std_logic_vector( 3 downto 0);
-	signal scanlines_en_s	: std_logic;
+	signal scanlines_en_s		: std_logic;
 	signal odd_line_s			: std_logic;
-	signal sound_hdmi_l_s	: std_logic_vector(15 downto 0);
-	signal sound_hdmi_r_s	: std_logic_vector(15 downto 0);
-	signal tdms_r_s			: std_logic_vector( 9 downto 0);
-	signal tdms_g_s			: std_logic_vector( 9 downto 0);
-	signal tdms_b_s			: std_logic_vector( 9 downto 0);
-	signal tdms_p_s			: std_logic_vector( 3 downto 0);
-	signal tdms_n_s			: std_logic_vector( 3 downto 0);
+	signal sound_hdmi_l_s		: std_logic_vector(15 downto 0);
+	signal sound_hdmi_r_s		: std_logic_vector(15 downto 0);
+	signal tdms_r_s				: std_logic_vector( 9 downto 0);
+	signal tdms_g_s				: std_logic_vector( 9 downto 0);
+	signal tdms_b_s				: std_logic_vector( 9 downto 0);
+	signal tdms_p_s				: std_logic_vector( 3 downto 0);
+	signal tdms_n_s				: std_logic_vector( 3 downto 0);
 
 	-- Keyboard
 	signal rows_s				: std_logic_vector( 3 downto 0);
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector( 3 downto 0);
-	signal keyb_valid_s		: std_logic;
-	signal keyb_data_s		: std_logic_vector( 7 downto 0);
+	signal extra_keys_s			: std_logic_vector( 3 downto 0);
+	signal keyb_valid_s			: std_logic;
+	signal keyb_data_s			: std_logic_vector( 7 downto 0);
 	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
-	signal keymap_we_s		: std_logic;
+	signal keymap_we_n_s		: std_logic;
 
 	-- Joystick
 	signal joy1_out_s			: std_logic;
@@ -203,71 +203,71 @@ architecture behavior of multicore_top is
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
-	signal bus_data_from_s	: std_logic_vector( 7 downto 0)	:= (others => '1');
+	signal bus_data_from_s		: std_logic_vector( 7 downto 0)	:= (others => '1');
 	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
 	signal bus_rd_n_s			: std_logic;
 	signal bus_wr_n_s			: std_logic;
 	signal bus_m1_n_s			: std_logic;
-	signal bus_iorq_n_s		: std_logic;
-	signal bus_mreq_n_s		: std_logic;
-	signal bus_sltsl1_n_s	: std_logic;
-	signal bus_sltsl2_n_s	: std_logic;
+	signal bus_iorq_n_s			: std_logic;
+	signal bus_mreq_n_s			: std_logic;
+	signal bus_sltsl1_n_s		: std_logic;
+	signal bus_sltsl2_n_s		: std_logic;
 
 begin
 
 	-- PLL1
 	pll: entity work.pll1
 	port map (
-		inclk0	=> clock_50_i,
+		inclk0		=> clock_50_i,
 		c0			=> clock_master_s,		--  21.477
 		c1			=> clock_mem_s,			--  42.954
-		locked	=> pll_locked_s
+		locked		=> pll_locked_s
 	);
 
 	-- PLL2
 	pll2: entity work.pll2
 	port map (
-		inclk0	=> clock_50_i,
+		inclk0		=> clock_50_i,
 		c0			=> clock_vga_s,			--  25.200
-		c1			=> clock_dvi_s				-- 126.000
+		c1			=> clock_dvi_s			-- 126.000
 	);
 
 	-- Clocks
 	clks: entity work.clocks
 	port map (
-		clock_i			=> clock_master_s,
-		por_i				=> not pll_locked_s,
-		turbo_on_i		=> turbo_on_s,
-		clock_vdp_o		=> clock_vdp_s,
-		clock_5m_en_o	=> open,
-		clock_cpu_o		=> clock_cpu_s,
-		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_master_i	=> clock_master_s,
+		por_i			=> not pll_locked_s,
+		clock_3m_en_o	=> clock_3m_en_s,
+		clock_5m_en_o	=> open,--clock_5m_en_s,
+		clock_7m_en_o	=> clock_7m_en_s,
+		clock_10m_en_o	=> clock_10m_en_s
 	);
+
+	clock_cpu_en_s	<= clock_3m_en_s	when turbo_on_s = '0' else clock_7m_en_s;
 
 	-- The MSX1
 	the_msx: entity work.msx
 	generic map (
 		hw_id_g			=> 5,
-		hw_txt_g			=> "Multicore Board",
+		hw_txt_g		=> "Multicore Board",
 		hw_version_g	=> actual_version,
 		video_opt_g		=> 3,							-- No dblscan and external palette (Color in rgb_r_o)
 		ramsize_g		=> 512,
 		hw_hashwds_g	=> '0'
 	)
 	port map (
+		-- Resets
+		reset_i			=> reset_s,
+		por_i			=> por_s,
+		softreset_o		=> soft_reset_s_s,
 		-- Clocks
-		clock_i			=> clock_master_s,
-		clock_vdp_i		=> clock_vdp_s,
-		clock_cpu_i		=> clock_cpu_s,
-		clock_psg_en_i	=> clock_psg_en_s,
+		clock_master_i	=> clock_master_s,
+		clock_vdp_en_i	=> clock_10m_en_s,
+		clock_cpu_en_i	=> clock_cpu_en_s,
+		clock_psg_en_i	=> clock_3m_en_s,
 		-- Turbo
 		turbo_on_k_i	=> extra_keys_s(3),	-- F11
 		turbo_on_o		=> turbo_on_s,
-		-- Resets
-		reset_i			=> reset_s,
-		por_i				=> por_s,
-		softreset_o		=> soft_reset_s_s,
 		-- Options
 		opt_nextor_i	=> '1',
 		opt_mr_type_i	=> "00",
@@ -276,14 +276,14 @@ begin
 		ram_addr_o		=> ram_addr_s,
 		ram_data_i		=> ram_data_from_s,
 		ram_data_o		=> ram_data_to_s,
-		ram_ce_o			=> ram_ce_s,
-		ram_we_o			=> ram_we_s,
-		ram_oe_o			=> ram_oe_s,
+		ram_ce_n_o		=> ram_ce_n_s,
+		ram_we_n_o		=> ram_we_n_s,
+		ram_oe_n_o		=> ram_oe_n_s,
 		-- ROM
-		rom_addr_o		=> open,--rom_addr_s,
+		rom_addr_o		=> open,
 		rom_data_i		=> ram_data_from_s,
-		rom_ce_o			=> open,--rom_ce_s,
-		rom_oe_o			=> open,--rom_oe_s,
+		rom_ce_n_o		=> open,
+		rom_oe_n_o		=> open,
 		-- External bus
 		bus_addr_o		=> bus_addr_s,
 		bus_data_i		=> bus_data_from_s,
@@ -300,11 +300,11 @@ begin
 		bus_int_n_i		=> '1',
 		-- VDP RAM
 		vram_addr_o		=> vram_addr_s,
-		vram_data_i		=> vram_do_s,
-		vram_data_o		=> vram_di_s,
-		vram_ce_o		=> vram_ce_s,
-		vram_oe_o		=> vram_oe_s,
-		vram_we_o		=> vram_we_s,
+		vram_data_i		=> vram_data_from_s,
+		vram_data_o		=> vram_data_to_s,
+		vram_ce_n_o		=> vram_ce_n_s,
+		vram_oe_n_o		=> vram_oe_n_s,
+		vram_we_n_o		=> vram_we_n_s,
 		-- Keyboard
 		rows_o			=> rows_s,
 		cols_i			=> cols_s,
@@ -313,7 +313,7 @@ begin
 		keyb_data_i		=> keyb_data_s,
 		keymap_addr_o	=> keymap_addr_s,
 		keymap_data_o	=> keymap_data_s,
-		keymap_we_o		=> keymap_we_s,
+		keymap_we_n_o	=> keymap_we_n_s,
 		-- Audio
 		audio_scc_o		=> audio_scc_s,
 		audio_psg_o		=> audio_psg_s,
@@ -352,8 +352,8 @@ begin
 		vsync_n_o		=> open,--rgb_vsync_n_s,
 		ntsc_pal_o		=> open,
 		vga_on_k_i		=> '0',
-		scanline_on_k_i=> '0',
-		vga_en_o			=> open,
+		scanline_on_k_i	=> '0',
+		vga_en_o		=> open,
 		-- SPI/SD
 		flspi_cs_n_o	=> open,
 		spi_cs_n_o		=> sd_cs_n_o,
@@ -363,7 +363,7 @@ begin
 		sd_pres_n_i		=> '0',
 		sd_wp_i			=> '0',
 		-- DEBUG
-		D_wait_o			=> open,
+		D_wait_o		=> open,
 		D_slots_o		=> open,
 		D_ipl_en_o		=> open
 	);
@@ -374,14 +374,14 @@ begin
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
-		clock_i			=> clock_3m_s,
+		clock_i			=> clock_3m_en_s,
 		reset_i			=> reset_s,
 		-- MSX
 		rows_coded_i	=> rows_s,
 		cols_o			=> cols_s,
 		keymap_addr_i	=> keymap_addr_s,
 		keymap_data_i	=> keymap_data_s,
-		keymap_we_i		=> keymap_we_s,
+		keymap_we_n_i	=> keymap_we_n_s,
 		-- LEDs
 		led_caps_i		=> caps_en_s,
 		-- PS/2 interface
@@ -392,27 +392,27 @@ begin
 		keyb_data_o		=> keyb_data_s,
 		--
 		reset_o			=> soft_reset_k_s,
-		por_o				=> soft_por_s,
+		por_o			=> soft_por_s,
 		reload_core_o	=> open,
 		extra_keys_o	=> extra_keys_s
 	);
-
+	
 	-- RAM and VRAM
 	sram0: entity work.dpSRAM_5128
 	port map (
-		clk_i				=> clock_mem_s,
+		clk_i			=> clock_mem_s,
 		-- Port 0
 		porta0_addr_i	=> "11101" & vram_addr_s,
-		porta0_ce_i		=> vram_ce_s,
-		porta0_oe_i		=> vram_oe_s,
-		porta0_we_i		=> vram_we_s,
-		porta0_data_i	=> vram_di_s,
-		porta0_data_o	=> vram_do_s,
+		porta0_ce_n_i	=> vram_ce_n_s,
+		porta0_oe_n_i	=> vram_oe_n_s,
+		porta0_we_n_i	=> vram_we_n_s,
+		porta0_data_i	=> vram_data_from_s,
+		porta0_data_o	=> vram_data_to_s,
 		-- Port 1
 		porta1_addr_i	=> ram_addr_s(18 downto 0),
-		porta1_ce_i		=> ram_ce_s,
-		porta1_oe_i		=> ram_oe_s,
-		porta1_we_i		=> ram_we_s,
+		porta1_ce_n_i	=> ram_ce_n_s,
+		porta1_oe_n_i	=> ram_oe_n_s,
+		porta1_we_n_i	=> ram_we_n_s,
 		porta1_data_i	=> ram_data_to_s,
 		porta1_data_o	=> ram_data_from_s,
 		-- SRAM in board
@@ -426,17 +426,16 @@ begin
 	-- Audio
 	mixer: entity work.mixeru
 	port map (
-		clock_i			=> clock_master_s,
-		reset_i			=> reset_s,
+		clock_audio_i	=> clock_master_s,
 		volumes_i		=> volumes_s,
 		beep_i			=> beep_s,
-		ear_i				=> ear_i,
+		ear_i			=> ear_i,
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		jt51_left_i		=> (others => '0'),
-		jt51_right_i	=> (others => '0'),
-		opll_mo_i		=> (others => '0'),
-		opll_ro_i		=> (others => '0'),
+--		jt51_left_i		=> (others => '0'),
+--		jt51_right_i	=> (others => '0'),
+--		opll_mo_i		=> (others => '0'),
+--		opll_ro_i		=> (others => '0'),
 		audio_mix_l_o	=> audio_l_s,
 		audio_mix_r_o	=> audio_r_s
 	);
@@ -450,8 +449,8 @@ begin
 		nbits_g	=> 16
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_3m_s,
+		reset_i		=> reset_s,
+		clock_i		=> clock_3m_en_s,
 		dac_i		=> audio_l_amp_s,
 		dac_o		=> dac_l_o
 	);
@@ -462,8 +461,8 @@ begin
 		nbits_g	=> 16
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_3m_s,
+		reset_i		=> reset_s,
+		clock_i		=> clock_3m_en_s,
 		dac_i		=> audio_r_amp_s,
 		dac_o		=> dac_r_o
 	);
@@ -475,7 +474,7 @@ begin
 	btn_reset_n_s	<= btn_n_i(3) or btn_n_i(4);
 
 	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or btn_por_n_s = '0'		else '0';
-	reset_s		<= '1'	when soft_rst_cnt_s = X"01"                 or btn_reset_n_s = '0'	else '0';
+	reset_s			<= '1'	when soft_rst_cnt_s = X"01"                 or btn_reset_n_s = '0'		else '0';
 
 	process(reset_s, clock_master_s)
 	begin
@@ -497,9 +496,9 @@ begin
 		counter_size_g	=> 16
 	)
 	port map (
-		clk_i				=> clock_master_s,
-		button_i			=> btn_n_i(1) or btn_n_i(2),
-		result_o			=> btn_scan_s
+		clk_i			=> clock_master_s,
+		button_i		=> btn_n_i(1) or btn_n_i(2),
+		result_o		=> btn_scan_s
 	);
 	
 	process (por_s, btn_scan_s)
@@ -514,7 +513,7 @@ begin
 	-- VGA framebuffer
 	vga: entity work.vga
 	port map (
-		I_CLK			=> clock_master_s,
+		I_CLK		=> clock_master_s,
 		I_CLK_VGA	=> clock_vga_s,
 		I_COLOR		=> rgb_col_s,
 		I_HCNT		=> cnt_hor_s,
@@ -540,8 +539,8 @@ begin
 
 	-- Index => RGB 
 	process (clock_vga_s)
-		variable vga_col_v	: integer range 0 to 15;
-		variable vga_rgb_v	: std_logic_vector(15 downto 0);
+		variable vga_col_v		: integer range 0 to 15;
+		variable vga_rgb_v		: std_logic_vector(15 downto 0);
 		variable vga_r_v		: std_logic_vector( 3 downto 0);
 		variable vga_g_v		: std_logic_vector( 3 downto 0);
 		variable vga_b_v		: std_logic_vector( 3 downto 0);

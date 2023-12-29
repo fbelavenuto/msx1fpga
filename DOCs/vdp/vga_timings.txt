@@ -1,0 +1,53 @@
+Format			Pixel Clock	Horizontal (in Pixels)			Vertical (in Lines)
+		   		(MHz)	
+							Active	Front	Sync	Back	Active	Front	Sync	Back
+							Video	Porch	Pulse	Porch	Video	Porch	Pulse	Porch
+640x480, 60Hz	25.175		640		16		96		48		480		11		2		31
+640x480, 72Hz	31.500		640		24		40		128		480		9		3		28
+640x480, 75Hz	31.500		640		16		96		48		480		11		2		32
+640x480, 85Hz	36.000		640		32		48		112		480		1		3		25
+800x600, 56Hz	38.100		800		32		128		128		600		1		4		14
+800x600, 60Hz	40.000		800		40		128		88		600		1		4		23
+800x600, 72Hz	50.000		800		56		120		64		600		37		6		23
+800x600, 75Hz	49.500		800		16		80		160		600		1		2		21
+800x600, 85Hz	56.250		800		32		64		152		600		1		3		27
+1024x768, 60Hz	65.000		1024	24		136		160		768		3		6		29
+1024x768, 70Hz	75.000		1024	24		136		144		768		3		6		29
+1024x768, 75Hz	78.750		1024	16		96		176		768		1		3		28
+1024x768, 85Hz	94.500		1024	48		96		208		768		1		3		36
+
+21477270
+10738635
+5369317,5
+
+14318180
+7159090
+3579545
+
+TMS9918 = dotclock 5369317 Hz
+
+Horizontal:
+					Graphics	Text		DBLSCAN
+Active display		256			240			512		480
+Right Border		15			25
+Right Blanking		8			8
+HSync				26			26
+Left Blanking		2			2
+Color Burst			14			14
+Left Blanking		8			8
+Left Border			13			19
+TOTAL				342			342			684
+
+VHDL Counter		-102=>239	-86=>255
+VHDL Blank			-72 => -13 (ambos)
+VHDL HSync			-64 => -38 (ambos)
+
+Vertical:
+					NTSC		PAL
+Active Display		192			
+Bottom Border		24			
+Bottom Blanking		3			
+Vertical Sync		3			
+Top Blanking		13			
+Top Border			27			
+TOTAL				262			313?

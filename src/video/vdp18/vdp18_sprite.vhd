@@ -52,20 +52,20 @@ entity vdp18_sprite is
 
   port (
     clock_i       : in  std_logic;
-    clk_en_5m37_i : in  boolean;
-    clk_en_acc_i  : in  boolean;
-    reset_i       : in  boolean;
+    clk_en_5m37_i : in  std_logic;
+    clk_en_acc_i  : in  std_logic;
+    reset_i       : in  std_logic;
     access_type_i : in  access_t;
     num_pix_i     : in  hv_t;
     num_line_i    : in  hv_t;
     vram_d_i      : in  std_logic_vector(0 to 7);
-    vert_inc_i    : in  boolean;
-    reg_size1_i   : in  boolean;
-    reg_mag1_i    : in  boolean;
-    spr_5th_o     : out boolean;
+    vert_inc_i    : in  std_logic;
+    reg_size1_i   : in  std_logic;
+    reg_mag1_i    : in  std_logic;
+    spr_5th_o     : out std_logic;
     spr_5th_num_o : out std_logic_vector(0 to 4);
-    stop_sprite_o : out boolean;
-    spr_coll_o    : out boolean;
+    stop_sprite_o : out std_logic;
+    spr_coll_o    : out std_logic;
     spr_num_o     : out std_logic_vector(0 to 4);
     spr_line_o    : out std_logic_vector(0 to 3);
     spr_name_o    : out std_logic_vector(0 to 7);
@@ -85,33 +85,33 @@ use work.vdp18_pack.all;
 
 architecture rtl of vdp18_sprite is
 
-  subtype sprite_number_t  is unsigned(0 to 4);
-  type    sprite_numbers_t is array (natural range 0 to 3) of sprite_number_t;
-  signal  sprite_numbers_q : sprite_numbers_t;
+	subtype sprite_number_t  is unsigned(0 to 4);
+	type    sprite_numbers_t is array (natural range 0 to 3) of sprite_number_t;
+	signal  sprite_numbers_q : sprite_numbers_t;
 
-  signal  sprite_num_q     : unsigned(0 to 4);
-  signal  sprite_idx_q     : unsigned(0 to 2);
-  signal  sprite_name_q    : std_logic_vector(0 to 7);
+	signal  sprite_num_q     : unsigned(0 to 4);
+	signal  sprite_idx_q     : unsigned(0 to 2);
+	signal  sprite_name_q    : std_logic_vector(0 to 7);
 
-  subtype sprite_x_pos_t   is unsigned(0 to 7);
-  type    sprite_xpos_t    is array (natural range 0 to 3) of sprite_x_pos_t;
-  signal  sprite_xpos_q    : sprite_xpos_t;
-  type    sprite_ec_t      is array (natural range 0 to 3) of std_logic;
-  signal  sprite_ec_q      : sprite_ec_t;
-  type    sprite_xtog_t    is array (natural range 0 to 3) of std_logic;
-  signal  sprite_xtog_q    : sprite_xtog_t;
+	subtype sprite_x_pos_t   is unsigned(0 to 7);
+	type    sprite_xpos_t    is array (natural range 0 to 3) of sprite_x_pos_t;
+	signal  sprite_xpos_q    : sprite_xpos_t;
+	type    sprite_ec_t      is array (natural range 0 to 3) of std_logic;
+	signal  sprite_ec_q      : sprite_ec_t;
+	type    sprite_xtog_t    is array (natural range 0 to 3) of std_logic;
+	signal  sprite_xtog_q    : sprite_xtog_t;
 
-  subtype sprite_col_t     is std_logic_vector(0 to 3);
-  type    sprite_cols_t    is array (natural range 0 to 3) of sprite_col_t;
-  signal  sprite_cols_q    : sprite_cols_t;
+	subtype sprite_col_t     is std_logic_vector(0 to 3);
+	type    sprite_cols_t    is array (natural range 0 to 3) of sprite_col_t;
+	signal  sprite_cols_q    : sprite_cols_t;
 
-  subtype sprite_pat_t     is std_logic_vector(0 to 15);
-  type    sprite_pats_t    is array (natural range 0 to 3) of sprite_pat_t;
-  signal  sprite_pats_q    : sprite_pats_t;
+	subtype sprite_pat_t     is std_logic_vector(0 to 15);
+	type    sprite_pats_t    is array (natural range 0 to 3) of sprite_pat_t;
+	signal  sprite_pats_q    : sprite_pats_t;
 
-  signal  sprite_line_s,
-          sprite_line_q    : std_logic_vector(0 to 3);
-  signal  sprite_visible_s : boolean;
+	signal  sprite_line_s,
+			sprite_line_q    : std_logic_vector(0 to 3);
+	signal  sprite_visible_s : std_logic;
 
 begin
 
@@ -126,7 +126,7 @@ begin
              sprite_idx_dec_v  : unsigned(sprite_idx_q'range);
     variable sprite_idx_v      : natural range 0 to 3;
   begin
-    if reset_i then
+    if reset_i = '1' then
       sprite_numbers_q <= (others => (others => '0'));
       sprite_num_q     <= (others => '0');
       sprite_idx_q     <= (others => '0');
@@ -138,7 +138,7 @@ begin
       sprite_xtog_q    <= (others => '0');
       sprite_pats_q    <= (others => (others => '0'));
 
-    elsif clock_i'event and clock_i = '1' then
+    elsif rising_edge(clock_i) then
       -- sprite index will be incremented during sprite tests
       sprite_idx_inc_v  := sprite_idx_q + 1;
       -- sprite index will be decremented at end of sprite pattern data
@@ -146,7 +146,7 @@ begin
       -- just save typing
       sprite_idx_v      := to_integer(sprite_idx_q(1 to 2));
 
-      if clk_en_5m37_i then
+      if clk_en_5m37_i = '1' then
         -- pre-decrement index counter when sprite reading starts
         if num_pix_i = hv_sprite_start_c and sprite_idx_q > 0 then
           sprite_idx_q <= sprite_idx_dec_v;
@@ -181,10 +181,10 @@ begin
             --   shift if
             --     magnification not enbled
             --       or
-            --     magnification enabled and toggle marker true
+            --     magnification enabled and toggle marker '1'
             if (num_pix_i(0) = '0'                                   or
                 (sprite_ec_q(idx) = '1' and num_pix_i(0 to 3) = "1111")) and
-               (sprite_xtog_q(idx) = '1' or not reg_mag1_i)              then
+               (sprite_xtog_q(idx) = '1' or reg_mag1_i = '0')              then
               --
               -- shift pattern left and fill vacated position with
               -- transparent information
@@ -202,18 +202,18 @@ begin
       end if;
 
 
-      if    vert_inc_i then
+      if    vert_inc_i = '1' then
         -- reset sprite num counter and sprite index counter
         sprite_num_q   <= (others => '0');
         sprite_idx_q   <= (others => '0');
 
-      elsif clk_en_acc_i then
+      elsif clk_en_acc_i = '1' then
         case access_type_i is
           when AC_STST =>
             -- increment sprite number counter
             sprite_num_q      <= sprite_num_q + 1;
 
-            if sprite_visible_s then
+            if sprite_visible_s = '1' then
               if sprite_idx_q < 4 then
                 -- store sprite number
                 sprite_numbers_q(sprite_idx_v) <= sprite_num_q;
@@ -250,7 +250,7 @@ begin
             sprite_pats_q(sprite_idx_v)(8 to 15)
               <= (others => '0');
 
-            if not reg_size1_i then
+            if reg_size1_i = '0' then
               -- decrement index counter in 8-bit mode
               sprite_idx_q <= sprite_idx_dec_v;
             end if;
@@ -290,8 +290,8 @@ begin
     variable vram_d_v      : signed(0 to 8);
   begin
     -- default assignments
-    sprite_visible_s <= false;
-    stop_sprite_o    <= false;
+    sprite_visible_s <= '0';
+    stop_sprite_o    <= '0';
 
     vram_d_v         := resize(signed(vram_d_i), 9);
     -- determine if y information from VRAM should be treated
@@ -302,22 +302,22 @@ begin
     end if;
 
     sprite_line_v    := num_line_i - vram_d_v;
-    if reg_mag1_i then
+    if reg_mag1_i = '1' then
       -- unmagnify line number
       sprite_line_v  := shift_right(sprite_line_v, 1);
     end if;
 
     -- check result bounds
     if sprite_line_v >= 0 then
-      if reg_size1_i then
+      if reg_size1_i = '1' then
         -- double sized sprite: 16 data lines
         if sprite_line_v < 16 then
-          sprite_visible_s <= true;
+          sprite_visible_s <= '1';
         end if;
       else
         -- standard sized sprite: 8 data lines
         if sprite_line_v < 8 then
-          sprite_visible_s <= true;
+          sprite_visible_s <= '1';
         end if;
       end if;
     end if;
@@ -325,36 +325,36 @@ begin
     -- finally: line number of current sprite
     sprite_line_s <= std_logic_vector(sprite_line_v(5 to 8));
 
-    if clk_en_acc_i then
+    if clk_en_acc_i = '1' then
       -- determine when to stop sprite scanning
       if access_type_i = AC_STST then
         if vram_d_v = 208 then
           -- stop upon Y position 208
-          stop_sprite_o <= true;
+          stop_sprite_o <= '1';
         end if;
 
         if sprite_idx_q = 4 then
           -- stop when all sprite positions have been vacated
-          stop_sprite_o <= true;
+          stop_sprite_o <= '1';
         end if;
 
         if sprite_num_q = 31 then
           -- stop when all sprites have been read
-          stop_sprite_o <= true;
+          stop_sprite_o <= '1';
         end if;
       end if;
 
       -- stop sprite reading when last active sprite has been processed
       if sprite_idx_q = 0                                and
          ( access_type_i = AC_SPTL                   or
-          (access_type_i = AC_SPTH and not reg_size1_i)) then
-        stop_sprite_o <= true;
+          (access_type_i = AC_SPTH and reg_size1_i = '0')) then
+        stop_sprite_o <= '1';
       end if;
     end if;
 
     -- stop sprite reading when no sprite is active on current line
     if num_pix_i = hv_sprite_start_c and sprite_idx_q = 0 then
-      stop_sprite_o <= true;
+      stop_sprite_o <= '1';
     end if;
   end process calc_vert;
   --
@@ -373,12 +373,12 @@ begin
                   sprite_num_q)
   begin
     -- default assignments
-    spr_5th_o         <= false;
+    spr_5th_o         <= '0';
     spr_5th_num_o     <= (others => '0');
 
-    if clk_en_acc_i and access_type_i = AC_STST then
-      if sprite_visible_s and sprite_idx_q = 4 then
-        spr_5th_o     <= true;
+    if clk_en_acc_i = '1' and access_type_i = AC_STST then
+      if sprite_visible_s = '1' and sprite_idx_q = 4 then
+        spr_5th_o     <= '1';
         spr_5th_num_o <= std_logic_vector(sprite_num_q);
       end if;
     end if;
@@ -422,8 +422,11 @@ begin
       spr3_col_o    <= sprite_cols_q(3);
       num_spr_pix_v := num_spr_pix_v + 1;
     end if;
-
-    spr_coll_o <= num_spr_pix_v > 1;
+	if num_spr_pix_v > 1 then
+    	spr_coll_o <= '1';
+	else
+    	spr_coll_o <= '0';
+	end if;
   end process col_mux;
   --
   -----------------------------------------------------------------------------

@@ -50,16 +50,16 @@ use ieee.numeric_std.all;
 
 entity vdp18_col_mux is
 	port (
-		vert_active_i	: in  boolean;
-		hor_active_i	: in  boolean;
-		blank_i			: in  boolean;
+		vert_active_i	: in  std_logic;
+		hor_active_i	: in  std_logic;
+		blank_i			: in  std_logic;
 		reg_col0_i		: in  std_logic_vector(0 to  3);
 		pat_col_i		: in  std_logic_vector(0 to  3);
 		spr0_col_i		: in  std_logic_vector(0 to  3);
 		spr1_col_i		: in  std_logic_vector(0 to  3);
 		spr2_col_i		: in  std_logic_vector(0 to  3);
 		spr3_col_i		: in  std_logic_vector(0 to  3);
-		col_o				: out std_logic_vector(0 to  3)
+		col_o			: out std_logic_vector(0 to  3)
 	);
 end vdp18_col_mux;
 
@@ -82,8 +82,8 @@ begin
 							pat_col_i,
 							reg_col0_i)
 	begin
-		if not blank_i then
-			if hor_active_i and vert_active_i then
+		if blank_i = '0' then
+			if hor_active_i = '1' and vert_active_i = '1' then
 				-- priority decoder
 				if    spr0_col_i /= "0000" then
 					col_s <= spr0_col_i;

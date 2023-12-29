@@ -39,4 +39,9 @@
 	- Added alternative Spanish keymap (thanks to desUBIKado)
 	- Added experimental Japanese keymap (thanks to tanam (tms9918))
 	- Fixed keyboard bug with new schema to the load keymap and change the ROM tables
+
+1.4:
+	- Changed all design to be synchronous
+	- Changed default volume mixer of SCC and OPLL signals
+	- Using Nextor 2.1.2
 	

@@ -21,8 +21,6 @@ bitstream: smart.log asm sta jic rbf
 $(OUTPUT_FOLDER):
 	mkdir -p $(OUTPUT_FOLDER)
 
-#clean:
-#	rm -rf *.rpt *.chg smart.log *.htm *.eqn *.pin *.sof *.pof db
 clean:
 	rm -rf db incremental_db $(OUTPUT_FOLDER) simulation *.qws \
 		*.chg smart.log *.rbf *.jic

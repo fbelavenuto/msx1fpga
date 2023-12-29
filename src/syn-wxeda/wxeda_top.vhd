@@ -52,13 +52,13 @@ entity wxeda_top is
 		clock_48M_i				: in    std_logic;
 		-- SDRAM (32MB 16x16bit)
 		sdram_clock_o			: out   std_logic;
-		sdram_cke_o    	  	: out   std_logic									:= '0';
-		sdram_addr_o			: out   std_logic_vector(12 downto 0)		:= (others => '0');
+		sdram_cke_o    	  		: out   std_logic									:= '0';
+		sdram_addr_o			: out   std_logic_vector(12 downto 0)				:= (others => '0');
 		sdram_dq_io				: inout std_logic_vector(15 downto 0);
 		sdram_ba_o				: out   std_logic_vector( 1 downto 0);
 		sdram_dqml_o			: out   std_logic;
 		sdram_dqmh_o			: out   std_logic;
-		sdram_cs_n_o   	  	: out   std_logic									:= '1';
+		sdram_cs_n_o   	  		: out   std_logic									:= '1';
 		sdram_we_n_o			: out   std_logic									:= '1';
 		sdram_cas_n_o			: out   std_logic									:= '1';
 		sdram_ras_n_o			: out   std_logic									:= '1';
@@ -71,14 +71,14 @@ entity wxeda_top is
 		vga_r_o					: out   std_logic_vector(4 downto 0)		:= (others => '0');
 		vga_g_o					: out   std_logic_vector(5 downto 0)		:= (others => '0');
 		vga_b_o					: out   std_logic_vector(4 downto 0)		:= (others => '0');
-		vga_hs_o					: out   std_logic									:= '1';
-		vga_vs_o					: out   std_logic									:= '1';
+		vga_hs_o				: out   std_logic									:= '1';
+		vga_vs_o				: out   std_logic									:= '1';
 		-- UART
 		uart_tx_o				: out   std_logic									:= '1';
 		uart_rx_i				: in    std_logic;
 		-- External I/O
-		keys_n_i					: in    std_logic_vector(3 downto 0);
-		buzzer_o					: out   std_logic									:= '1';
+		keys_n_i				: in    std_logic_vector(3 downto 0);
+		buzzer_o				: out   std_logic									:= '1';
 		-- ADC
 		adc_clock_o				: out   std_logic;
 		adc_data_i				: in    std_logic;
@@ -103,42 +103,40 @@ end;
 architecture behavior of wxeda_top is
 
 	-- Resets
-	signal pll_locked_s		: std_logic;
+	signal pll_locked_s			: std_logic;
 	signal por_s				: std_logic;
 	signal reset_s				: std_logic;
 	signal soft_por_s			: std_logic;
-	signal soft_reset_k_s	: std_logic;
-	signal soft_reset_s_s	: std_logic;
-	signal soft_rst_cnt_s	: unsigned(7 downto 0)	:= X"FF";
+	signal soft_reset_k_s		: std_logic;
+	signal soft_reset_s_s		: std_logic;
+	signal soft_rst_cnt_s		: unsigned(7 downto 0)	:= X"FF";
 
 	-- Clocks
-	signal clock_master_s	: std_logic;
+	signal clock_master_s		: std_logic;
 	signal clock_sdram_s		: std_logic;
-	signal clock_vdp_s		: std_logic;
-	signal clock_cpu_s		: std_logic;
-	signal clock_psg_en_s	: std_logic;
-	signal clock_3m_s			: std_logic;
+	signal clock_3m_en_s		: std_logic;
+	signal clock_7m_en_s		: std_logic;
+	signal clock_10m_en_s		: std_logic;
+	signal clock_cpu_en_s		: std_logic;
 	signal turbo_on_s			: std_logic;
 
 	-- RAM
 	signal ram_addr_s			: std_logic_vector(22 downto 0);		-- 8MB
-	signal ram_data_from_s	: std_logic_vector( 7 downto 0);
+	signal ram_data_from_s		: std_logic_vector( 7 downto 0);
 	signal ram_data_to_s		: std_logic_vector( 7 downto 0);
-	signal ram_ce_s			: std_logic;
-	signal ram_oe_s			: std_logic;
-	signal ram_we_s			: std_logic;
+	signal ram_ce_n_s			: std_logic;
+	signal ram_oe_n_s			: std_logic;
+	signal ram_we_n_s			: std_logic;
 
 	-- VRAM memory
-	signal vram_addr_s		: std_logic_vector(13 downto 0);		-- 16K
+	signal vram_addr_s			: std_logic_vector(13 downto 0);		-- 16K
 	signal vram_do_s			: std_logic_vector( 7 downto 0);
 	signal vram_di_s			: std_logic_vector( 7 downto 0);
---	signal vram_ce_s			: std_logic;
---	signal vram_oe_s			: std_logic;
-	signal vram_we_s			: std_logic;
+	signal vram_we_n_s			: std_logic;
 
 	-- Audio
-	signal audio_scc_s		: signed(14 downto 0);
-	signal audio_psg_s		: unsigned(7 downto 0);
+	signal audio_scc_s			: signed(14 downto 0);
+	signal audio_psg_s			: unsigned(7 downto 0);
 	signal beep_s				: std_logic;
 	signal audio_l_s			: signed(15 downto 0);
 	signal audio_r_s			: signed(15 downto 0);
@@ -157,31 +155,30 @@ architecture behavior of wxeda_top is
 	signal rows_s				: std_logic_vector( 3 downto 0);
 	signal cols_s				: std_logic_vector( 7 downto 0);
 	signal caps_en_s			: std_logic;
-	signal extra_keys_s		: std_logic_vector( 3 downto 0);
-	signal keyb_valid_s		: std_logic;
-	signal keyb_data_s		: std_logic_vector( 7 downto 0);
+	signal extra_keys_s			: std_logic_vector( 3 downto 0);
+	signal keyb_valid_s			: std_logic;
+	signal keyb_data_s			: std_logic_vector( 7 downto 0);
 	signal keymap_addr_s		: std_logic_vector( 8 downto 0);
 	signal keymap_data_s		: std_logic_vector( 7 downto 0);
-	signal keymap_we_s		: std_logic;
+	signal keymap_we_n_s		: std_logic;
 
 	-- Bus
 	signal bus_addr_s			: std_logic_vector(15 downto 0);
-	signal bus_data_from_s	: std_logic_vector( 7 downto 0)		:= (others => '1');
+	signal bus_data_from_s		: std_logic_vector( 7 downto 0)		:= (others => '1');
 	signal bus_data_to_s		: std_logic_vector( 7 downto 0);
 	signal bus_rd_n_s			: std_logic;
 	signal bus_wr_n_s			: std_logic;
 	signal bus_m1_n_s			: std_logic;
-	signal bus_iorq_n_s		: std_logic;
-	signal bus_mreq_n_s		: std_logic;
-	signal bus_sltsl1_n_s	: std_logic;
-	signal bus_sltsl2_n_s	: std_logic;
+	signal bus_iorq_n_s			: std_logic;
+	signal bus_mreq_n_s			: std_logic;
+	signal bus_sltsl1_n_s		: std_logic;
+	signal bus_sltsl2_n_s		: std_logic;
 
 	--
-	signal jt51_left_s		: signed(15 downto 0)			:= (others => '0');
-	signal jt51_right_s		: signed(15 downto 0)			:= (others => '0');
+--	signal jt51_left_s			: signed(15 downto 0)			:= (others => '0');
+--	signal jt51_right_s			: signed(15 downto 0)			:= (others => '0');
 
 	-- OPLL
-	signal opll_cs_n_s		: std_logic							:= '1';
 	signal opll_mo_s			: signed(12 downto 0)			:= (others => '0');
 	signal opll_ro_s			: signed(12 downto 0)			:= (others => '0');
 
@@ -194,200 +191,204 @@ begin
 	-- PLL
 	pll_1: entity work.pll1
 	port map (
-		inclk0	=> clock_48M_i,
-		c0			=> clock_master_s,		-- 21.46667 MHz (6x NTSC)
+		inclk0		=> clock_48M_i,
+		c0			=> clock_master_s,			-- 21.46667 MHz (6x NTSC)
 		c1			=> clock_sdram_s,			-- 85.86667 MHz (4x master)
 		c2			=> sdram_clock_o,			-- 85.86667 MHz -45º
-		locked	=> pll_locked_s
+		locked		=> pll_locked_s
 	);
 
 	-- Clocks
 	clks: entity work.clocks
 	port map (
-		clock_i			=> clock_master_s,
-		por_i				=> por_s,
-		turbo_on_i		=> turbo_on_s,
-		clock_vdp_o		=> clock_vdp_s,
-		clock_5m_en_o	=> open,
-		clock_cpu_o		=> clock_cpu_s,
-		clock_psg_en_o	=> clock_psg_en_s,
-		clock_3m_o		=> clock_3m_s
+		clock_master_i		=> clock_master_s,
+		por_i				=> not pll_locked_s,
+		clock_3m_en_o		=> clock_3m_en_s,
+		clock_5m_en_o		=> open,
+		clock_7m_en_o		=> clock_7m_en_s,
+		clock_10m_en_o		=> clock_10m_en_s
 	);
+
+	clock_cpu_en_s	<= clock_3m_en_s	when turbo_on_s = '0' else clock_7m_en_s;
 
 	-- The MSX1
 	the_msx: entity work.msx
 	generic map (
-		hw_id_g			=> 3,
+		hw_id_g				=> 3,
 		hw_txt_g			=> "WXEDA Board",
-		hw_version_g	=> actual_version,
-		video_opt_g		=> 1,						-- dblscan configurable
-		ramsize_g		=> 8192
+		hw_version_g		=> actual_version,
+		video_opt_g			=> 1,						-- dblscan configurable
+		ramsize_g			=> 8192,
+		opll_en_g			=> false
 	)
 	port map (
-		-- Clocks
-		clock_i			=> clock_master_s,
-		clock_vdp_i		=> clock_vdp_s,
-		clock_cpu_i		=> clock_cpu_s,
-		clock_psg_en_i	=> clock_psg_en_s,
-		-- Turbo
-		turbo_on_k_i	=> extra_keys_s(3),	-- F11
-		turbo_on_o		=> turbo_on_s,
 		-- Resets
-		reset_i			=> reset_s,
+		reset_i				=> reset_s,
 		por_i				=> por_s,
-		softreset_o		=> soft_reset_s_s,
+		softreset_o			=> soft_reset_s_s,
+		-- Clocks
+		clock_master_i		=> clock_master_s,
+		clock_vdp_en_i		=> clock_10m_en_s,
+		clock_cpu_en_i		=> clock_cpu_en_s,
+		clock_psg_en_i		=> clock_3m_en_s,
+		-- Turbo
+		turbo_on_k_i		=> extra_keys_s(3),	-- F11
+		turbo_on_o			=> turbo_on_s,
 		-- Options
-		opt_nextor_i	=> '1',
-		opt_mr_type_i	=> "00",
-		opt_vga_on_i	=> '1',
+		opt_nextor_i		=> '1',
+		opt_mr_type_i		=> "00",
+		opt_vga_on_i		=> '1',
 		-- RAM
-		ram_addr_o		=> ram_addr_s,
-		ram_data_i		=> ram_data_from_s,
-		ram_data_o		=> ram_data_to_s,
-		ram_ce_o			=> ram_ce_s,
-		ram_we_o			=> ram_we_s,
-		ram_oe_o			=> ram_oe_s,
+		ram_addr_o			=> ram_addr_s,
+		ram_data_i			=> ram_data_from_s,
+		ram_data_o			=> ram_data_to_s,
+		ram_ce_n_o			=> ram_ce_n_s,
+		ram_we_n_o			=> ram_we_n_s,
+		ram_oe_n_o			=> ram_oe_n_s,
 		-- ROM
-		rom_addr_o		=> open,
-		rom_data_i		=> ram_data_from_s,
-		rom_ce_o			=> open,
-		rom_oe_o			=> open,
+		rom_addr_o			=> open,
+		rom_data_i			=> ram_data_from_s,
+		rom_ce_n_o			=> open,
+		rom_oe_n_o			=> open,
 		-- External bus
-		bus_addr_o		=> bus_addr_s,
-		bus_data_i		=> bus_data_from_s,
-		bus_data_o		=> bus_data_to_s,
-		bus_rd_n_o		=> bus_rd_n_s,
-		bus_wr_n_o		=> bus_wr_n_s,
-		bus_m1_n_o		=> bus_m1_n_s,
-		bus_iorq_n_o	=> bus_iorq_n_s,
-		bus_mreq_n_o	=> bus_mreq_n_s,
-		bus_sltsl1_n_o	=> bus_sltsl1_n_s,
-		bus_sltsl2_n_o	=> bus_sltsl2_n_s,
-		bus_wait_n_i	=> '1',
-		bus_nmi_n_i		=> '1',
-		bus_int_n_i		=> '1',
+		bus_addr_o			=> bus_addr_s,
+		bus_data_i			=> bus_data_from_s,
+		bus_data_o			=> bus_data_to_s,
+		bus_rd_n_o			=> bus_rd_n_s,
+		bus_wr_n_o			=> bus_wr_n_s,
+		bus_m1_n_o			=> bus_m1_n_s,
+		bus_iorq_n_o		=> bus_iorq_n_s,
+		bus_mreq_n_o		=> bus_mreq_n_s,
+		bus_sltsl1_n_o		=> bus_sltsl1_n_s,
+		bus_sltsl2_n_o		=> bus_sltsl2_n_s,
+		bus_wait_n_i		=> '1',
+		bus_nmi_n_i			=> '1',
+		bus_int_n_i			=> '1',
 		-- VDP RAM
-		vram_addr_o		=> vram_addr_s,
-		vram_data_i		=> vram_do_s,
-		vram_data_o		=> vram_di_s,
-		vram_ce_o		=> open,--vram_ce_s,
-		vram_oe_o		=> open,--vram_oe_s,
-		vram_we_o		=> vram_we_s,
+		vram_addr_o			=> vram_addr_s,
+		vram_data_i			=> vram_do_s,
+		vram_data_o			=> vram_di_s,
+		vram_ce_n_o			=> open,
+		vram_oe_n_o			=> open,
+		vram_we_n_o			=> vram_we_n_s,
 		-- Keyboard
-		rows_o			=> rows_s,
-		cols_i			=> cols_s,
-		caps_en_o		=> caps_en_s,
-		keyb_valid_i	=> keyb_valid_s,
-		keyb_data_i		=> keyb_data_s,
-		keymap_addr_o	=> keymap_addr_s,
-		keymap_data_o	=> keymap_data_s,
-		keymap_we_o		=> keymap_we_s,
+		rows_o				=> rows_s,
+		cols_i				=> cols_s,
+		caps_en_o			=> caps_en_s,
+		keyb_valid_i		=> keyb_valid_s,
+		keyb_data_i			=> keyb_data_s,
+		keymap_addr_o		=> keymap_addr_s,
+		keymap_data_o		=> keymap_data_s,
+		keymap_we_n_o		=> keymap_we_n_s,
 		-- Audio
-		audio_scc_o		=> audio_scc_s,
-		audio_psg_o		=> audio_psg_s,
-		beep_o			=> beep_s,
-		volumes_o		=> volumes_s,
+		audio_scc_o			=> audio_scc_s,
+		audio_psg_o			=> audio_psg_s,
+		beep_o				=> beep_s,
+		opll_mo_o			=> opll_mo_s,
+		opll_ro_o			=> opll_ro_s,
+		volumes_o			=> volumes_s,
 		-- K7
-		k7_motor_o		=> open,
-		k7_audio_o		=> open,
-		k7_audio_i		=> '0',
+		k7_motor_o			=> open,
+		k7_audio_o			=> open,
+		k7_audio_i			=> '0',
 		-- Joystick
-		joy1_up_i		=> '1',
-		joy1_down_i		=> '1',
-		joy1_left_i		=> '1',
-		joy1_right_i	=> '1',
-		joy1_btn1_i		=> '1',
-		joy1_btn1_o		=> open,
-		joy1_btn2_i		=> '1',
-		joy1_btn2_o		=> open,
-		joy1_out_o		=> open,
-		joy2_up_i		=> '1',
-		joy2_down_i		=> '1',
-		joy2_left_i		=> '1',
-		joy2_right_i	=> '1',
-		joy2_btn1_i		=> '1',
-		joy2_btn1_o		=> open,
-		joy2_btn2_i		=> '1',
-		joy2_btn2_o		=> open,
-		joy2_out_o		=> open,
+		joy1_up_i			=> '1',
+		joy1_down_i			=> '1',
+		joy1_left_i			=> '1',
+		joy1_right_i		=> '1',
+		joy1_btn1_i			=> '1',
+		joy1_btn1_o			=> open,
+		joy1_btn2_i			=> '1',
+		joy1_btn2_o			=> open,
+		joy1_out_o			=> open,
+		joy2_up_i			=> '1',
+		joy2_down_i			=> '1',
+		joy2_left_i			=> '1',
+		joy2_right_i		=> '1',
+		joy2_btn1_i			=> '1',
+		joy2_btn1_o			=> open,
+		joy2_btn2_i			=> '1',
+		joy2_btn2_o			=> open,
+		joy2_out_o			=> open,
 		-- Video
-		rgb_r_o			=> rgb_r_s,
-		rgb_g_o			=> rgb_g_s,
-		rgb_b_o			=> rgb_b_s,
-		hsync_n_o		=> rgb_hsync_n_s,
-		vsync_n_o		=> rgb_vsync_n_s,
-		ntsc_pal_o		=> open,--ntsc_pal_s,
-		vga_on_k_i		=> extra_keys_s(2),		-- Print Screen
-		scanline_on_k_i=> extra_keys_s(1),		-- Scroll Lock
+		rgb_r_o				=> rgb_r_s,
+		rgb_g_o				=> rgb_g_s,
+		rgb_b_o				=> rgb_b_s,
+		hsync_n_o			=> rgb_hsync_n_s,
+		vsync_n_o			=> rgb_vsync_n_s,
+		ntsc_pal_o			=> open,--ntsc_pal_s,
+		vga_on_k_i			=> extra_keys_s(2),		-- Print Screen
+		scanline_on_k_i		=> extra_keys_s(1),		-- Scroll Lock
 		vga_en_o			=> open,--vga_en_s,
 		-- SPI/SD
-		flspi_cs_n_o	=> open,
-		spi_cs_n_o		=> sd_cs_n_o,
-		spi_sclk_o		=> sd_sclk_o,
-		spi_mosi_o		=> sd_mosi_o,
-		spi_miso_i		=> sd_miso_i,
-		sd_pres_n_i		=> '0',
-		sd_wp_i			=> '0',
+		flspi_cs_n_o		=> open,
+		spi_cs_n_o			=> sd_cs_n_o,
+		spi_sclk_o			=> sd_sclk_o,
+		spi_mosi_o			=> sd_mosi_o,
+		spi_miso_i			=> sd_miso_i,
+		sd_pres_n_i			=> '0',
+		sd_wp_i				=> '0',
 		-- DEBUG
 		D_wait_o			=> open,
-		D_slots_o		=> open,
-		D_ipl_en_o		=> open
+		D_slots_o			=> open,
+		D_ipl_en_o			=> open
 	);
 
 	-- RAM
 	ram: entity work.ssdram
 	generic map (
-		freq_g		=> 86
+		freq_g			=> 86
 	)
 	port map (
-		clock_i		=> clock_sdram_s,
-		reset_i		=> reset_s,
-		refresh_i	=> '1',
+		clock_i			=> clock_sdram_s,
+		reset_i			=> reset_s,
+		refresh_i		=> '1',
 		-- Static RAM bus
-		addr_i		=> ram_addr_s,
-		data_i		=> ram_data_to_s,
-		data_o		=> ram_data_from_s,
-		cs_i			=> ram_ce_s,
-		oe_i			=> ram_oe_s,
-		we_i			=> ram_we_s,
+		addr_i			=> ram_addr_s,
+		data_i			=> ram_data_to_s,
+		data_o			=> ram_data_from_s,
+		cs_n_i			=> ram_ce_n_s,
+		oe_n_i			=> ram_oe_n_s,
+		we_n_i			=> ram_we_n_s,
 		-- SD-RAM ports
-		mem_cke_o	=> sdram_cke_o,
-		mem_cs_n_o	=> sdram_cs_n_o,
-		mem_ras_n_o	=> sdram_ras_n_o,
-		mem_cas_n_o	=> sdram_cas_n_o,
-		mem_we_n_o	=> sdram_we_n_o,
-		mem_udq_o	=> sdram_dqmh_o,
-		mem_ldq_o	=> sdram_dqml_o,
+		mem_cke_o		=> sdram_cke_o,
+		mem_cs_n_o		=> sdram_cs_n_o,
+		mem_ras_n_o		=> sdram_ras_n_o,
+		mem_cas_n_o		=> sdram_cas_n_o,
+		mem_we_n_o		=> sdram_we_n_o,
+		mem_udq_o		=> sdram_dqmh_o,
+		mem_ldq_o		=> sdram_dqml_o,
 		mem_ba_o		=> sdram_ba_o,
-		mem_addr_o	=> sdram_addr_o(11 downto 0),
-		mem_data_io	=> sdram_dq_io
+		mem_addr_o		=> sdram_addr_o(11 downto 0),
+		mem_data_io		=> sdram_dq_io
 	);
 
 	-- VRAM
 	vram: entity work.spram
 	generic map (
-		addr_width_g => 14,
-		data_width_g => 8
+		addr_width_g 	=> 14,
+		data_width_g 	=> 8
 	)
 	port map (
-		clk_i		=> clock_master_s,
-		we_i		=> vram_we_s,
-		addr_i	=> vram_addr_s,
-		data_i	=> vram_di_s,
-		data_o	=> vram_do_s
+		clock_i			=> clock_master_s,
+		clock_en_i		=> clock_10m_en_s,
+		we_n_i			=> vram_we_n_s,
+		addr_i			=> vram_addr_s,
+		data_i			=> vram_di_s,
+		data_o			=> vram_do_s
 	);
 
 	-- Keyboard PS/2
 	keyb: entity work.keyboard
 	port map (
-		clock_i			=> clock_3m_s,
+		clock_i			=> clock_3m_en_s,
 		reset_i			=> reset_s,
 		-- MSX
 		rows_coded_i	=> rows_s,
 		cols_o			=> cols_s,
 		keymap_addr_i	=> keymap_addr_s,
 		keymap_data_i	=> keymap_data_s,
-		keymap_we_i		=> keymap_we_s,
+		keymap_we_n_i	=> keymap_we_n_s,
 		-- LEDs
 		led_caps_i		=> caps_en_s,
 		-- PS/2 interface
@@ -398,7 +399,7 @@ begin
 		keyb_data_o		=> keyb_data_s,
 		--
 		reset_o			=> soft_reset_k_s,
-		por_o				=> soft_por_s,
+		por_o			=> soft_por_s,
 		reload_core_o	=> open,
 		extra_keys_o	=> extra_keys_s
 	);
@@ -406,15 +407,14 @@ begin
 	-- Audio
 	mixer: entity work.mixers
 	port map (
-		clock_i			=> clock_master_s,
-		reset_i			=> reset_s,
+		clock_audio_i	=> clock_master_s,
 		volumes_i		=> volumes_s,
 		beep_i			=> beep_s,
-		ear_i				=> '0',
+--		ear_i			=> '0',
 		audio_scc_i		=> audio_scc_s,
 		audio_psg_i		=> audio_psg_s,
-		jt51_left_i		=> jt51_left_s,
-		jt51_right_i	=> jt51_right_s,
+--		jt51_left_i		=> jt51_left_s,
+--		jt51_right_i	=> jt51_right_s,
 		opll_mo_i		=> opll_mo_s,
 		opll_ro_i		=> opll_ro_s,
 		audio_mix_l_o	=> audio_l_s,
@@ -427,8 +427,8 @@ begin
 		nbits_g	=> 16
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
+		reset_i		=> reset_s,
+		clock_i		=> clock_master_s,
 		dac_i		=> audio_l_s,
 		dac_o		=> audio_dac_l_o
 	);
@@ -439,15 +439,15 @@ begin
 		nbits_g	=> 16
 	)
 	port map (
-		reset_i	=> reset_s,
-		clock_i	=> clock_master_s,
+		reset_i		=> reset_s,
+		clock_i		=> clock_master_s,
 		dac_i		=> audio_r_s,
 		dac_o		=> audio_dac_r_o
 	);
 
 	-- Glue logic
 	por_s			<= '1'	when pll_locked_s = '0' or soft_por_s = '1' or keys_n_i(3) = '0'	else '0';
-	reset_s		<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1'  or keys_n_i(0) = '0'	else '0';
+	reset_s			<= '1'	when soft_rst_cnt_s = X"00" or por_s = '1'  or keys_n_i(0) = '0'	else '0';
 
 	process(clock_master_s)
 	begin
@@ -461,9 +461,9 @@ begin
 	end process;
 
 	-- VGA Output
-	vga_r_o	<= rgb_r_s & '0';
-	vga_g_o	<= rgb_g_s & "00";
-	vga_b_o	<= rgb_b_s & '0';
+	vga_r_o		<= rgb_r_s & '0';
+	vga_g_o		<= rgb_g_s & "00";
+	vga_b_o		<= rgb_b_s & '0';
 	vga_hs_o	<= rgb_hsync_n_s;
 	vga_vs_o	<= rgb_vsync_n_s;
 

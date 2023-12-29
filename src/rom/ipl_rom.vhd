@@ -7,6 +7,7 @@ use ieee.numeric_std.all;
 entity ipl_rom is
 	port (
 		clock_i		: in    std_logic;
+		clock_en_i	: in    std_logic;
 		addr_i		: in    std_logic_vector(12 downto 0);
 		data_o		: out   std_logic_vector(7 downto 0)
 	);
@@ -16,38 +17,38 @@ architecture rtl of ipl_rom is
 
 	type ROM_ARRAY is array(0 to 8191) of std_logic_vector(7 downto 0);
 	constant ROM : ROM_ARRAY := (
-		x"F3",x"ED",x"56",x"C3",x"80",x"00",x"FF",x"FF", -- 0x0000
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0008
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0010
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0018
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0020
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0028
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0030
-		x"ED",x"4D",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0038
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0040
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0048
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0050
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0058
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"ED",x"45", -- 0x0060
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0068
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0070
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0078
+		x"F3",x"ED",x"56",x"C3",x"80",x"00",x"00",x"00", -- 0x0000
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0008
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0010
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0018
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0020
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0028
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0030
+		x"ED",x"4D",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0038
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0040
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0048
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0050
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0058
+		x"00",x"00",x"00",x"00",x"00",x"00",x"ED",x"45", -- 0x0060
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0068
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0070
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0078
 		x"31",x"FF",x"7F",x"CD",x"87",x"1C",x"CD",x"07", -- 0x0080
-		x"02",x"C3",x"00",x"01",x"FF",x"FF",x"FF",x"FF", -- 0x0088
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0090
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x0098
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00A0
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00A8
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00B0
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00B8
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00C0
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00C8
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00D0
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00D8
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00E0
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00E8
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00F0
-		x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF",x"FF", -- 0x00F8
+		x"02",x"C3",x"00",x"01",x"00",x"00",x"00",x"00", -- 0x0088
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0090
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x0098
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00A0
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00A8
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00B0
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00B8
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00C0
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00C8
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00D0
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00D8
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00E0
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00E8
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00F0
+		x"00",x"00",x"00",x"00",x"00",x"00",x"00",x"00", -- 0x00F8
 		x"76",x"18",x"FD",x"47",x"C5",x"EB",x"E5",x"CD", -- 0x0100
 		x"55",x"1B",x"EB",x"D1",x"C1",x"CB",x"3C",x"CB", -- 0x0108
 		x"1D",x"3E",x"10",x"95",x"4F",x"D5",x"68",x"79", -- 0x0110
@@ -1047,7 +1048,9 @@ begin
 	process(clock_i)
 	begin
 		if rising_edge(clock_i) then
-			data_o <= ROM(to_integer(unsigned(addr_i)));
+			if (clock_en_i = '1') then
+  				data_o <= ROM(to_integer(unsigned(addr_i)));
+			end if;
 		end if;
 	end process;
 end architecture;

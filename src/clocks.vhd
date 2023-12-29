@@ -44,14 +44,12 @@ use ieee.numeric_std.all;
 
 entity clocks is
 	port (
-		clock_i			: in  std_logic;				-- 21 MHz
-		por_i				: in  std_logic;
-		turbo_on_i		: in  std_logic;				-- 0 = 3.57, 1 = 7.15
-		clock_vdp_o		: out std_logic;
+		clock_master_i	: in  std_logic;				-- 21 MHz
+		por_i			: in  std_logic;
+		clock_3m_en_o	: out std_logic;
 		clock_5m_en_o	: out std_logic;
-		clock_cpu_o		: out std_logic;
-		clock_psg_en_o	: out std_logic;				-- 3.57 clock enable
-		clock_3m_o		: out std_logic
+		clock_7m_en_o	: out std_logic;
+		clock_10m_en_o	: out std_logic
 	);
 end entity;
 
@@ -59,112 +57,74 @@ architecture rtl of clocks is
 
 	-- Clocks
 	signal clk1_cnt_q			: unsigned(2 downto 0)				:= (others => '0');
-	signal clk2_cnt_q			: unsigned(2 downto 0)				:= (others => '0');
-	signal pos_cnt3_q			: unsigned(1 downto 0)				:= "00";
-	signal neg_cnt3_q			: unsigned(1 downto 0)				:= "00";
-	signal div3_s				: std_logic								:= '0';
-	signal clock_vdp_s		: std_logic								:= '0';
+	signal clk2_cnt_q			: unsigned(1 downto 0)				:= (others => '0');
+	signal clk3_cnt_q			: unsigned(1 downto 0)				:= (others => '0');
+
+	signal clock_3m_en_s		: std_logic								:= '0';
 	signal clock_5m_en_s		: std_logic								:= '0';
-	signal clock_3m_s			: std_logic								:= '0';
-	signal clock_7m_s			: std_logic								:= '0';
-	signal clock_psg_en_s	: std_logic								:= '0';
-	-- Switcher
-	signal sw_ff_q				: std_logic_vector(1 downto 0)	:= "11";
-	signal clock_out1_s		: std_logic;
-	signal clock_out2_s		: std_logic;
+	signal clock_7m_en_s		: std_logic								:= '0';
+	signal clock_10m_en_s		: std_logic								:= '0';
 
 begin
 
-	-- clk1_cnt_q: 5 4 3 2 1 0
-	-- 0 and 3 = 3.57
-	-- 0, 2, 4 = 10.7
-
 	-- Clocks generation
-	process (por_i, clock_i)
+	-- 3m and 10m
+	process (por_i, clock_master_i)
+	begin
+		if por_i = '1' then
+			clk1_cnt_q		<= (others => '0');
+			clock_10m_en_s	<= '0';
+			clock_3m_en_s	<= '0';
+		elsif rising_edge(clock_master_i) then
+			clock_3m_en_s	<= '0';
+			if clk1_cnt_q = 0 then
+				clk1_cnt_q 		<= "101";
+				clock_3m_en_s	<= '1';
+			else
+				clk1_cnt_q <= clk1_cnt_q - 1;
+			end if;
+			clock_10m_en_s	<= not clock_10m_en_s;			-- VDP: 10.7 MHz
+		end if;
+	end process;
+
+	-- 5m
+	process (por_i, clock_master_i)
 	begin
 		if por_i = '1' then
 			clk2_cnt_q	<= (others => '0');
 			clock_5m_en_s	<= '0';
-		elsif rising_edge(clock_i) then
+		elsif rising_edge(clock_master_i) then
 			clock_5m_en_s	<= '0';
 			if clk2_cnt_q = 0 then
-				clk2_cnt_q <= "111";
+				clock_5m_en_s <= '1';
+				clk2_cnt_q <= "11";
 			else
 				clk2_cnt_q <= clk2_cnt_q - 1;
 			end if;
-			if clk2_cnt_q = 0 or clk2_cnt_q = 4 then
-				clock_5m_en_s <= '1';				-- Scandoubler: 5.37 MHz enable
-			end if;
 		end if;
 	end process;
 
-	process (por_i, clock_i)
+	-- 7m
+	process (por_i, clock_master_i)
 	begin
 		if por_i = '1' then
-			clk1_cnt_q		<= (others => '0');
-			clock_vdp_s		<= '0';
-			clock_3m_s		<= '0';
-			pos_cnt3_q		<= "00";
-		elsif rising_edge(clock_i) then
-			clock_psg_en_s	<= '0';						-- PSG clock enable
-			if clk1_cnt_q = 0 then
-				clk1_cnt_q <= "101";
-				clock_psg_en_s	<= '1';					-- PSG clock enable
+			clk3_cnt_q	<= (others => '0');
+			clock_7m_en_s	<= '0';
+		elsif rising_edge(clock_master_i) then
+			clock_7m_en_s	<= '0';
+			if clk3_cnt_q = 0 then
+				clock_7m_en_s <= '1';
+				clk3_cnt_q <= "10";
 			else
-				clk1_cnt_q <= clk1_cnt_q - 1;
-			end if;
-			clock_vdp_s	<= not clock_vdp_s;			-- VDP: 10.7 MHz
-			if clk1_cnt_q = 0 or clk1_cnt_q = 3 then
-				clock_3m_s		<= not clock_3m_s;	-- 3.57 MHz
-			end if;
-			-- /3
-			if pos_cnt3_q = 2 then
-				pos_cnt3_q <= "00";
-			else
-				pos_cnt3_q <= pos_cnt3_q + 1;
+				clk3_cnt_q <= clk3_cnt_q - 1;
 			end if;
 		end if;
 	end process;
-
-	-- /3
-	process (por_i, clock_i)
-	begin
-		if por_i = '1' then
-			neg_cnt3_q <= "00";
-		elsif falling_edge(clock_i) then
-			if neg_cnt3_q = 2 then
-				neg_cnt3_q <= "00";
-			else
-				neg_cnt3_q <= neg_cnt3_q + 1;
-			end if;
-		end if;
-	end process;
-
-	clock_7m_s <= '1' when pos_cnt3_q /= 2 and neg_cnt3_q /= 2 else '0';
-
-	-- Switcher
-	process(por_i, clock_out1_s)
-	begin
-		if por_i = '1' then
-			sw_ff_q	<= "00";
-		elsif rising_edge(clock_out1_s) then
-			sw_ff_q(1) <= turbo_on_i;
-			sw_ff_q(0) <= sw_ff_q(1);
-		end if;
-	end process;
-
-	clock_out1_s <= clock_3m_s when sw_ff_q(1) = '0' else clock_7m_s;
 
 	-- Out
-	clock_vdp_o		<= clock_vdp_s;
+	clock_3m_en_o	<= clock_3m_en_s;
 	clock_5m_en_o	<= clock_5m_en_s;
-	clock_psg_en_o	<= clock_psg_en_s;
-	clock_3m_o		<= clock_3m_s;
-
-	with sw_ff_q select
-		clock_cpu_o <=
-			clock_3m_s		when "00",
-			clock_7m_s		when "11",
-			'1'				when others;
+	clock_7m_en_o	<= clock_7m_en_s;
+	clock_10m_en_o	<= clock_10m_en_s;
 
 end architecture;
