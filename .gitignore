@@ -11,6 +11,7 @@ greybox_tmp
 transcript
 /_bak
 /Support/_
+/Support/*.vhd
 /SW/*/*.COM
 /SW/*/*.ROM
 /SW/*/*.bin

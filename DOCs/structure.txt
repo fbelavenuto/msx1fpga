@@ -19,7 +19,7 @@ Hardware IDs:
 4  = WXEDAX Board
 5  = Multicore Board
 6  = ZX-Uno Board
-7  = ZX-Uno Board VGA2M
+7  = Mist/Mistica/SiDi
 8  = Multicore2 Board
 9  = QMXC6SLX16 Board
 

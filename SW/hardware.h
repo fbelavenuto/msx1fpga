@@ -69,10 +69,6 @@ static const unsigned char mymkid = 40;
 // Reg turbo
 #define TURBO_ON		0x01
 
-// SPI
-__sfr __at 0x9E SPI_CTRL;
-__sfr __at 0x9F SPI_DATA;
-
 // VDP
 __sfr __at 0x98 VDP_DATA;
 __sfr __at 0x99 VDP_CMD;

@@ -1,3 +1,6 @@
 [submodule "SW/msxclib"]
 	path = SW/msxclib
 	url = git@github.com:fbelavenuto/msxclib.git
+[submodule "src/mist-modules"]
+	path = src/mist-modules
+	url = https://github.com/mist-devel/mist-modules.git

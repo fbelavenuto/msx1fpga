@@ -79,7 +79,7 @@ begin
 		variable port_c_addr_v	: integer range 0 to 7;
 	begin
 		if reset_i = '1' then
-			port_a_r	<= (others => ipl_en_i);
+			port_a_r	<= (others => ipl_en_i);		-- If IPL enabled, configure all frames to slot 3
 			port_c_r	<= (7 => '0', others => '1');	-- MSB=0: beep silent
 		elsif rising_edge(clock_master_i) then
 			if req_i = '1' and cs_n_i = '0' and wr_n_i = '0' then

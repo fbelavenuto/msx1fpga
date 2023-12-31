@@ -60,7 +60,10 @@
 
 init:
 	;; Stack at the top of memory.
-	ld	sp, #0x7FFF
+	ld		sp, #0x3800
+	;; Change MSXSD bank to access SPI
+	ld		a, #0xFF
+	ld		(#0x6000), a	
 
 	;; Initialise global variables
 	call    gsinit

@@ -19,7 +19,7 @@ _OBJS = crt0.rel main.rel mmc.rel fat.rel vdp.rel
 
 DESTNAME = loader
 CODELOC = 0x0100
-DATALOC = 0x4000
+DATALOC = 0x2000
 
 all: $(ODIR) loader
 

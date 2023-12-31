@@ -41,12 +41,15 @@
 -- Slots:
 -- 0 = Primary: BIOS+BASIC
 -- 1 = Expanded:
--- 1.0 = 
--- 1.1 = 
--- 1.2 = 
--- 2 = Primary:
+-- 1.0 = XBasic
+-- 1.1 = External slot 1
+-- 1.2 = External slot 2
+-- 2 = Primary: ESSCI
 -- 3 = Expanded:
--- 1.0 = RAM
+-- 3.0 = Extension ROM (MSX-Music)
+-- 3.1 = RAM
+-- 3.2 = MSXSD
+-- 3.3 = IPL
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -297,14 +300,14 @@ architecture Behavior of msx is
 	signal swp_cs_n_s			: std_logic;
 	signal d_from_swp_s			: std_logic_vector( 7 downto 0);
 
-	-- SPI/SD
-	signal nextor_en_s			: std_logic;
-	signal spi_cs_n_s			: std_logic;
-	signal spi_hd_s				: std_logic;
+	-- MSXSSD
+	signal nextor_en_s			: std_logic						:= '0';
+	signal spi_has_data_s		: std_logic						:= '0';
+	signal spi_wait_n_s			: std_logic						:= '1';
 	signal d_from_spi_s			: std_logic_vector( 7 downto 0);
-	signal nxt_rom_page_s		: std_logic_vector( 2 downto 0);
-	signal nxt_rom_cs_n_s		: std_logic;
-	signal nxt_rom_wr_n_s		: std_logic;
+	signal nxt_rom_page_s		: std_logic_vector( 2 downto 0)	:= (others => '0');
+	signal nxt_rom_cs_n_s		: std_logic						:= '1';
+	signal nxt_rom_wr_n_s		: std_logic						:= '1';
 
 	-- SCC/Megaram
 	signal mram_cs_n_s			: std_logic;
@@ -567,18 +570,25 @@ begin
 		volumes_o			=> volumes_o
 	);
 
-	-- SPI
-	spi: entity work.spi
+	-- MSX SD interface (Nextor ROM + SPI)
+	msxsd0: entity work.msxsd
 	port map (
+		enable_i		=> nextor_en_s,
 		clock_i			=> clock_master_i,
+		clock_en_i		=> '1',
 		reset_i			=> reset_i,
-		addr_i			=> cpu_addr_s(0),
-		req_i			=> req_io_s,		-- One pulse
-		cs_n_i			=> spi_cs_n_s,
-		wr_n_i			=> wr_n_s,
-		rd_n_i			=> rd_n_s,
+		addr_i			=> cpu_addr_s,
 		data_i			=> d_from_cpu_s,
 		data_o			=> d_from_spi_s,
+		spi_has_data_o	=> spi_has_data_s,
+		wait_n_o		=> spi_wait_n_s,
+		sltsl_n_i		=> slot3_exp_n_s(2),
+		wr_n_i			=> wr_n_s,
+		rd_n_i			=> rd_n_s,
+		-- Memory
+		rom_cs_n_o		=> nxt_rom_cs_n_s,
+		rom_wr_n_o		=> nxt_rom_wr_n_s,
+		rom_page_o		=> nxt_rom_page_s,
 		-- SD card interface
 		spi_cs_n_o(2)	=> flspi_cs_n_o,
 		spi_cs_n_o(1)	=> spi2_cs_n_o,
@@ -588,24 +598,6 @@ begin
 		spi_miso_i		=> spi_miso_i,
 		sd_wp_i			=> sd_wp_i,
 		sd_pres_n_i		=> sd_pres_n_i
-	);
-
-	-- ROM Nextor control
-	nxt: entity work.romnextor
-	port map (
-		reset_i			=> reset_i,
-		clock_i			=> clock_master_i,
-		enable_i		=> nextor_en_s,
-		addr_i			=> cpu_addr_s,
-		data_i			=> d_from_cpu_s,
-		req_i			=> req_mem_s,
-		sltsl_n_i		=> slot3_exp_n_s(2),
-		rd_n_i			=> rd_n_s,
-		wr_n_i			=> wr_n_s,
-		--
-		rom_cs_n_o		=> nxt_rom_cs_n_s,
-		rom_wr_n_o		=> nxt_rom_wr_n_s,
-		rom_page_o		=> nxt_rom_page_s
 	);
 
 	-- ESCCI
@@ -660,7 +652,7 @@ begin
 	caps_en_o		<= not pio_caps_a;
 	turbo_on_o		<= turbo_on_s;
 
-	wait_n_s		<= m1_wait_n_s and bus_wait_n_i and vdp_wait_n_s;-- and opll_wait_n_s;
+	wait_n_s		<= m1_wait_n_s and bus_wait_n_i and vdp_wait_n_s and spi_wait_n_s;-- and opll_wait_n_s;
 	int_n_s			<= bus_int_n_i and vdp_int_n_s;
 
 	-- K7 and Joystick
@@ -703,7 +695,6 @@ begin
 	opll_cs_n_s		<= '0'	when io_access_n_s = '0' and cpu_addr_s(7 downto 1) = "0111110"		else '1';	-- OPLL			=> 7C-7D
 	vdp_wr_n_s		<= '0'	when io_write_n_s  = '0' and cpu_addr_s(7 downto 2) = "100110"		else '1';	-- VDP write	=> 98-9B
 	vdp_rd_n_s		<= '0'	when io_read_n_s   = '0' and cpu_addr_s(7 downto 2) = "100110"		else '1';	-- VDP read		=> 98-9B
-	spi_cs_n_s		<= '0'	when io_access_n_s = '0' and cpu_addr_s(7 downto 1) = "1001111"		else '1';	-- SPI			=> 9E-9F
 	pio_cs_n_s		<= '0'  when io_access_n_s = '0' and cpu_addr_s(7 downto 2) = "101010"		else '1';	-- PPI 			=> A8-AB
 	psg_cs_n_s		<= '0'	when io_access_n_s = '0' and cpu_addr_s(7 downto 2) = "101000"		else '1';	-- PSG			=> A0-A3
 	mp_cs_n_s		<= '0'	when io_access_n_s = '0' and cpu_addr_s(7 downto 2) = "111111"		else '1';	-- Mapper		=> FC-FF
@@ -711,8 +702,9 @@ begin
 	-- Mem
 	ram_cs_n_s		<= '0'	when slot3_exp_n_s(1) = '0'											else '1';	-- RAM 0000-FFFF
 	mram_cs_n_s		<= '0'	when prim_slot_n_s(2) = '0'											else '1';	-- ESCCI slot 2
-	iplram_cs_n_s	<= '0'	when slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 14) /= "00"	else '1';
+
 	-- IPL
+	iplram_cs_n_s	<= '0'	when slot3_exp_n_s(3) = '0' and cpu_addr_s(15 downto 13) /= "000"	else '1';	-- IPL RAM range 2000-FFFF
 	ipl_cs_n_s		<= '0'	when slot3_exp_n_s(3) = '0'											else '1';
 
 	-- ROMs
@@ -733,19 +725,17 @@ begin
 			ram_data_i			when xb2rom_cs_n_s = '0' and rd_n_s = '0'		else
 			ram_data_i			when ram_cs_n_s = '0' and rd_n_s = '0'			else
 			ram_data_i			when nxt_rom_cs_n_s = '0' and rd_n_s = '0'		else
-			d_from_exp1_s		when exp1_has_data_s = '1'		else
-			d_from_exp3_s		when exp3_has_data_s = '1'		else
+			d_from_spi_s		when spi_has_data_s = '1' 						else			
+			d_from_exp1_s		when exp1_has_data_s = '1'						else
+			d_from_exp3_s		when exp3_has_data_s = '1'						else
 			d_from_mram_s		when mram_cs_n_s = '0' and rd_n_s = '0'			else
 			-- I/O
-			d_from_swp_s		when swp_cs_n_s = '0' and rd_n_s = '0'		else			
-			d_from_vdp_s		when vdp_rd_n_s = '0' and rd_n_s = '0'		else
-			d_from_psg_s		when psg_cs_n_s = '0' and rd_n_s = '0'		else
-			d_from_pio_s		when pio_cs_n_s = '0' and rd_n_s = '0'		else
-			d_from_spi_s		when spi_cs_n_s = '0' and rd_n_s = '0'		else
-			d_from_mp_s			when mp_cs_n_s = '0' and rd_n_s = '0'		else
---			bus_data_i;
-			(others => 'Z')
-	;
+			d_from_swp_s		when swp_cs_n_s = '0' and rd_n_s = '0'			else			
+			d_from_vdp_s		when vdp_rd_n_s = '0' and rd_n_s = '0'			else
+			d_from_psg_s		when psg_cs_n_s = '0' and rd_n_s = '0'			else
+			d_from_pio_s		when pio_cs_n_s = '0' and rd_n_s = '0'			else
+			d_from_mp_s			when mp_cs_n_s = '0' and rd_n_s = '0'			else
+			bus_data_i;
 
 	-- Slot control
 	with cpu_addr_s(15 downto 14) select pslot_s <= 
@@ -886,8 +876,8 @@ begin
 
 	-- Debug
 	D_slots_o		<= pio_port_a_s;
-	D_wait_o		<= opll_wait_n_s;
+	D_wait_o		<= spi_wait_n_s;
 	D_ipl_en_o		<= ipl_en_s;
-	D_generic_o		<= not spi_cs_n_s;
+	D_generic_o		<= spi_has_data_s;
 
 end architecture;

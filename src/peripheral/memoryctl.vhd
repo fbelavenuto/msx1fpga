@@ -91,7 +91,7 @@ begin
 
 			if nxt_rom_cs_n_i = '0' then														-- Nextor
 				ram_addr_o <= "000000" & nxt_rom_page_i & cpu_addr_i(13 downto 0);
-			elsif ipl_cs_n_i = '0' and cpu_addr_i(15 downto 14) = "01" then						-- RAM 16K (IPL) ($4000-$7FFF)
+			elsif ipl_cs_n_i = '0' and cpu_addr_i(15 downto 13) = "001" then					-- RAM 8K (IPL) ($2000-$3FFF)
 				ram_addr_o <= "000001111" & cpu_addr_i(13 downto 0);
 			elsif ipl_cs_n_i = '0' and cpu_addr_i(15) = '1' then								-- All RAM (IPL) ($8000-$FFFF)
 				ram_addr_o <= "0000" & ipl_rampage_i(4 downto 0) & cpu_addr_i(13 downto 0);
@@ -134,7 +134,7 @@ begin
 		begin
 			ram_addr_o <= (others => '0');
 
-			if rom_cs_n_i = '0' then																	-- ROM
+			if rom_cs_n_i = '0' then																-- ROM
 				ram_addr_o <= "00000000" & cpu_addr_i(14 downto 0);
 			elsif extrom_cs_n_i = '0' then															-- Extension ROM
 				ram_addr_o <= "000000010" & cpu_addr_i(13 downto 0);
@@ -146,9 +146,9 @@ begin
 				ram_addr_o <= "0001" & mr_ram_addr_i(18 downto 0);
 			elsif ram_cs_n_i = '0' then																-- Mapper (only 1MB)
 				ram_addr_o <= "001" & ram_page_i(5 downto 0)  & cpu_addr_i(13 downto 0);
-			elsif ipl_cs_n_i = '0' and cpu_addr_i(15 downto 14) = "01" then				-- RAM 16K (IPL) ($4000-$7FFF)
+			elsif ipl_cs_n_i = '0' and cpu_addr_i(15 downto 13) = "001" then						-- RAM 8K (IPL) ($2000-$3FFF)
 				ram_addr_o <= "001111111" & cpu_addr_i(13 downto 0);
-			elsif ipl_cs_n_i = '0' and cpu_addr_i(15) = '1' then								-- All RAM (IPL) ($8000-$FFFF)
+			elsif ipl_cs_n_i = '0' and cpu_addr_i(15) = '1' then									-- All RAM (IPL) ($8000-$FFFF)
 				ram_addr_o <= "00" & ipl_rampage_i(6 downto 0) & cpu_addr_i(13 downto 0);
 			else
 				null;
@@ -181,7 +181,7 @@ begin
 		begin
 			ram_addr_o <= (others => '0');
 
-			if rom_cs_n_i = '0' then																	-- ROM
+			if rom_cs_n_i = '0' then																-- ROM
 				ram_addr_o <= "00000000" & cpu_addr_i(14 downto 0);
 			elsif extrom_cs_n_i = '0' then															-- Extension ROM
 				ram_addr_o <= "000000010" & cpu_addr_i(13 downto 0);
@@ -193,9 +193,9 @@ begin
 				ram_addr_o <= "001" & mr_ram_addr_i;
 			elsif ram_cs_n_i = '0' then																-- Mapper
 				ram_addr_o <= "1" & ram_page_i  & cpu_addr_i(13 downto 0);
-			elsif ipl_cs_n_i = '0' and cpu_addr_i(15 downto 14) = "01" then				-- RAM 16K (IPL) ($4000-$7FFF)
+			elsif ipl_cs_n_i = '0' and cpu_addr_i(15 downto 13) = "001" then						-- RAM 8K (IPL) ($2000-$3FFF)
 				ram_addr_o <= "111111111" & cpu_addr_i(13 downto 0);
-			elsif ipl_cs_n_i = '0' and cpu_addr_i(15) = '1' then								-- All RAM (IPL) ($8000-$FFFF)
+			elsif ipl_cs_n_i = '0' and cpu_addr_i(15) = '1' then									-- All RAM (IPL) ($8000-$FFFF)
 				ram_addr_o <= ipl_rampage_i & cpu_addr_i(13 downto 0);
 			else
 				null;

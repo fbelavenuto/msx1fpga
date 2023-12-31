@@ -1,6 +1,7 @@
 
 DIRS += synth/DE1
 DIRS += synth/DE2
+DIRS += synth/mist
 DIRS += synth/multicore
 DIRS += synth/multicore2
 DIRS += synth/wxeda
