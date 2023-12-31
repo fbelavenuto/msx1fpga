@@ -74,7 +74,7 @@ begin
 	begin
 		if reset_i = '1' then
 			if ipl_en_i = '1' then
-				exp_reg_s <= X"FF";
+				exp_reg_s <= X"FB";		-- If IPL enabled, put frame 0,2,3 to subslot 3 and frame 1 to subslot 2 (enable MSXSD)
 			else
 				exp_reg_s <= X"00";
 			end if;

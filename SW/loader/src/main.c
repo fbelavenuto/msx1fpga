@@ -176,7 +176,8 @@ void main()
 		//     12345678901234567890123456789012
 		error("Error on SD card initialization!");
 	}
-	if (!fat_init()) {
+	k = fat_init();
+	if (k != 0) {
 		//              11111111112222222222333
 		//     12345678901234567890123456789012
 		error("FAT FS not found!");
@@ -356,7 +357,6 @@ void main()
 		*pramrom++ = buffer[k];
 	}
 	vdp_putstring(" OK\n");
-	SPI_CTRL = 0xFF;
 
 	vdp_setcolor(COLOR_GREEN, COLOR_BLACK, COLOR_WHITE);
 	vdp_putstring("\nBooting...");
@@ -367,7 +367,7 @@ void main()
 	SWIOP_REGVAL = cfgturbo;
 
 	// start ROM
-	*ppl++=0x3E;		// LD A, $F0
+	*ppl++=0x3E;		// LD A, $F0		; frame 0-1 to slot 0, frame 2-3 to slot 3
 	*ppl++=0xF0;
 	*ppl++=0xD3;		// OUT ($A8), A
 	*ppl++=0xA8;

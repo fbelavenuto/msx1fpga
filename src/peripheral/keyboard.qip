@@ -1,3 +1,4 @@
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "keyboard.vhd"]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "keymap.vhd"]
 set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "ps2_iobase.vhd"]
+set_global_assignment -name VHDL_FILE [file join $::quartus(qip_path) "ps2_base.vhd"]

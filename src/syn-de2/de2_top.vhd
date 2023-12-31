@@ -657,11 +657,22 @@ begin
 --	ledg_o(6) <= vga_en_s;
 --	ledg_o(5) <= ntsc_pal_s;
 --	ledg_o(4) <= not jt51_cs_n_s;
---	ledg_o(2) <= D_ipl_en_s;
---	ledg_o(1) <= D_generic_s;
+	ledg_o(2) <= D_ipl_en_s;
+	ledg_o(1) <= D_generic_s;
 	ledg_o(0) <= D_wait_n_s;
 --
 --	ledr_o(15 downto 0) <= std_logic_vector(jt51_left_s);
+
+	ld5: entity work.seg7
+	port map (
+		D		=> D_slots_s(7 downto 4),
+		Q		=> display5_o
+	);
+	ld4: entity work.seg7
+	port map (
+		D		=> D_slots_s(3 downto 0),
+		Q		=> display4_o
+	);
 
 	ld3: entity work.seg7
 	port map(

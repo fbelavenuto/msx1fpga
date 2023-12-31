@@ -17,7 +17,8 @@
 ;along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;
 ; Technical info:
-; I/O port 0x9E: Interface status and card select register (read/write)
+; 7B00h~7EFFh	: SPI data transfer window (read/write)
+; 7FF0h			: Interface status and card select register (read/write)
 ;	<read>
 ;	b0	: 1=SD disk was changed
 ;	b1	: 0=SD card present
@@ -25,7 +26,6 @@
 ;	b3-7: Reserved for future use. Must be masked out from readings.
 ;	<write>
 ;	b0	: SD card chip-select (0=selected)
-; I/O port 0x9F: SPI data transfer (read/write)
 
 	.module mmc
 	.optsdcc -mz80
@@ -36,8 +36,8 @@ mmc_type:
 
 	.area	_CODE
 
-SPI_CTRL = 0x9E;
-SPI_DATA = 0x9F;
+SPI_CTRL = 0x7FF0;
+SPI_DATA = 0x7B00;
 
 ; Comandos SPI:
 CMD0	= 0  | 0x40
@@ -61,7 +61,7 @@ ACMD41	= 41 | 0x40
 ; unsigned char MMC_IsPresent();
 ;
 _MMC_IsPresent::
-	in		a, (SPI_CTRL)
+	ld		a, (SPI_CTRL)
 	ld		l, #1
 	and		#0x02						; Is there an SD Card in the slot?
 	jr z,	.ispresent
@@ -76,18 +76,18 @@ _MMC_IsPresent::
 ; unsigned char MMC_Init();
 ;
 _MMC_Init::
-	in		a, (SPI_CTRL)
+	ld		a, (SPI_CTRL)
 	and		#0x02						; Is there an SD Card in the slot?
 	jr nz,	deuerroi
 	ld		a, #0xFF
-	out		(SPI_CTRL), a				; desabilita SD
+	ld		(SPI_CTRL), a				; desabilita SD
 	ld		b, #10						; enviar 80 pulsos de clock com cartao desabilitado
 enviaClocksInicio:
 	ld		a, #0xFF					; manter MOSI em 1
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	djnz	enviaClocksInicio
 	ld		a, #0xFE
-	out		(SPI_CTRL), a				; habilita SD
+	ld		(SPI_CTRL), a				; habilita SD
 	ld		b, #16						; 16 tentativas para CMD0
 SD_SEND_CMD0:
 	ld		a, #CMD0					; primeiro comando: CMD0
@@ -95,10 +95,10 @@ SD_SEND_CMD0:
 	push	bc
 	call	SD_SEND_CMD_2_ARGS_TEST_BUSY
 	pop		bc
-	jp	nc, testaSDCV2					; cartao respondeu ao CMD0, pula
+	jp nc,	testaSDCV2					; cartao respondeu ao CMD0, pula
 	djnz	SD_SEND_CMD0
 	ld		a, #0xFF
-	out		(SPI_CTRL), a				; desabilita SD
+	ld		(SPI_CTRL), a				; desabilita SD
 	ld		a, #0						; cartao nao respondeu ao CMD0, retornar 0
 	ret
 testaSDCV2:
@@ -120,7 +120,7 @@ testaSDCV2:
 	jr		nz, .loop
 deuerroi:
 	ld		a, #0xFF
-	out		(SPI_CTRL), a				; desabilita SD
+	ld		(SPI_CTRL), a				; desabilita SD
 	ld		a, #0						; erro, retornar 0
 	ret
 .jumpHL:
@@ -136,7 +136,7 @@ iniciou:
 	call	z, mudarTamanhoBlocoPara512	; se bit CCS do OCR for 1, eh cartao SDV2 (Block address - SDHC ou SDXD)
 										; e nao precisamos mudar tamanho do bloco para 512
 	ld		a, #0xFF
-	out		(SPI_CTRL), a				; desabilita SD
+	ld		(SPI_CTRL), a				; desabilita SD
 	ld		a, (mmc_type)				; retornar tipo de cartao
 	cp		#0x40
 	ld		a, #3
@@ -165,17 +165,15 @@ _MMC_Read::
 	ld		e, 2(iy)
 	ld		d, 3(iy)
 	ld		c, 4(iy)
-	ld		b, 5(iy)
+	ld		b, 5(iy)					; BCDE=LBA
 	ld		l, 6(iy)
-	ld		h, 7(iy)
+	ld		h, 7(iy)					; HL=*buffer
 
 	ld		a, #0xFE
-	out		(SPI_CTRL), a				; habilita SD
-
+	ld		(SPI_CTRL), a				; habilita SD
 	ld		a, (mmc_type)				; verificar se eh SDV1 ou SDV2
 	or		a
 	call	z, blocoParaByte			; se for SDV1 converter blocos para bytes
-
 	ld		a, #CMD17					; ler somente um bloco com CMD17 = Read Single Block
 	call	SD_SEND_CMD_GET_ERROR
 	jr		nc, .ok2
@@ -185,14 +183,13 @@ _MMC_Read::
 .ok2:
 	call	WAIT_RESP_FE
 	jr c,	.erro2
-	ld		bc, #SPI_DATA
-	inir
-	inir
-	nop
-	in		a, (SPI_DATA)				; descarta CRC
-	nop
-	in		a, (SPI_DATA)
-	ld		l, #1
+	ex		de, hl						; DE = destiny
+	ld		hl, #SPI_DATA				; HL = source
+	ld		bc, #512					; BC = 512 times
+ 	ldir
+	ld		a, (SPI_DATA)				; descarta CRC
+	ld		a, (SPI_DATA)
+	ld		l, #1						; OK
 	ret
 
 ; ------------------------------------------------
@@ -290,20 +287,16 @@ SD_SEND_CMD_2_ARGS_GET_R3:
 ; Destroi AF, BC
 ; ------------------------------------------------
 SD_SEND_CMD:
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	push	af
 	ld		a, b
-	nop
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	ld		a, c
-	nop
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	ld		a, d
-	nop
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	ld		a, e
-	nop
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	pop		af
 	cp		#CMD0
 	ld		b, #0x95					; CRC para CMD0
@@ -314,7 +307,7 @@ SD_SEND_CMD:
 	ld		b, #0xFF					; CRC dummy
 enviaCRC:
 	ld		a, b
-	out		(SPI_DATA), a
+	ld		(SPI_DATA), a
 	jr		WAIT_RESP_NO_FF
 
 ; ------------------------------------------------
@@ -322,12 +315,12 @@ enviaCRC:
 ; Destroi AF, B
 ; ------------------------------------------------
 WAIT_RESP_FE:
-	ld		b, #10						; 10 tentativas
+	ld		b, #255						; n tentativas
 .loop1:
 	push	bc
 	call	WAIT_RESP_NO_FF				; esperar resposta diferente de $FF
 	pop		bc
-	cp		#0xFE						; resposta � $FE ?
+	cp		#0xFE						; resposta é $FE ?
 	ret	z								; sim, retornamos com carry=0
 	djnz	.loop1
 	scf									; erro, carry=1
@@ -339,12 +332,12 @@ WAIT_RESP_FE:
 ; Destroi AF, BC
 ; ------------------------------------------------
 WAIT_RESP_NO_FF:
-	ld		bc, #100					; 100 tentativas
+	ld		bc, #65535					; n tentativas
 .loop2:
-	in		a, (SPI_DATA)
+	ld		a, (SPI_DATA)
 	cp		#0xFF						; testa $FF
 	ret	nz								; sai se nao for $FF
 	djnz	.loop2
 	dec		c
-	jr		nz, .loop2
+	jr nz,	.loop2
 	ret

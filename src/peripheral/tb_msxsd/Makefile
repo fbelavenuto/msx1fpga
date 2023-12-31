@@ -2,6 +2,6 @@
 #RM = rm -rf
 RM = del /q
 
-SRCS = ../spi.vhd
+SRCS = ../msxsd.vhd
 
 include ../../make.inc

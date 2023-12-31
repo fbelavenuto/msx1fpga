@@ -15,8 +15,7 @@ SRCS = ../msx_pack.vhd \
 	../peripheral/ym2149s.vhd \
 	../peripheral/exp_slot.vhd \
 	../peripheral/memoryctl.vhd \
-	../peripheral/romnextor.vhd \
-	../peripheral/spi.vhd \
+	../peripheral/msxsd.vhd \
 	../peripheral/swioports.vhd \
 	../peripheral/escci/scc_wave.vhd \
 	../peripheral/escci/escci.vhd \
@@ -32,7 +31,7 @@ SRCS = ../msx_pack.vhd \
 	../peripheral/vm2413/voicerom.vhd ../peripheral/vm2413/voicememory.vhd \
 	../peripheral/vm2413/operator.vhd ../peripheral/vm2413/controller.vhd \
 	../peripheral/vm2413/opll.vhd \
-	ipl_rom.vhd \
+	../rom/ipl_rom.vhd \
 	../clocks.vhd ../msx.vhd \
 
 include ../make.inc

@@ -44,6 +44,9 @@ use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
 entity keyboard is
+	generic (
+		ps2_signals_separated_g	: boolean		:= false
+	);
 	port (
 		clock_i			: in    std_logic;
 		reset_i			: in    std_logic;
@@ -56,8 +59,12 @@ entity keyboard is
 		-- LEDs
 		led_caps_i		: in    std_logic;
 		-- PS/2 interface
-		ps2_clk_io		: inout std_logic;
-		ps2_data_io		: inout std_logic;
+		ps2_clk_io		: inout std_logic						:= 'Z';
+		ps2_data_io		: inout std_logic						:= 'Z';
+		ps2_clk_i		: in    std_logic						:= '1';
+		ps2_clk_o		: out   std_logic;
+		ps2_data_i		: in    std_logic						:= '1';
+		ps2_data_o		: out   std_logic;
 		-- Direct Access
 		keyb_valid_o	: out   std_logic;
 		keyb_data_o		: out   std_logic_vector(7 downto 0);
@@ -93,19 +100,39 @@ architecture Behavior of Keyboard is
 
 begin
 
-	-- PS/2 interface
-	ps2_port: entity work.ps2_iobase
-	port map (
-		enable_i		=> '1',
-		clock_i			=> clock_i,
-		reset_i			=> reset_i,
-		ps2_data_io		=> ps2_data_io,
-		ps2_clk_io		=> ps2_clk_io,
-		data_rdy_i		=> data_load_s,
-		data_i			=> d_to_send_s,
-		data_rdy_o		=> keyb_valid_s,
-		data_o			=> keyb_data_s
-	);
+	ps2s: if ps2_signals_separated_g generate
+		-- PS/2 interface
+		ps2_port: entity work.ps2_base
+		port map (
+			enable_i		=> '1',
+			clock_i			=> clock_i,
+			reset_i			=> reset_i,
+			ps2_data_i		=> ps2_data_i,
+			ps2_data_o		=> ps2_data_o,
+			ps2_clk_i		=> ps2_clk_i,
+			ps2_clk_o		=> ps2_clk_o,
+			data_rdy_i		=> data_load_s,
+			data_i			=> d_to_send_s,
+			data_rdy_o		=> keyb_valid_s,
+			data_o			=> keyb_data_s
+		);
+	end generate;
+
+	ps2j: if not ps2_signals_separated_g generate
+		-- PS/2 interface
+		ps2_port: entity work.ps2_iobase
+		port map (
+			enable_i		=> '1',
+			clock_i			=> clock_i,
+			reset_i			=> reset_i,
+			ps2_data_io		=> ps2_data_io,
+			ps2_clk_io		=> ps2_clk_io,
+			data_rdy_i		=> data_load_s,
+			data_i			=> d_to_send_s,
+			data_rdy_o		=> keyb_valid_s,
+			data_o			=> keyb_data_s
+		);
+	end generate;
 
 	clock_km_s <= not clock_i;
 

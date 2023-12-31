@@ -68,7 +68,7 @@ entity ssdram is
 		mem_we_n_o	: out   std_logic;
 		mem_udq_o	: out   std_logic;
 		mem_ldq_o	: out   std_logic;
-		mem_ba_o		: out   std_logic_vector( 1 downto 0);
+		mem_ba_o	: out   std_logic_vector( 1 downto 0);
 		mem_addr_o	: out   std_logic_vector(11 downto 0);
 		mem_data_io	: inout std_logic_vector(15 downto 0)
 	);

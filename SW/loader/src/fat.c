@@ -171,10 +171,10 @@ int fat_init()
 
 	sector = 0;
 	if (!MMC_Read(sector, data_buffer)) {
-		return FALSE;
+		return 1;
 	}
 	if ((data_buffer[0x1FE] != 0x55) || (data_buffer[0x1FF] != 0xAA)) {
-		return FALSE;
+		return 2;
 	}
 	switch (data_buffer[0x1C2]) {
 	case 0x0E:
@@ -205,7 +205,7 @@ int fat_init()
 #endif
 			hasMBR = FALSE;
 		} else {
-			return FALSE;
+			return 3;
 		}
 	}
 	if (hasMBR) {
@@ -215,15 +215,15 @@ int fat_init()
 	}
 
 	if (!MMC_Read(sector, data_buffer)) {
-		return FALSE;
+		return 4;
 	}
 /*
 	if ((data_buffer[0x1FE] != 0x55) || (data_buffer[0x1FF] != 0xAA)) {
-		return FALSE;
+		return 5;
 	}
 */
 	if ((data_buffer[0x0B] != 0) || (data_buffer[0x0C] != 2)) {
-		return FALSE;
+		return 6;
 	}
 
 	fat.sectors_per_cluster = data_buffer[0x0D];
@@ -241,7 +241,7 @@ int fat_init()
 	fat_init16();
 #endif
 
-	return TRUE;
+	return 0;	// 0 = OK
 }
 
 /******************************************************************************/
