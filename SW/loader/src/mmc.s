@@ -106,7 +106,7 @@ testaSDCV2:
 	ld		de, #0x1AA
 	call	SD_SEND_CMD_2_ARGS_GET_R3
 	ld		hl, #SD_SEND_CMD1			; HL aponta para rotina correta
-	jr		c, .pula4					; cartao recusou CMD8, enviar comando CMD1
+	jr c,	.pula4						; cartao recusou CMD8, enviar comando CMD1
 	ld		hl, #SD_SEND_ACMD41			; cartao aceitou CMD8, enviar comando ACMD41
 .pula4:
 	ld		bc, #120					; 120 tentativas
@@ -117,7 +117,7 @@ testaSDCV2:
 	jp nc,	iniciou
 	djnz	.loop
 	dec		c
-	jr		nz, .loop
+	jr nz,	.loop
 deuerroi:
 	ld		a, #0xFF
 	ld		(SPI_CTRL), a				; desabilita SD
@@ -129,11 +129,11 @@ iniciou:
 	ld		a, #CMD58					; ler OCR
 	ld		de, #0
 	call	SD_SEND_CMD_2_ARGS_GET_R3	; enviar comando e receber resposta tipo R3
-	jp c,	deuerroi
+	jr c,	deuerroi
 	ld		a, b						; testa bit CCS do OCR que informa se cartao eh SDV1 ou SDV2
 	and		#0x40
 	ld		(mmc_type), a				; salva informacao da versao do SD (V1 ou V2)
-	call	z, mudarTamanhoBlocoPara512	; se bit CCS do OCR for 1, eh cartao SDV2 (Block address - SDHC ou SDXD)
+	call z,	mudarTamanhoBlocoPara512	; se bit CCS do OCR for 1, é cartao SDV2 (Block address - SDHC ou SDXD)
 										; e nao precisamos mudar tamanho do bloco para 512
 	ld		a, #0xFF
 	ld		(SPI_CTRL), a				; desabilita SD
@@ -152,7 +152,7 @@ mudarTamanhoBlocoPara512:
 	ld		a, #CMD16
 	ld		bc, #0
 	ld		de, #512
-	jp		SD_SEND_CMD_GET_ERROR
+	jr		SD_SEND_CMD_GET_ERROR
 
 
 ; ------------------------------------------------
@@ -173,7 +173,7 @@ _MMC_Read::
 	ld		(SPI_CTRL), a				; habilita SD
 	ld		a, (mmc_type)				; verificar se eh SDV1 ou SDV2
 	or		a
-	call	z, blocoParaByte			; se for SDV1 converter blocos para bytes
+	call z,	blocoParaByte			; se for SDV1 converter blocos para bytes
 	ld		a, #CMD17					; ler somente um bloco com CMD17 = Read Single Block
 	call	SD_SEND_CMD_GET_ERROR
 	jr		nc, .ok2
@@ -300,10 +300,10 @@ SD_SEND_CMD:
 	pop		af
 	cp		#CMD0
 	ld		b, #0x95					; CRC para CMD0
-	jr		z, enviaCRC
+	jr z,	enviaCRC
 	cp		#CMD8
 	ld		b, #0x87					; CRC para CMD8
-	jr		z, enviaCRC
+	jr z,	enviaCRC
 	ld		b, #0xFF					; CRC dummy
 enviaCRC:
 	ld		a, b
