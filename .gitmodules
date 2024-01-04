@@ -4,3 +4,6 @@
 [submodule "src/mist-modules"]
 	path = src/mist-modules
 	url = https://github.com/mist-devel/mist-modules.git
+[submodule "src/fblabs-fpga-cores"]
+	path = src/fblabs-fpga-cores
+	url = git@github.com:fbelavenuto/fblabs-fpga-cores.git
