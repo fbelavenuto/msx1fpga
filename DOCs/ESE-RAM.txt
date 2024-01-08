@@ -1,7 +1,7 @@
 Para usar o ESE-RAM:
 --------------------
 
-H· 3 modos de mapper, ESE-SCC, ASCII8 e ASCII16.
+H√° 3 modos de mapper, ESE-SCC, ASCII8 e ASCII16.
 
 Se mapper for ASCII8 ou 16:
 ===========================
@@ -10,77 +10,73 @@ Bancos divididos assim:
 -----------------------
 
 ASCII 8:
-Banco 1 = 4000-5FFF
-Banco 2 = 6000-7FFF
-Banco 3 = 8000-9FFF
-Banco 4 = A000-BFFF
+Banco 1 = 4000-5FFF     (metade baixa frame 1)  Mirror C000-DFFF    (metade baixa frame 3)
+Banco 2 = 6000-7FFF     (metade alta frame 1)   Mirror E000-FFFF    (metade alta frame 3)
+Banco 3 = 8000-9FFF     (metade baixa frame 2)  Mirror 0000-1FFF    (metade baixa frame 0)
+Banco 4 = A000-BFFF     (metade alta frame 2)   Mirror 2000-3FFF    (metade alta frame 0)
 
 ASCII 16:
-Banco 1 = 4000-7FFF
-Banco 2 = 8000-BFFF
+Banco 1 = 4000-7FFF     (frame 1)               Mirror C000-FFFF    (frame 3)
+Banco 2 = 8000-BFFF     (frame 2)               Mirror 0000-3FFF    (frame 0)
 
 Escrever bancos nos enderecos:
 ------------------------------
 
 ASCII 8:
-Banco 1 = Escrever de 6000-67FF
-Banco 2 = Escrever de 6800-6FFF
-Banco 3 = Escrever de 7000-77FF
-Banco 4 = Escrever de 7800-7FFF
+Banco 1 = Escrever de 6000-67FF     (regi√£o dentro do frame 1)
+Banco 2 = Escrever de 6800-6FFF     (regi√£o dentro do frame 1)
+Banco 3 = Escrever de 7000-77FF     (regi√£o dentro do frame 1)
+Banco 4 = Escrever de 7800-7FFF     (regi√£o dentro do frame 1)
 
 ASCII 16:
-Banco 1 = Escrever de 6000-67FF
-Banco 2 = Escrever de 7000-77FF
+Banco 1 = Escrever de 6000-67FF     (regi√£o dentro do frame 1)
+Banco 2 = Escrever de 7000-77FF     (regi√£o dentro do frame 1)
 
 
-Leitura no slot ocorre normalmente de 4000 a BFFF, RAM È bloqueada para escrita.
+Leitura no slot ocorre normalmente de 4000 a BFFF, RAM √© bloqueada para escrita.
 
-Para escrever na RAM, coloque 1 no bit 7 do banco 1 ou 3 ou 4 (Escrever "1xxxxxxx" nos bancos) e a escrita È habilitada.
+Para escrever na RAM, coloque 1 no bit 7 do banco 1 ou 3 ou 4 (Escrever "1xxxxxxx" nos bancos) e a escrita √© habilitada.
 
-Observe que o Banco 2 n„o È permitido escrita.
+Observe que o Banco 2 n√£o √© permitido escrita.
 
 
 Se mapper for ESE-SCC:
 ===================
 
-Bancos divididos assim:
+Bancos divididos assim (igual ASCII 8):
 -----------------------
 
-Banco 1 = 4000-5FFF
-Banco 2 = 6000-7FFF
-Banco 3 = 8000-9FFF
-Banco 4 = A000-BFFF
+Banco 1 = 4000-5FFF     (metade baixa frame 1)
+Banco 2 = 6000-7FFF     (metade alta frame 1)
+Banco 3 = 8000-9FFF     (metade baixa frame 2)
+Banco 4 = A000-BFFF     (metade alta frame 2)
 
 Escrever bancos nos enderecos:
 ------------------------------
 
-Banco 1 = Escrever de 5000-57FF
-Banco 2 = Escrever de 7000-77FF
-Banco 3 = Escrever de 9000-97FF
-Banco 4 = Escrever de B000-B7FF
+Banco 1 = Escrever de 5000-57FF     (regi√£o dentro do frame 1)
+Banco 2 = Escrever de 7000-77FF     (regi√£o dentro do frame 1)
+Banco 3 = Escrever de 9000-97FF     (regi√£o dentro do frame 2)
+Banco 4 = Escrever de B000-B7FF     (regi√£o dentro do frame 2)
 
-A mapper ESE-SCC tem dois registros de configuraÁ„o:
+A mapper ESE-SCC tem dois registros de configura√ß√£o:
 
-Registro 1 = Escrita em 7FFE-7FFF se Modo de som for SCC e modo de memÛria for seleÁ„o de bancos (novo para o ESE-SCC)
-Registro 2 = Escrita em BFFE-BFFF se chaveado para os primeiros 512K (bit 6=0 do registro 1) e modo normal do SCC (bit 4=0 do registro 1) (mesmo do SCC+ do cartucho Snatcher)
+Registro 1 = Escrita em 7FFE-7FFF se Modo de som for SCC e modo de mem√≥ria for sele√ß√£o de bancos (novo para o ESE-SCC):
 
-O bit 4 do Registro 1 È usado para ativar a escrita da RAM e bloquear o SCC+ (mapeador dos bancos e wave).
-O bit 6 do Registro 1 È usado para mapear alÈm dos 512K, permitindo mais 512K porÈm com restriÁıes.
+    O bit 4 do Registro 1 √© usado para ativar a escrita da RAM e bloquear o SCC+ (mapeador dos bancos e wave).
+        Se 1, √© permitido escrever na RAM em qualquer banco, sem chavear os bancos nos seus endere√ßos, mas a escrita dos registros continuam ativos (7FFE-7FFF e BFFE-BFFF).
 
-O registro 2 funciona assim:
+    O bit 6 do Registro 1 √© usado para mapear al√©m dos 512K, permitindo mais 512K por√©m com restri√ß√µes.
+        Se 1, a leitura e escrita n√£o acontece de 4000-5FFF e nem em A000-BFFF, permitindo ler somente nos bancos 2 e 3 os 512K excedentes.
 
-Bit 5 = Modo de Som (1=SCC+, 0=SCC)
-Bit 4 = Modo da MemÛria (1=RAM, 0=seleÁ„o de bancos)
-(outros bits sao ignorados)
+Registro 2 = Escrita em BFFE-BFFF se chaveado para os primeiros 512K (bit 6=0 do registro 1) e modo normal do SCC (bit 4=0 do registro 1) (mesmo do SCC+ do cartucho Snatcher):
+    Bit 5 = Modo de Som (1=SCC+, 0=SCC)
+    Bit 4 = Modo da Mem√≥ria (1=RAM, 0=sele√ß√£o de bancos)
+    (outros bits sao ignorados)
 
-Se ativar o bit 6 do registro 1, a leitura e escrita n„o acontece de 4000-5FFF e nem em A000-BFFF, permitindo ler somente nos bancos 2 e 3 os 512K excedentes.
 
-Se ativar o bit 4 do registro 1, È permitido escrever na RAM em qualquer banco, sem chavear os bancos nos seus endereÁos, mas a escrita dos registros continuam ativos (7FFE-7FFF e BFFE-BFFF).
-
-Se o modo de memÛria for banco (bit 4=0 do registro 2):
+Se o modo de mem√≥ria for banco (bit 4=0 do registro 2):
 -------------------------------------------------------
 
-Se o banco 3 estiver configurado para a p·gina 3F (bits 5-0 igual a 1) e o modo de som for SCC (bit5=0 do registro 2) o chip de ·udio È mapeado de 9800 a 9FFF, sendo redirecionado para o som e n„o a memÛria.
-
-Se o bit 7 do banco 4 for 1 e o modo de som for SCC+ (bit5=1 do registro 2), os endereÁos de B800-BFFD s„o redirecionados para o chip de ·udio ao invÈs de acessar a memÛria (BFFE-BFFF continua sendo Registro 2).
-
+Se o banco 3 estiver configurado para a p√°gina 3F (bits 5-0 igual a 1) e o modo de som for SCC (bit5=0 do registro 2) o chip de √°udio √© mapeado de 9800 a 9FFF, sendo redirecionado para o som e n√£o a mem√≥ria.
+Se o bit 7 do banco 4 for 1 e o modo de som for SCC+ (bit5=1 do registro 2), os endere√ßos de B800-BFFD s√£o redirecionados para o chip de √°udio ao inv√©s de acessar a mem√≥ria (BFFE-BFFF continua sendo Registro 2).

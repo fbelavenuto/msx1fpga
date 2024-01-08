@@ -165,19 +165,18 @@ begin
 	-- SCC address decoder
 	SccSel_s  <=
 				"10" when	-- memory access (scc_wave)
-							addr_i(8) = '0' and SccModeB(4) = '0' and map_type_i(0) = '0' and
-							(DecSccA = '1' or DecSccB = '1')																else
+							addr_i(8) = '0' and SccModeB(4) = '0' and map_type_i(0) = '0' and (DecSccA = '1' or DecSccB = '1')	else	-- map_type = SCC
 				"01" when	-- memory access (MEGA-ROM)
 							-- 4000-7FFFh(R/-, ASC8K/16K)
-							(addr_i(15 downto 14) = "01"  and map_type_i(0) = '1'  and                     rd_n_i = '0') or
+							(addr_i(15 downto 14) = "01"  and map_type_i(0) = '1'  and                     rd_n_i = '0') or				-- map_type /= SCC
 							-- 8000-BFFFh(R/-, ASC8K/16K)
-							(addr_i(15 downto 14) = "10"  and map_type_i(0) = '1'  and                     rd_n_i = '0') or
+							(addr_i(15 downto 14) = "10"  and map_type_i(0) = '1'  and                     rd_n_i = '0') or				-- map_type /= SCC
 							-- 4000-5FFFh(R/W, ASC8K/16K)
-							(addr_i(15 downto 13) = "010" and map_type_i(0) = '1'  and SccBank0(7) = '1'               ) or
+							(addr_i(15 downto 13) = "010" and map_type_i(0) = '1'  and SccBank0(7) = '1'               ) or				-- map_type /= SCC
 							-- 8000-9FFFh(R/W, ASC8K/16K)
-							(addr_i(15 downto 13) = "100" and map_type_i(0) = '1'  and SccBank2(7) = '1'               ) or
+							(addr_i(15 downto 13) = "100" and map_type_i(0) = '1'  and SccBank2(7) = '1'               ) or				-- map_type /= SCC
 							-- A000-BFFFh(R/W, ASC8K/16K)
-							(addr_i(15 downto 13) = "101" and map_type_i(0) = '1'  and SccBank3(7) = '1'               ) or
+							(addr_i(15 downto 13) = "101" and map_type_i(0) = '1'  and SccBank3(7) = '1'               ) or				-- map_type /= SCC
 							-- 4000-5FFFh(R/-, SCC)
 							(addr_i(15 downto 13) = "010" and SccModeA(6) = '0'    and                     rd_n_i = '0') or
 							-- 6000-7FFFh(R/-, SCC)
@@ -187,15 +186,15 @@ begin
 							-- A000-BFFFh(R/-, SCC)
 							(addr_i(15 downto 13) = "101" and SccModeA(6) = '0' and      DecSccB = '0' and rd_n_i = '0') or
 							-- 4000-5FFFh(R/W) ESCC-RAM
-							(addr_i(15 downto 13) = "010" and SccModeA(4) = '1') or
+							(addr_i(15 downto 13) = "010" and SccModeA(4) = '1'                                        ) or
 							-- 6000-7FFDh(R/W) ESCC-RAM
-							(addr_i(15 downto 13) = "011" and SccModeA(4) = '1' and Dec1FFE /= '1') or
+							(addr_i(15 downto 13) = "011" and SccModeA(4) = '1' and Dec1FFE /= '1'                     ) or
 							-- 4000-7FFFh(R/W) SNATCHER
-							(addr_i(15 downto 14) = "01"  and SccModeB(4) = '1') or
+							(addr_i(15 downto 14) = "01"  and SccModeB(4) = '1'                                        ) or
 							-- 8000-9FFFh(R/W) SNATCHER
-							(addr_i(15 downto 13) = "100" and SccModeB(4) = '1') or
+							(addr_i(15 downto 13) = "100" and SccModeB(4) = '1'                                        ) or
 							-- A000-BFFDh(R/W) SNATCHER
-							(addr_i(15 downto 13) = "101" and SccModeB(4) = '1' and Dec1FFE /= '1')							else
+							(addr_i(15 downto 13) = "101" and SccModeB(4) = '1' and Dec1FFE /= '1'                     )		else
             "00";			-- MEGA-ROM bank register access
 
 	-- Mapped I/O port access on 7FFE-7FFFh / BFFE-BFFFh ... Write protect / SPC mode register
@@ -219,7 +218,7 @@ begin
 			SccModeB    <= (others => '0');
 		elsif rising_edge(clock_i) then
 
-			if map_type_i(0) = '0' then
+			if map_type_i(0) = '0' then												-- map_type = SCC
 
 				-- Mapped I/O port access on 5000-57FFh ... Bank register write
 				if req_wr_n_s = '0' and SccSel_s = "00" and addr_i(15 downto 11) = "01010" and SccModeA(6) = '0' and SccModeA(4) = '0' and SccModeB(4) = '0' then
@@ -245,17 +244,17 @@ begin
 				if req_wr_n_s = '0' and SccSel_s = "00" and addr_i(15 downto 13) = "101"  and Dec1FFE = '1' and SccModeA(6) = '0' and SccModeA(4) = '0' then
 					SccModeB <= data_i;
 				end if;
-			else
+			else																	-- map_type /= SCC
 				-- Mapped I/O port access on 6000-6FFFh ... Bank register write
 				if req_wr_n_s = '0' and SccSel_s = "00" and addr_i(15 downto 12) = "0110" then
 					-- ASC8K / 6000-67FFh
-					if    map_type_i(1) = '0' and addr_i(11) = '0' then
+					if    map_type_i(1) = '0' and addr_i(11) = '0' then				-- map_type = ASCII8
 						SccBank0 <= data_i;
 					-- ASC8K / 6800-6FFFh
-					elsif map_type_i(1) = '0' and addr_i(11) = '1' then
+					elsif map_type_i(1) = '0' and addr_i(11) = '1' then				-- map_type = ASCII8
 						SccBank1 <= data_i;
 					-- ASC16K / 6000-67FFh
-					elsif addr_i(11) = '0' then
+					elsif addr_i(11) = '0' then										-- map_type = ASCII16
 						SccBank0 <= data_i(7) & data_i(5 downto 0) & '0';
 						SccBank1 <= data_i(7) & data_i(5 downto 0) & '1';
 					end if;
@@ -264,13 +263,13 @@ begin
 				-- Mapped I/O port access on 7000-7FFFh ... Bank register write
 				if req_wr_n_s = '0' and SccSel_s = "00" and addr_i(15 downto 12) = "0111" then
 					-- ASC8K / 7000-77FFh
-					if    map_type_i(1) = '0' and addr_i(11) = '0' then
+					if    map_type_i(1) = '0' and addr_i(11) = '0' then				-- map_type = ASCII8
 						SccBank2 <= data_i;
 					-- ASC8K / 7800-7FFFh
-					elsif map_type_i(1) = '0' and addr_i(11) = '1' then
+					elsif map_type_i(1) = '0' and addr_i(11) = '1' then				-- map_type = ASCII8
 						SccBank3 <= data_i;
 					-- ASC16K / 7000-77FFh
-					elsif addr_i(11) = '0' then
+					elsif addr_i(11) = '0' then										-- map_type = ASCII16
 						SccBank2 <= data_i(7) & data_i(5 downto 0) & '0';
 						SccBank3 <= data_i(7) & data_i(5 downto 0) & '1';
 					end if;
